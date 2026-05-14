@@ -1,0 +1,1236 @@
+{% extends "base.html" %}
+
+{% block title %}Weekly Crypto Report - {{ site_name or 'CryptositNews' }}{% endblock %}
+
+{% block og_title %}Weekly Crypto Report - {{ site_name or 'CryptositNews' }}{% endblock %}
+{% block og_desc %}AI-powered weekly crypto market summary with top stories, best & worst performing coins, and sentiment analysis.{% endblock %}
+{% block twitter_title %}Weekly Crypto Report - {{ site_name or 'CryptositNews' }}{% endblock %}
+{% block twitter_desc %}AI-powered weekly crypto market summary with top stories, best & worst performing coins, and sentiment analysis.{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       Page Hero
+       ============================================ */
+    .wr-page-hero {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2.5rem 1rem 2rem;
+        position: relative;
+    }
+    .wr-page-hero::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 3px;
+        background: var(--gradient-primary);
+        border-radius: 2px;
+    }
+    .wr-page-hero h1 {
+        font-size: 2rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+    .wr-page-hero .wr-hero-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 0.8rem;
+    }
+    .wr-hero-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3);
+        animation: pulse-glow 3s ease infinite;
+        flex-shrink: 0;
+    }
+    .wr-week-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 20px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 24px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--accent-cyan);
+    }
+    .wr-week-badge i {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+
+    /* ============================================
+       Market Overview Stats Row
+       ============================================ */
+    .wr-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .wr-stat-card {
+        padding: 1.2rem 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        text-align: center;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .wr-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+    .wr-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-glow);
+        border-color: var(--border-glow);
+    }
+    .wr-stat-card.cyan::before { background: var(--accent-cyan); }
+    .wr-stat-card.green::before { background: var(--accent-green); }
+    .wr-stat-card.red::before { background: var(--accent-red); }
+    .wr-stat-card.purple::before { background: var(--accent-purple); }
+    .wr-stat-card.yellow::before { background: var(--accent-yellow); }
+    .wr-stat-card.orange::before { background: var(--accent-orange); }
+
+    .wr-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.7rem;
+        font-size: 1rem;
+    }
+    .wr-stat-icon.cyan { background: rgba(34, 211, 238, 0.12); color: var(--accent-cyan); }
+    .wr-stat-icon.green { background: rgba(52, 211, 153, 0.12); color: var(--accent-green); }
+    .wr-stat-icon.red { background: rgba(248, 113, 113, 0.12); color: var(--accent-red); }
+    .wr-stat-icon.purple { background: rgba(167, 139, 250, 0.12); color: var(--accent-purple); }
+    .wr-stat-icon.yellow { background: rgba(251, 191, 36, 0.12); color: var(--accent-yellow); }
+    .wr-stat-icon.orange { background: rgba(251, 146, 60, 0.12); color: var(--accent-orange); }
+
+    .wr-stat-value {
+        font-size: 1.35rem;
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 4px;
+        word-break: break-word;
+    }
+    .wr-stat-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .wr-stat-sub {
+        font-size: 0.72rem;
+        margin-top: 4px;
+        font-weight: 600;
+    }
+
+    /* Fear & Greed Gauge */
+    .wr-fg-gauge {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 900;
+        position: relative;
+    }
+    .wr-fg-gauge::before {
+        content: '';
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        padding: 3px;
+        background: conic-gradient(from 180deg, var(--accent-red), var(--accent-orange), var(--accent-yellow), var(--accent-green));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0.7;
+    }
+    .wr-fg-classification {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    /* ============================================
+       AI Weekly Summary Section
+       ============================================ */
+    .wr-ai-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition);
+    }
+    .wr-ai-card:hover {
+        border-color: var(--border-glow);
+        box-shadow: var(--shadow-glow);
+    }
+    .wr-ai-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        background-size: 200% 100%;
+        animation: borderGlow 4s ease infinite;
+    }
+    .wr-ai-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.2rem;
+        flex-wrap: wrap;
+    }
+    .wr-ai-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25);
+        flex-shrink: 0;
+        animation: float 4s ease infinite;
+    }
+    .wr-ai-title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        flex: 1;
+    }
+    .wr-ai-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 14px;
+        background: rgba(34, 211, 238, 0.1);
+        border: 1px solid rgba(34, 211, 238, 0.2);
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .wr-ai-badge i {
+        font-size: 0.65rem;
+    }
+    .wr-ai-text {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.85;
+    }
+    .wr-ai-text p {
+        margin-bottom: 1rem;
+    }
+    .wr-ai-text p:last-child {
+        margin-bottom: 0;
+    }
+    .wr-ai-unavailable {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--text-muted);
+    }
+    .wr-ai-unavailable i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        display: block;
+        opacity: 0.4;
+        animation: float 3s ease infinite;
+    }
+    .wr-ai-unavailable p {
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    .wr-ai-unavailable .wr-ai-sub {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-top: 0.4rem;
+        opacity: 0.7;
+    }
+
+    /* ============================================
+       Section Headers
+       ============================================ */
+    .wr-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 2.5rem 0 1rem;
+    }
+    .wr-section-header h2 {
+        font-size: 1.3rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .wr-section-header .wr-section-icon {
+        font-size: 1rem;
+    }
+    .wr-section-header .wr-section-icon.fire { color: var(--accent-orange); }
+    .wr-section-header .wr-section-icon.rocket { color: var(--accent-green); }
+    .wr-section-header .wr-section-icon.trending { color: var(--accent-red); }
+    .wr-section-header .wr-section-icon.chart { color: var(--accent-purple); }
+
+    /* ============================================
+       Top 10 News of the Week
+       ============================================ */
+    .wr-news-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+    }
+    .wr-news-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.2rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        transition: var(--transition);
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        overflow: hidden;
+    }
+    .wr-news-card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 0 20px rgba(34, 211, 238, 0.12),
+            0 0 40px rgba(34, 211, 238, 0.06);
+        border-color: rgba(34, 211, 238, 0.2);
+        color: inherit;
+    }
+    .wr-news-rank {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 900;
+        color: white;
+        flex-shrink: 0;
+    }
+    .wr-news-rank.top3 {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        box-shadow: 0 2px 10px rgba(251, 191, 36, 0.3);
+    }
+    .wr-news-body {
+        flex: 1;
+        min-width: 0;
+    }
+    .wr-news-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 5px;
+        flex-wrap: wrap;
+    }
+    .wr-news-source {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .wr-news-date {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+    }
+    .wr-news-views {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    .wr-news-sentiment {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.63rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .wr-news-sentiment.bullish {
+        background: rgba(52, 211, 153, 0.1);
+        color: var(--accent-green);
+    }
+    .wr-news-sentiment.bearish {
+        background: rgba(248, 113, 113, 0.1);
+        color: var(--accent-red);
+    }
+    .wr-news-sentiment.neutral {
+        background: rgba(100, 116, 139, 0.1);
+        color: var(--text-muted);
+    }
+    .wr-news-title {
+        font-weight: 700;
+        font-size: 0.92rem;
+        line-height: 1.4;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .wr-news-summary {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .wr-news-img {
+        width: 80px;
+        height: 64px;
+        border-radius: var(--radius-md);
+        object-fit: cover;
+        flex-shrink: 0;
+        background: var(--bg-glass);
+    }
+    .wr-news-img-placeholder {
+        width: 80px;
+        height: 64px;
+        border-radius: var(--radius-md);
+        background: var(--gradient-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    /* ============================================
+       Gainers & Losers Section
+       ============================================ */
+    .wr-coins-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .wr-coins-column {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        transition: var(--transition);
+    }
+    .wr-coins-column:hover {
+        border-color: var(--border-glow);
+        box-shadow: var(--shadow-glow);
+    }
+    .wr-coins-column-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 1.2rem 1.4rem;
+        border-bottom: 1px solid var(--border-glass);
+    }
+    .wr-coins-column-header.gainers {
+        background: linear-gradient(135deg, rgba(52, 211, 153, 0.06), rgba(52, 211, 153, 0.02));
+    }
+    .wr-coins-column-header.losers {
+        background: linear-gradient(135deg, rgba(248, 113, 113, 0.06), rgba(248, 113, 113, 0.02));
+    }
+    .wr-coins-column-header h3 {
+        font-size: 1rem;
+        font-weight: 800;
+    }
+    .wr-coins-column-header.gainers h3 { color: var(--accent-green); }
+    .wr-coins-column-header.losers h3 { color: var(--accent-red); }
+    .wr-coins-column-header i {
+        font-size: 1rem;
+    }
+    .wr-coins-column-header.gainers i { color: var(--accent-green); }
+    .wr-coins-column-header.losers i { color: var(--accent-red); }
+
+    .wr-coin-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.9rem 1.4rem;
+        border-bottom: 1px solid var(--border-glass);
+        transition: var(--transition);
+    }
+    .wr-coin-row:last-child {
+        border-bottom: none;
+    }
+    .wr-coin-row:hover {
+        background: var(--bg-glass-hover);
+    }
+    .wr-coin-rank {
+        width: 24px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-align: center;
+        flex-shrink: 0;
+    }
+    .wr-coin-image {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: var(--bg-glass);
+    }
+    .wr-coin-image-placeholder {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--gradient-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--text-muted);
+        font-size: 0.65rem;
+        font-weight: 700;
+    }
+    .wr-coin-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .wr-coin-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .wr-coin-symbol {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .wr-coin-change {
+        font-size: 0.88rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        text-align: right;
+        min-width: 80px;
+    }
+    .wr-coin-change.positive { color: var(--accent-green); }
+    .wr-coin-change.negative { color: var(--accent-red); }
+    .wr-coin-mcap {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        text-align: right;
+        min-width: 70px;
+        flex-shrink: 0;
+    }
+    .wr-coins-empty {
+        padding: 2rem 1.4rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+    .wr-coins-empty i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+        opacity: 0.4;
+    }
+
+    /* ============================================
+       Sentiment Breakdown Section
+       ============================================ */
+    .wr-sentiment-section {
+        margin-bottom: 2rem;
+    }
+    .wr-sentiment-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: 1.8rem 2rem;
+        transition: var(--transition);
+    }
+    .wr-sentiment-card:hover {
+        border-color: var(--border-glow);
+        box-shadow: var(--shadow-glow);
+    }
+    .wr-sentiment-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .wr-sentiment-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .wr-sentiment-row-label {
+        width: 80px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .wr-sentiment-row-label i {
+        font-size: 0.75rem;
+    }
+    .wr-sentiment-row-label.bullish { color: var(--accent-green); }
+    .wr-sentiment-row-label.bearish { color: var(--accent-red); }
+    .wr-sentiment-row-label.neutral { color: var(--text-muted); }
+
+    .wr-sentiment-bar-track {
+        flex: 1;
+        height: 12px;
+        background: var(--bg-glass);
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+    }
+    .wr-sentiment-bar-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    .wr-sentiment-bar-fill.bullish {
+        background: linear-gradient(90deg, rgba(52, 211, 153, 0.4), var(--accent-green));
+    }
+    .wr-sentiment-bar-fill.bearish {
+        background: linear-gradient(90deg, rgba(248, 113, 113, 0.4), var(--accent-red));
+    }
+    .wr-sentiment-bar-fill.neutral {
+        background: linear-gradient(90deg, rgba(100, 116, 139, 0.4), var(--text-muted));
+    }
+    .wr-sentiment-row-stats {
+        width: 120px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .wr-sentiment-count {
+        font-size: 0.88rem;
+        font-weight: 800;
+    }
+    .wr-sentiment-count.bullish { color: var(--accent-green); }
+    .wr-sentiment-count.bearish { color: var(--accent-red); }
+    .wr-sentiment-count.neutral { color: var(--text-muted); }
+    .wr-sentiment-pct {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    /* ============================================
+       CTA Section
+       ============================================ */
+    .wr-cta-section {
+        margin-bottom: 2rem;
+    }
+    .wr-cta-card {
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(59, 130, 246, 0.08), rgba(167, 139, 250, 0.08));
+        border: 1px solid rgba(34, 211, 238, 0.15);
+        border-radius: var(--radius-xl);
+        padding: 2.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .wr-cta-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        background-size: 200% 100%;
+        animation: borderGlow 4s ease infinite;
+    }
+    .wr-cta-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #0088cc, #00bbff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.4rem;
+        margin: 0 auto 1rem;
+        box-shadow: 0 4px 20px rgba(0, 136, 204, 0.3);
+    }
+    .wr-cta-title {
+        font-size: 1.4rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+    }
+    .wr-cta-desc {
+        color: var(--text-secondary);
+        font-size: 0.92rem;
+        margin-bottom: 1.5rem;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .wr-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 28px;
+        background: linear-gradient(135deg, #0088cc, #00bbff);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        box-shadow: 0 4px 16px rgba(0, 136, 204, 0.3);
+    }
+    .wr-cta-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 136, 204, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* ============================================
+       Empty State
+       ============================================ */
+    .wr-empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-muted);
+    }
+    .wr-empty-state i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: block;
+        opacity: 0.4;
+    }
+    .wr-empty-state p {
+        font-size: 0.9rem;
+    }
+
+    /* ============================================
+       Responsive
+       ============================================ */
+    @media (max-width: 1024px) {
+        .wr-stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    @media (max-width: 768px) {
+        .wr-page-hero h1 {
+            font-size: 1.5rem;
+        }
+        .wr-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+        .wr-stat-value {
+            font-size: 1.15rem;
+        }
+        .wr-coins-grid {
+            grid-template-columns: 1fr;
+        }
+        .wr-ai-card {
+            padding: 1.5rem;
+        }
+        .wr-news-card {
+            flex-wrap: wrap;
+        }
+        .wr-news-img,
+        .wr-news-img-placeholder {
+            display: none;
+        }
+        .wr-cta-card {
+            padding: 2rem 1.5rem;
+        }
+        .wr-sentiment-card {
+            padding: 1.5rem;
+        }
+        .wr-sentiment-row-stats {
+            width: 90px;
+        }
+        .wr-sentiment-row-label {
+            width: 65px;
+        }
+    }
+    @media (max-width: 480px) {
+        .wr-stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .wr-page-hero h1 {
+            font-size: 1.3rem;
+        }
+        .wr-coin-change {
+            min-width: 65px;
+            font-size: 0.8rem;
+        }
+        .wr-coin-mcap {
+            min-width: 55px;
+        }
+        .wr-sentiment-row {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .wr-sentiment-row-label {
+            width: auto;
+        }
+        .wr-sentiment-row-stats {
+            width: auto;
+        }
+        .wr-sentiment-bar-track {
+            width: 100%;
+            order: 3;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ==========================================
+     1. Hero Section
+     ========================================== -->
+<div class="wr-page-hero animate-in">
+    <h1>
+        <span class="wr-hero-icon"><i class="fas fa-chart-bar"></i></span>
+        Weekly Crypto Report
+    </h1>
+    <p class="wr-hero-subtitle"><i class="fas fa-sparkles" style="color: var(--accent-cyan); margin-right: 4px;"></i> AI-powered weekly summary of the crypto market</p>
+    <div class="wr-week-badge">
+        <i class="far fa-calendar-alt"></i>
+        {% if now_utc %}
+        {{ now_utc.strftime('%b %d') }} - {{ (now_utc + timedelta(days=7)).strftime('%b %d, %Y') }}
+        {% else %}
+        Weekly Report
+        {% endif %}
+    </div>
+</div>
+
+<!-- ==========================================
+     2. Market Overview Stats Row (6 cards)
+     ========================================== -->
+<div class="wr-stats-grid animate-in" style="animation-delay: 0.05s">
+
+    <!-- Total Market Cap -->
+    <div class="wr-stat-card cyan">
+        <div class="wr-stat-icon cyan"><i class="fas fa-globe"></i></div>
+        <div class="wr-stat-value">
+            {% if global_data and global_data.total_market_cap_usd %}
+                ${{ "{:,.1f}T".format(global_data.total_market_cap_usd / 1e12) if global_data.total_market_cap_usd >= 1e12 else ("${:,.1f}B".format(global_data.total_market_cap_usd / 1e9) if global_data.total_market_cap_usd >= 1e9 else "${:,.1f}M".format(global_data.total_market_cap_usd / 1e6)) }}
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <div class="wr-stat-label">Total Market Cap</div>
+    </div>
+
+    <!-- 24h Change -->
+    {% set mc_24h_change = global_data.get('market_cap_change_24h') if global_data else None %}
+    <div class="wr-stat-card {{ 'green' if mc_24h_change is not none and mc_24h_change >= 0 else 'red' }}">
+        <div class="wr-stat-icon {{ 'green' if mc_24h_change is not none and mc_24h_change >= 0 else 'red' }}">
+            <i class="fas {{ 'fa-arrow-up' if mc_24h_change is not none and mc_24h_change >= 0 else 'fa-arrow-down' }}"></i>
+        </div>
+        <div class="wr-stat-value" style="color: {{ 'var(--accent-green)' if mc_24h_change is not none and mc_24h_change >= 0 else 'var(--accent-red)' }};">
+            {% if mc_24h_change is not none %}
+                {{ "%.1f" | format(mc_24h_change) }}%
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <div class="wr-stat-label">24h Change</div>
+    </div>
+
+    <!-- BTC Dominance -->
+    <div class="wr-stat-card orange">
+        <div class="wr-stat-icon orange"><i class="fab fa-bitcoin"></i></div>
+        <div class="wr-stat-value">
+            {% if global_data and global_data.btc_dominance is not none %}
+                {{ "%.1f" | format(global_data.btc_dominance) }}%
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <div class="wr-stat-label">BTC Dominance</div>
+    </div>
+
+    <!-- ETH Dominance -->
+    <div class="wr-stat-card purple">
+        <div class="wr-stat-icon purple"><i class="fab fa-ethereum"></i></div>
+        <div class="wr-stat-value">
+            {% if global_data and global_data.eth_dominance is not none %}
+                {{ "%.1f" | format(global_data.eth_dominance) }}%
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <div class="wr-stat-label">ETH Dominance</div>
+    </div>
+
+    <!-- Fear & Greed Index -->
+    <div class="wr-stat-card yellow">
+        {% set fg_value = fear_greed.value if fear_greed and fear_greed.value is not none else 50 %}
+        {% set fg_class = fear_greed.classification if fear_greed and fear_greed.classification else 'Neutral' %}
+        <div class="wr-fg-gauge" style="color: {{ 'var(--accent-red)' if fg_value <= 25 else ('var(--accent-orange)' if fg_value <= 45 else ('var(--accent-yellow)' if fg_value <= 55 else ('var(--accent-green)' if fg_value <= 75 else 'var(--accent-green)'))) }};">
+            {{ fg_value }}
+        </div>
+        <div class="wr-stat-label">Fear & Greed</div>
+        <div class="wr-fg-classification" style="color: {{ 'var(--accent-red)' if fg_value <= 25 else ('var(--accent-orange)' if fg_value <= 45 else ('var(--accent-yellow)' if fg_value <= 55 else ('var(--accent-green)' if fg_value <= 75 else 'var(--accent-green)'))) }};">
+            {{ fg_class }}
+        </div>
+    </div>
+
+    <!-- Total Articles Analyzed -->
+    <div class="wr-stat-card cyan">
+        <div class="wr-stat-icon cyan"><i class="fas fa-newspaper"></i></div>
+        <div class="wr-stat-value">
+            {{ stats.total_articles if stats and stats.total_articles else 0 }}
+        </div>
+        <div class="wr-stat-label">Articles Analyzed</div>
+        {% if stats and stats.total_sources %}
+        <div class="wr-stat-sub" style="color: var(--text-muted);">{{ stats.total_sources }} sources</div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- ==========================================
+     3. AI Weekly Summary Section
+     ========================================== -->
+<div class="wr-ai-card animate-in" style="animation-delay: 0.1s">
+    <div class="wr-ai-card-header">
+        <div class="wr-ai-icon"><i class="fas fa-robot"></i></div>
+        <div style="flex: 1;">
+            <div class="wr-ai-title">AI Weekly Summary</div>
+        </div>
+        <span class="wr-ai-badge"><i class="fas fa-wand-magic-sparkles"></i> Powered by AI</span>
+    </div>
+    {% if weekly_summary %}
+    <div class="wr-ai-text">{{ weekly_summary | safe }}</div>
+    {% else %}
+    <div class="wr-ai-unavailable">
+        <i class="fas fa-hourglass-half"></i>
+        <p>AI summary is being generated. Check back soon.</p>
+        <p class="wr-ai-sub">Our AI is analyzing the week's crypto data to craft your comprehensive report.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ==========================================
+     4. Top 10 News of the Week Section
+     ========================================== -->
+{% if top_news and top_news | length > 0 %}
+<div class="animate-in" style="animation-delay: 0.15s">
+    <div class="wr-section-header">
+        <h2><i class="fas fa-fire wr-section-icon fire"></i> Top {{ top_news | length if top_news | length <= 10 else 10 }} News of the Week</h2>
+    </div>
+    <div class="wr-news-list">
+        {% for article in top_news[:10] %}
+        <a href="/news/{{ article.id }}" class="wr-news-card">
+            <span class="wr-news-rank {{ 'top3' if loop.index <= 3 }}">{{ loop.index }}</span>
+            <div class="wr-news-body">
+                <div class="wr-news-meta">
+                    {% if article.source %}
+                    <span class="wr-news-source">{{ article.source }}</span>
+                    {% endif %}
+                    {% if article.category %}
+                    <span class="wr-news-sentiment neutral" style="background: rgba(34, 211, 238, 0.08); color: var(--accent-cyan);">
+                        <i class="fas fa-tag"></i> {{ article.category }}
+                    </span>
+                    {% endif %}
+                    {% if article.sentiment_label %}
+                    <span class="wr-news-sentiment {{ article.sentiment_label | lower }}">
+                        {% if article.sentiment_label | lower == 'bullish' %}
+                        <i class="fas fa-arrow-up"></i>
+                        {% elif article.sentiment_label | lower == 'bearish' %}
+                        <i class="fas fa-arrow-down"></i>
+                        {% else %}
+                        <i class="fas fa-minus"></i>
+                        {% endif %}
+                        {{ article.sentiment_label }}
+                    </span>
+                    {% endif %}
+                    {% if article.published_at %}
+                    <span class="wr-news-date"><i class="far fa-clock" style="margin-right: 3px;"></i> {% if article.published_at is string %}{{ article.published_at[:10] }}{% elif article.published_at %}{{ article.published_at.strftime('%b %d') }}{% endif %}</span>
+                    {% endif %}
+                    {% if article.views is not none %}
+                    <span class="wr-news-views"><i class="far fa-eye"></i> {{ "{:,}".format(article.views) if article.views > 999 else article.views }}</span>
+                    {% endif %}
+                </div>
+                <div class="wr-news-title">{{ article.title }}</div>
+                {% if article.summary %}
+                <div class="wr-news-summary">{{ article.summary }}</div>
+                {% endif %}
+            </div>
+            {% if article.image_url %}
+            <img src="{{ article.image_url }}" alt="" class="wr-news-img" loading="lazy" onerror="this.style.display='none'">
+            {% else %}
+            <div class="wr-news-img-placeholder"><i class="far fa-image"></i></div>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="wr-empty-state animate-in" style="animation-delay: 0.15s">
+    <i class="fas fa-newspaper"></i>
+    <p>No top news available for this week.</p>
+</div>
+{% endif %}
+
+<!-- ==========================================
+     5. Best & Worst Performing Coins Section
+     ========================================== -->
+<div class="animate-in" style="animation-delay: 0.2s">
+    <div class="wr-section-header">
+        <h2><i class="fas fa-coins wr-section-icon" style="color: var(--accent-yellow);"></i> Best & Worst Performing Coins</h2>
+    </div>
+    <div class="wr-coins-grid">
+
+        <!-- Left Column - Top Gainers -->
+        <div class="wr-coins-column">
+            <div class="wr-coins-column-header gainers">
+                <i class="fas fa-rocket"></i>
+                <h3>Top Gainers (7d)</h3>
+            </div>
+            {% if top_gainers and top_gainers | length > 0 %}
+                {% for coin in top_gainers %}
+                <div class="wr-coin-row">
+                    <span class="wr-coin-rank">#{{ coin.rank if coin.rank else loop.index }}</span>
+                    {% if coin.image %}
+                    <img src="{{ coin.image }}" alt="{{ coin.name }}" class="wr-coin-image" loading="lazy" onerror="this.outerHTML='<div class=\\'wr-coin-image-placeholder\\'>{{ (coin.symbol | upper)[:2] if coin.symbol else '??' }}</div>'">
+                    {% else %}
+                    <div class="wr-coin-image-placeholder">{{ (coin.symbol | upper)[:2] if coin.symbol else '??' }}</div>
+                    {% endif %}
+                    <div class="wr-coin-info">
+                        <div class="wr-coin-name">{{ coin.name }}</div>
+                        <div class="wr-coin-symbol">{{ coin.symbol | upper if coin.symbol else '' }}</div>
+                    </div>
+                    <div class="wr-coin-change positive">
+                        <i class="fas fa-caret-up" style="margin-right: 2px;"></i>
+                        {% if coin.change_7d is not none %}
+                        {{ "%.1f" | format(coin.change_7d) }}%
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                    <div class="wr-coin-mcap">
+                        {% if coin.market_cap %}
+                            {% if coin.market_cap >= 1e12 %}${{ "%.1f" | format(coin.market_cap / 1e12) }}T
+                            {% elif coin.market_cap >= 1e9 %}${{ "%.1f" | format(coin.market_cap / 1e9) }}B
+                            {% elif coin.market_cap >= 1e6 %}${{ "%.1f" | format(coin.market_cap / 1e6) }}M
+                            {% else %}${{ "{:,}".format(coin.market_cap | round(0)) }}
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="wr-coins-empty">
+                    <i class="fas fa-rocket"></i>
+                    <p>No data available</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - Top Losers -->
+        <div class="wr-coins-column">
+            <div class="wr-coins-column-header losers">
+                <i class="fas fa-arrow-trend-down"></i>
+                <h3>Top Losers (7d)</h3>
+            </div>
+            {% if top_losers and top_losers | length > 0 %}
+                {% for coin in top_losers %}
+                <div class="wr-coin-row">
+                    <span class="wr-coin-rank">#{{ coin.rank if coin.rank else loop.index }}</span>
+                    {% if coin.image %}
+                    <img src="{{ coin.image }}" alt="{{ coin.name }}" class="wr-coin-image" loading="lazy" onerror="this.outerHTML='<div class=\\'wr-coin-image-placeholder\\'>{{ (coin.symbol | upper)[:2] if coin.symbol else '??' }}</div>'">
+                    {% else %}
+                    <div class="wr-coin-image-placeholder">{{ (coin.symbol | upper)[:2] if coin.symbol else '??' }}</div>
+                    {% endif %}
+                    <div class="wr-coin-info">
+                        <div class="wr-coin-name">{{ coin.name }}</div>
+                        <div class="wr-coin-symbol">{{ coin.symbol | upper if coin.symbol else '' }}</div>
+                    </div>
+                    <div class="wr-coin-change negative">
+                        <i class="fas fa-caret-down" style="margin-right: 2px;"></i>
+                        {% if coin.change_7d is not none %}
+                        {{ "%.1f" | format(coin.change_7d) }}%
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                    <div class="wr-coin-mcap">
+                        {% if coin.market_cap %}
+                            {% if coin.market_cap >= 1e12 %}${{ "%.1f" | format(coin.market_cap / 1e12) }}T
+                            {% elif coin.market_cap >= 1e9 %}${{ "%.1f" | format(coin.market_cap / 1e9) }}B
+                            {% elif coin.market_cap >= 1e6 %}${{ "%.1f" | format(coin.market_cap / 1e6) }}M
+                            {% else %}${{ "{:,}".format(coin.market_cap | round(0)) }}
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="wr-coins-empty">
+                    <i class="fas fa-arrow-trend-down"></i>
+                    <p>No data available</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<!-- ==========================================
+     6. Sentiment Breakdown Section
+     ========================================== -->
+{% if top_news and top_news | length > 0 %}
+{% set bullish_count = top_news | selectattr('sentiment_label', 'equalto', 'Bullish') | list | length %}
+{% set bullish_lower = top_news | selectattr('sentiment_label', 'equalto', 'bullish') | list | length %}
+{% set bearish_count = top_news | selectattr('sentiment_label', 'equalto', 'Bearish') | list | length %}
+{% set bearish_lower = top_news | selectattr('sentiment_label', 'equalto', 'bearish') | list | length %}
+{% set neutral_count = top_news | selectattr('sentiment_label', 'equalto', 'Neutral') | list | length %}
+{% set neutral_lower = top_news | selectattr('sentiment_label', 'equalto', 'neutral') | list | length %}
+{% set total_bullish = bullish_count + bullish_lower %}
+{% set total_bearish = bearish_count + bearish_lower %}
+{% set total_neutral = neutral_count + neutral_lower %}
+{% set total_sentiment = total_bullish + total_bearish + total_neutral %}
+{% if total_sentiment > 0 %}
+<div class="wr-sentiment-section animate-in" style="animation-delay: 0.25s">
+    <div class="wr-section-header">
+        <h2><i class="fas fa-chart-pie wr-section-icon chart"></i> Sentiment Breakdown</h2>
+    </div>
+    <div class="wr-sentiment-card">
+        <div class="wr-sentiment-bars">
+            <!-- Bullish -->
+            <div class="wr-sentiment-row">
+                <div class="wr-sentiment-row-label bullish">
+                    <i class="fas fa-arrow-up"></i> Bullish
+                </div>
+                <div class="wr-sentiment-bar-track">
+                    <div class="wr-sentiment-bar-fill bullish" style="width: {{ (total_bullish / total_sentiment * 100) | round(1) }}%;"></div>
+                </div>
+                <div class="wr-sentiment-row-stats">
+                    <div class="wr-sentiment-count bullish">{{ total_bullish }}</div>
+                    <div class="wr-sentiment-pct">{{ (total_bullish / total_sentiment * 100) | round(0) }}%</div>
+                </div>
+            </div>
+            <!-- Bearish -->
+            <div class="wr-sentiment-row">
+                <div class="wr-sentiment-row-label bearish">
+                    <i class="fas fa-arrow-down"></i> Bearish
+                </div>
+                <div class="wr-sentiment-bar-track">
+                    <div class="wr-sentiment-bar-fill bearish" style="width: {{ (total_bearish / total_sentiment * 100) | round(1) }}%;"></div>
+                </div>
+                <div class="wr-sentiment-row-stats">
+                    <div class="wr-sentiment-count bearish">{{ total_bearish }}</div>
+                    <div class="wr-sentiment-pct">{{ (total_bearish / total_sentiment * 100) | round(0) }}%</div>
+                </div>
+            </div>
+            <!-- Neutral -->
+            <div class="wr-sentiment-row">
+                <div class="wr-sentiment-row-label neutral">
+                    <i class="fas fa-minus"></i> Neutral
+                </div>
+                <div class="wr-sentiment-bar-track">
+                    <div class="wr-sentiment-bar-fill neutral" style="width: {{ (total_neutral / total_sentiment * 100) | round(1) }}%;"></div>
+                </div>
+                <div class="wr-sentiment-row-stats">
+                    <div class="wr-sentiment-count neutral">{{ total_neutral }}</div>
+                    <div class="wr-sentiment-pct">{{ (total_neutral / total_sentiment * 100) | round(0) }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% else %}
+<div class="wr-sentiment-section animate-in" style="animation-delay: 0.25s">
+    <div class="wr-section-header">
+        <h2><i class="fas fa-chart-pie wr-section-icon chart"></i> Sentiment Breakdown</h2>
+    </div>
+    <div class="wr-empty-state">
+        <i class="fas fa-chart-pie"></i>
+        <p>No sentiment data available yet.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- ==========================================
+     7. CTA Section — Subscribe to Telegram
+     ========================================== -->
+<div class="wr-cta-section animate-in" style="animation-delay: 0.3s">
+    <div class="wr-cta-card">
+        <div class="wr-cta-icon">
+            <i class="fab fa-telegram"></i>
+        </div>
+        <h2 class="wr-cta-title">Never Miss a Weekly Report</h2>
+        <p class="wr-cta-desc">Get weekly crypto reports delivered straight to your Telegram. Stay ahead of the market with AI-powered insights.</p>
+        <a href="https://t.me/cryptositnews" class="wr-cta-btn" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-telegram"></i>
+            Subscribe on Telegram
+        </a>
+    </div>
+</div>
+
+{% endblock %}

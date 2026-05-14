@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Crypto Converter - CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .converter-hero {
+        text-align: center; margin-bottom: 2rem;
+    }
+    .converter-hero h1 {
+        font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .converter-hero p { color: var(--text-secondary); font-size: 1rem; }
+
+    .converter-main {
+        max-width: 640px; margin: 0 auto 2rem;
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl); padding: 2rem;
+        position: relative; overflow: hidden;
+    }
+    .converter-main::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: var(--gradient-primary);
+    }
+    .converter-live-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 12px; border-radius: 20px;
+        background: rgba(52, 211, 153, 0.08); border: 1px solid rgba(52, 211, 153, 0.15);
+        font-size: 0.75rem; font-weight: 600; color: var(--accent-green);
+        margin-bottom: 1.5rem;
+    }
+    .live-dot-sm {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--accent-green); animation: livePulse 2s ease infinite;
+    }
+
+    .converter-section {
+        margin-bottom: 1.5rem;
+    }
+    .converter-section label {
+        display: block; font-size: 0.78rem; font-weight: 700;
+        color: var(--text-muted); text-transform: uppercase;
+        letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .converter-row {
+        display: flex; gap: 10px; align-items: center;
+    }
+    .converter-input {
+        flex: 1; padding: 16px; min-width: 0;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); color: var(--text-primary);
+        font-size: 1.4rem; font-weight: 800; font-family: inherit;
+        outline: none; transition: var(--transition);
+    }
+    .converter-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.1); }
+    .converter-input::placeholder { color: var(--text-muted); font-weight: 400; }
+    .converter-select {
+        padding: 16px 14px; min-width: 130px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); color: var(--text-primary);
+        font-size: 0.9rem; font-weight: 600; font-family: inherit;
+        outline: none; cursor: pointer; transition: var(--transition);
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 12px center;
+        padding-right: 32px;
+    }
+    .converter-select:focus { border-color: var(--accent-cyan); }
+
+    .swap-btn-wrapper { display: flex; justify-content: center; margin: -0.5rem 0; }
+    .swap-btn {
+        width: 48px; height: 48px; border-radius: 50%;
+        background: var(--gradient-primary); color: white; border: none;
+        font-size: 1.1rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: var(--transition);
+        box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3);
+        z-index: 2;
+    }
+    .swap-btn:hover { transform: rotate(180deg) scale(1.1); }
+
+    .converter-result-box {
+        background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(167,139,250,0.06));
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.5rem;
+        text-align: center;
+    }
+    .converter-result-amount {
+        font-size: 2.5rem; font-weight: 900; line-height: 1.2;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 4px;
+    }
+    .converter-result-detail { color: var(--text-secondary); font-size: 0.88rem; }
+
+    /* Popular Conversions */
+    .popular-conversions {
+        max-width: 640px; margin: 0 auto 2rem;
+    }
+    .popular-conversions h3 {
+        font-size: 1rem; font-weight: 700; margin-bottom: 1rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .popular-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.8rem;
+    }
+    .popular-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); cursor: pointer; transition: var(--transition);
+        text-decoration: none;
+    }
+    .popular-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); border-color: var(--border-glow); }
+    .popular-item-icon {
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; flex-shrink: 0;
+    }
+    .popular-item-pair { font-weight: 700; font-size: 0.85rem; color: var(--text-primary); }
+    .popular-item-label { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* Market Overview */
+    .market-overview {
+        max-width: 100%; margin: 0 auto;
+    }
+    .market-overview h3 {
+        font-size: 1rem; font-weight: 700; margin-bottom: 1rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .mini-coins-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.8rem;
+    }
+    .mini-coin-card {
+        display: flex; align-items: center; gap: 10px;
+        padding: 0.8rem 1rem; background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); transition: var(--transition); cursor: pointer;
+    }
+    .mini-coin-card:hover { transform: translateY(-2px); border-color: var(--border-glow); }
+    .mini-coin-card img { width: 28px; height: 28px; border-radius: 50%; }
+    .mini-coin-name { font-weight: 600; font-size: 0.82rem; }
+    .mini-coin-sym { font-size: 0.7rem; color: var(--text-muted); }
+    .mini-coin-price { margin-left: auto; font-weight: 700; font-size: 0.85rem; }
+
+    @media (max-width: 640px) {
+        .converter-hero h1 { font-size: 1.5rem; }
+        .converter-main { padding: 1.5rem; }
+        .converter-input { font-size: 1.1rem; padding: 14px; }
+        .converter-result-amount { font-size: 1.8rem; }
+        .converter-row { flex-direction: column; }
+        .converter-select { min-width: 100%; }
+        .popular-grid { grid-template-columns: 1fr; }
+        .mini-coins-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="converter-hero animate-in">
+    <h1><i class="fas fa-exchange-alt" style="color: var(--accent-cyan);"></i> Crypto Converter</h1>
+    <p>Convert between 50+ cryptocurrencies with live market prices</p>
+</div>
+
+<div class="converter-main animate-in" style="animation-delay: 0.1s">
+    <div class="converter-live-badge">
+        <span class="live-dot-sm"></span>
+        Live Prices &bull; Updated every 5 minutes
+    </div>
+
+    <div class="converter-section">
+        <label>Amount</label>
+        <div class="converter-row">
+            <input type="number" class="converter-input" id="cvFromAmount" value="1" min="0" step="any" oninput="doConvert()" placeholder="Enter amount">
+            <select class="converter-select" id="cvFromCoin" onchange="doConvert()">
+                <option value="bitcoin">Bitcoin (BTC)</option>
+                <option value="ethereum">Ethereum (ETH)</option>
+                <option value="tether" selected>Tether (USDT)</option>
+                <option value="binancecoin">BNB (BNB)</option>
+                <option value="solana">Solana (SOL)</option>
+                <option value="ripple">XRP (XRP)</option>
+                <option value="cardano">Cardano (ADA)</option>
+                <option value="dogecoin">Dogecoin (DOGE)</option>
+                <option value="avalanche-2">Avalanche (AVAX)</option>
+                <option value="polkadot">Polkadot (DOT)</option>
+                <option value="chainlink">Chainlink (LINK)</option>
+                <option value="polygon-pos">Polygon (MATIC)</option>
+                <option value="litecoin">Litecoin (LTC)</option>
+                <option value="uniswap">Uniswap (UNI)</option>
+                <option value="cosmos">Cosmos (ATOM)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="swap-btn-wrapper">
+        <button class="swap-btn" onclick="swapCv()" title="Swap"><i class="fas fa-arrows-alt-v"></i></button>
+    </div>
+
+    <div class="converter-section">
+        <label>To</label>
+        <div class="converter-row">
+            <input type="text" class="converter-input" id="cvToAmount" readonly placeholder="Result" style="opacity: 0.9;">
+            <select class="converter-select" id="cvToCoin" onchange="doConvert()">
+                <option value="bitcoin" selected>Bitcoin (BTC)</option>
+                <option value="ethereum">Ethereum (ETH)</option>
+                <option value="tether">Tether (USDT)</option>
+                <option value="binancecoin">BNB (BNB)</option>
+                <option value="solana">Solana (SOL)</option>
+                <option value="ripple">XRP (XRP)</option>
+                <option value="cardano">Cardano (ADA)</option>
+                <option value="dogecoin">Dogecoin (DOGE)</option>
+                <option value="avalanche-2">Avalanche (AVAX)</option>
+                <option value="polkadot">Polkadot (DOT)</option>
+                <option value="chainlink">Chainlink (LINK)</option>
+                <option value="polygon-pos">Polygon (MATIC)</option>
+                <option value="litecoin">Litecoin (LTC)</option>
+                <option value="uniswap">Uniswap (UNI)</option>
+                <option value="cosmos">Cosmos (ATOM)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="converter-result-box">
+        <div class="converter-result-amount" id="cvResultAmount">Loading...</div>
+        <div class="converter-result-detail" id="cvResultDetail">Fetching live prices...</div>
+    </div>
+</div>
+
+<!-- Popular Conversions -->
+<div class="popular-conversions animate-in" style="animation-delay: 0.2s">
+    <h3><i class="fas fa-fire" style="color: var(--accent-orange);"></i> Popular Conversions</h3>
+    <div class="popular-grid">
+        <div class="popular-item" onclick="quickConvert('tether','bitcoin',100)">
+            <div class="popular-item-icon" style="background: rgba(251,191,36,0.12); color: #fbbf24;"><i class="fab fa-bitcoin"></i></div>
+            <div><div class="popular-item-pair">100 USDT → BTC</div><div class="popular-item-label">Dollar to Bitcoin</div></div>
+        </div>
+        <div class="popular-item" onclick="quickConvert('bitcoin','tether',1)">
+            <div class="popular-item-icon" style="background: rgba(34,211,238,0.12); color: var(--accent-cyan);"><i class="fas fa-dollar-sign"></i></div>
+            <div><div class="popular-item-pair">1 BTC → USDT</div><div class="popular-item-label">Bitcoin to Dollar</div></div>
+        </div>
+        <div class="popular-item" onclick="quickConvert('tether','ethereum',1000)">
+            <div class="popular-item-icon" style="background: rgba(98,126,234,0.12); color: #627eea;"><i class="fab fa-ethereum"></i></div>
+            <div><div class="popular-item-pair">1,000 USDT → ETH</div><div class="popular-item-label">Dollar to Ethereum</div></div>
+        </div>
+        <div class="popular-item" onclick="quickConvert('tether','solana',100)">
+            <div class="popular-item-icon" style="background: rgba(167,139,250,0.12); color: var(--accent-purple);"><i class="fas fa-sun"></i></div>
+            <div><div class="popular-item-pair">100 USDT → SOL</div><div class="popular-item-label">Dollar to Solana</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Market Overview -->
+{% if coins %}
+<div class="market-overview animate-in" style="animation-delay: 0.3s">
+    <h3><i class="fas fa-coins" style="color: var(--accent-yellow);"></i> Top Coins</h3>
+    <div class="mini-coins-grid">
+        {% for coin in coins[:15] %}
+        <div class="mini-coin-card" onclick="selectCoin('{{ coin.id }}')">
+            {% if coin.image %}<img src="{{ coin.image }}" alt="{{ coin.symbol }}" loading="lazy" onerror="this.style.display='none'">{% endif %}
+            <div>
+                <div class="mini-coin-name">{{ coin.name }}</div>
+                <div class="mini-coin-sym">{{ coin.symbol }}</div>
+            </div>
+            <div class="mini-coin-price" style="{% if coin.change_24h >= 0 %}color: var(--accent-green);{% else %}color: var(--accent-red);{% endif %}">
+                {{ coin.formatted_price or 'N/A' }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    let prices = {};
+
+    async function loadPrices() {
+        try {
+            const r = await fetch('/api/prices?limit=50');
+            const d = await r.json();
+            if (d.success) {
+                d.data.forEach(c => { prices[c.id] = c.price; });
+            }
+        } catch(e) {}
+    }
+
+    window.doConvert = function() {
+        const amount = parseFloat(document.getElementById('cvFromAmount').value) || 0;
+        const from = document.getElementById('cvFromCoin').value;
+        const to = document.getElementById('cvToCoin').value;
+        const fp = prices[from] || 0;
+        const tp = prices[to] || 0;
+        let result = 0;
+        if (fp && tp) result = (amount * fp) / tp;
+        const toName = document.getElementById('cvToCoin').selectedOptions[0].text;
+        const fromName = document.getElementById('cvFromCoin').selectedOptions[0].text;
+        const formatted = result > 0.0001 ? (result > 1 ? result.toLocaleString(undefined,{maximumFractionDigits:4}) : result.toFixed(8)) : 'N/A';
+        document.getElementById('cvToAmount').value = formatted;
+        document.getElementById('cvResultAmount').textContent = formatted;
+        document.getElementById('cvResultDetail').textContent = `${amount} ${fromName} = ${formatted} ${toName}`;
+    };
+
+    window.swapCv = function() {
+        const f = document.getElementById('cvFromCoin');
+        const t = document.getElementById('cvToCoin');
+        const tmp = f.value; f.value = t.value; t.value = tmp;
+        document.getElementById('cvToCoin').value = t.value;
+        doConvert();
+    };
+
+    window.quickConvert = function(from, to, amount) {
+        document.getElementById('cvFromCoin').value = from;
+        document.getElementById('cvToCoin').value = to;
+        document.getElementById('cvFromAmount').value = amount;
+        doConvert();
+        document.querySelector('.converter-main').scrollIntoView({behavior:'smooth', block:'center'});
+    };
+
+    window.selectCoin = function(coinId) {
+        document.getElementById('cvToCoin').value = coinId;
+        doConvert();
+        document.querySelector('.converter-main').scrollIntoView({behavior:'smooth', block:'center'});
+    };
+
+    loadPrices().then(() => doConvert());
+    setInterval(loadPrices, 300000);
+})();
+</script>
+{% endblock %}

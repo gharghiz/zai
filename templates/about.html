@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}About - CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        text-align: center; padding: 2rem 0 3rem;
+    }
+    .about-hero h1 {
+        font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;
+        letter-spacing: -0.5px;
+    }
+    .about-hero p {
+        color: var(--text-secondary); max-width: 700px; margin: 0 auto;
+        font-size: 1.05rem; line-height: 1.8;
+    }
+
+    /* Tech Stack */
+    .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.2rem; margin: 2rem 0;
+    }
+    .tech-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.5rem;
+        transition: var(--transition);
+    }
+    .tech-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-glow); border-color: var(--border-glow); }
+    .tech-card h4 {
+        display: flex; align-items: center; gap: 8px;
+        margin-bottom: 0.6rem; color: var(--accent-cyan); font-size: 0.95rem;
+    }
+    .tech-card p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
+
+    /* Architecture */
+    .architecture {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl); padding: 2rem; margin: 2rem 0;
+    }
+    .architecture h2 { margin-bottom: 1.2rem; }
+    .arch-flow {
+        display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: center;
+    }
+    .arch-step {
+        padding: 1rem 1.5rem;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); text-align: center; min-width: 110px;
+        transition: var(--transition);
+    }
+    .arch-step:hover { transform: translateY(-3px); border-color: var(--border-glow); }
+    .arch-step i { font-size: 1.5rem; color: var(--accent-cyan); margin-bottom: 6px; }
+    .arch-step .step-label { font-size: 0.8rem; font-weight: 600; }
+    .arch-arrow { color: var(--text-muted); font-size: 1.2rem; }
+
+    /* Data Stats */
+    .data-section { margin: 3rem 0; }
+    .data-section h2 { margin-bottom: 1.5rem; }
+    .data-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    .data-item {
+        text-align: center; padding: 1.5rem 1rem;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md);
+        transition: var(--transition);
+    }
+    .data-item:hover { border-color: var(--border-glow); transform: translateY(-3px); }
+    .data-item .data-value { font-size: 2rem; font-weight: 900; }
+    .data-item .data-label {
+        color: var(--text-muted); font-size: 0.72rem;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin-top: 4px; font-weight: 600;
+    }
+
+    /* Features */
+    .features-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1rem; margin: 2rem 0;
+    }
+    .feature-card {
+        display: flex; gap: 1rem; align-items: flex-start;
+        padding: 1.2rem; background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); transition: var(--transition);
+    }
+    .feature-card:hover { transform: translateY(-3px); border-color: var(--border-glow); box-shadow: var(--shadow-glow); }
+    .feature-card .fi-icon {
+        width: 44px; height: 44px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 12px;
+        background: var(--gradient-card); color: var(--accent-cyan);
+        font-size: 1rem;
+    }
+    .feature-card .fi-content h4 { margin-bottom: 4px; font-size: 0.95rem; }
+    .feature-card .fi-content p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
+
+    @media (max-width: 768px) {
+        .about-hero h1 { font-size: 1.8rem; }
+        .arch-flow { flex-direction: column; }
+        .arch-arrow { transform: rotate(90deg); }
+        .features-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="about-hero animate-in">
+    <h1 class="text-gradient">About CryptositNews</h1>
+    <p>
+        CryptositNews is an AI-powered cryptocurrency news aggregator that monitors 70+ RSS sources in real-time,
+        processes articles with advanced AI for sentiment analysis and summaries, and delivers curated
+        insights directly to our Telegram channel and this web dashboard.
+    </p>
+</section>
+
+<!-- Architecture -->
+<div class="architecture animate-in" style="animation-delay: 0.1s">
+    <h2><i class="fas fa-project-diagram" style="color: var(--accent-cyan);"></i> System Architecture</h2>
+    <div class="arch-flow">
+        <div class="arch-step">
+            <i class="fas fa-rss"></i>
+            <div class="step-label">RSS Feeds</div>
+        </div>
+        <span class="arch-arrow"><i class="fas fa-arrow-right"></i></span>
+        <div class="arch-step">
+            <i class="fas fa-spider"></i>
+            <div class="step-label">Scraper</div>
+        </div>
+        <span class="arch-arrow"><i class="fas fa-arrow-right"></i></span>
+        <div class="arch-step">
+            <i class="fas fa-robot"></i>
+            <div class="step-label">AI Engine</div>
+        </div>
+        <span class="arch-arrow"><i class="fas fa-arrow-right"></i></span>
+        <div class="arch-step">
+            <i class="fas fa-database"></i>
+            <div class="step-label">Database</div>
+        </div>
+        <span class="arch-arrow"><i class="fas fa-arrow-right"></i></span>
+        <div class="arch-step">
+            <a href="https://t.me/CryptositNews" target="_blank" style="color: var(--accent-cyan); text-decoration: none;">
+                <i class="fab fa-telegram" style="font-size: 1.5rem;"></i>
+            </a>
+            <div class="step-label"><a href="https://t.me/CryptositNews" target="_blank" style="color: var(--text-primary); text-decoration: none;">Telegram</a></div>
+        </div>
+        <span class="arch-arrow"><i class="fas fa-arrow-right"></i></span>
+        <div class="arch-step">
+            <i class="fas fa-globe"></i>
+            <div class="step-label">Web App</div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Stats -->
+{% if stats %}
+<div class="data-section animate-in" style="animation-delay: 0.15s">
+    <h2><i class="fas fa-chart-bar" style="color: var(--accent-cyan);"></i> Platform Statistics</h2>
+    <div class="data-grid">
+        <div class="data-item">
+            <div class="data-value text-gradient">{{ stats.total_articles or 0 }}</div>
+            <div class="data-label">Articles</div>
+        </div>
+        <div class="data-item">
+            <div class="data-value text-gradient">{{ stats.total_sources or 0 }}</div>
+            <div class="data-label">Sources</div>
+        </div>
+        <div class="data-item">
+            <div class="data-value text-gradient">{{ stats.ai_processed or 0 }}</div>
+            <div class="data-label">AI Analyzed</div>
+        </div>
+        <div class="data-item">
+            <div class="data-value text-gradient">{{ stats.posted_articles or 0 }}</div>
+            <div class="data-label">Telegram Posts</div>
+        </div>
+        <div class="data-item">
+            <div class="data-value text-gradient">{{ stats.total_categories or 0 }}</div>
+            <div class="data-label">Categories</div>
+        </div>
+        <div class="data-item">
+            <div class="data-value text-gradient">{{ stats.tracked_coins or 0 }}</div>
+            <div class="data-label">Tracked Coins</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tech Stack -->
+<h2 style="margin: 2rem 0 1rem;" class="animate-in" style="animation-delay: 0.2s"><i class="fas fa-code" style="color: var(--accent-cyan);"></i> Tech Stack</h2>
+<div class="tech-grid animate-in" style="animation-delay: 0.2s">
+    <div class="tech-card">
+        <h4><i class="fab fa-python"></i> Python</h4>
+        <p>Backend powered by Python with Flask for the web server and async RSS scraping.</p>
+    </div>
+    <div class="tech-card">
+        <h4><i class="fas fa-brain"></i> GPT-4o-mini</h4>
+        <p>AI engine for article summaries, sentiment analysis, and market insight generation.</p>
+    </div>
+    <div class="tech-card">
+        <h4><i class="fas fa-database"></i> SQLite / PostgreSQL</h4>
+        <p>Dual database support for flexible deployment from development to production.</p>
+    </div>
+    <div class="tech-card">
+        <h4><i class="fab fa-telegram"></i> Telegram Bot API</h4>
+        <p>Automated news delivery with formatted messages, images, and sentiment indicators.</p>
+    </div>
+    <div class="tech-card">
+        <h4><i class="fas fa-server"></i> Gunicorn</h4>
+        <p>Production WSGI server for reliable web application hosting.</p>
+    </div>
+    <div class="tech-card">
+        <h4><i class="fas fa-feather"></i> Feedparser</h4>
+        <p>Robust RSS/Atom feed parsing library supporting 70+ cryptocurrency news sources.</p>
+    </div>
+</div>
+
+<!-- Features -->
+<h2 class="animate-in" style="animation-delay: 0.25s; margin: 2rem 0 1rem;"><i class="fas fa-star" style="color: var(--accent-cyan);"></i> Key Features</h2>
+<div class="features-grid animate-in" style="animation-delay: 0.25s">
+    <div class="feature-card">
+        <div class="fi-icon"><i class="fas fa-rss"></i></div>
+        <div class="fi-content">
+            <h4>Multi-Source Aggregation</h4>
+            <p>Monitors over 70 RSS feeds including CoinDesk, CoinTelegraph, Decrypt, The Block, and Reddit crypto communities for comprehensive coverage.</p>
+        </div>
+    </div>
+    <div class="feature-card">
+        <div class="fi-icon"><i class="fas fa-brain"></i></div>
+        <div class="fi-content">
+            <h4>AI-Powered Analysis</h4>
+            <p>Uses GPT-4o-mini to generate concise summaries, sentiment scores, keyword extraction, and market impact assessments for every article.</p>
+        </div>
+    </div>
+    <div class="feature-card">
+        <div class="fi-icon"><i class="fas fa-bolt"></i></div>
+        <div class="fi-content">
+            <h4>Parallel Scraping</h4>
+            <p>Multi-threaded RSS fetching with configurable worker count, timeout handling, and connection pooling for maximum efficiency.</p>
+        </div>
+    </div>
+    <div class="feature-card">
+        <div class="fi-icon"><i class="fas fa-filter"></i></div>
+        <div class="fi-content">
+            <h4>Smart Content Filtering</h4>
+            <p>Automatic deduplication, keyword-based crypto detection, title similarity matching, and quality scoring to ensure relevant content only.</p>
+        </div>
+    </div>
+    <div class="feature-card">
+        <div class="fi-icon"><i class="fas fa-language"></i></div>
+        <div class="fi-content">
+            <h4>Multi-Language Support</h4>
+            <p>Automatic language detection with support for English and Arabic content, including RTL text rendering for the web dashboard.</p>
+        </div>
+    </div>
+    <div class="feature-card">
+        <div class="fi-icon"><i class="fas fa-shield-alt"></i></div>
+        <div class="fi-content">
+            <h4>Robust Error Handling</h4>
+            <p>Retry logic with exponential backoff for Telegram posting, graceful degradation when AI service is unavailable, and comprehensive logging.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

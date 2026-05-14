@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Page Not Found | CryptositNews{% endblock %}
+{% block og_title %}404 - Page Not Found | CryptositNews{% endblock %}
+{% block og_desc %}The page you're looking for doesn't exist. Head back to CryptositNews for the latest crypto news.{% endblock %}
+{% block twitter_title %}404 - Page Not Found | CryptositNews{% endblock %}
+{% block twitter_desc %}The page you're looking for doesn't exist. Head back to CryptositNews for the latest crypto news.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-page {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+        padding: 2rem 1rem;
+    }
+    .error-container {
+        text-align: center;
+        max-width: 520px;
+        width: 100%;
+        animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        opacity: 0;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .error-illustration {
+        width: 160px;
+        height: 160px;
+        margin: 0 auto 2rem;
+        border-radius: 50%;
+        background: var(--gradient-card);
+        border: 1px solid var(--border-glass);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    .error-illustration .icon-main {
+        font-size: 3.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .error-illustration .icon-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: var(--accent-cyan);
+        border-right-color: var(--accent-purple);
+        animation: spin 4s linear infinite;
+        opacity: 0.4;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .error-code {
+        font-size: 5rem;
+        font-weight: 900;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .error-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+    }
+    .error-message {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+    }
+    .error-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    .error-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.9rem;
+        font-family: inherit;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        border: none;
+    }
+    .error-btn-primary {
+        background: var(--gradient-primary);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25);
+    }
+    .error-btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(34, 211, 238, 0.3);
+    }
+    .error-btn-ghost {
+        background: var(--bg-glass);
+        color: var(--text-primary);
+        border: 1px solid var(--border-glass);
+    }
+    .error-btn-ghost:hover {
+        background: var(--bg-glass-hover);
+        border-color: var(--border-glow);
+        transform: translateY(-2px);
+    }
+    .error-search {
+        max-width: 420px;
+        margin: 0 auto;
+        position: relative;
+    }
+    .error-search input {
+        width: 100%;
+        padding: 14px 20px 14px 48px;
+        background: var(--bg-card);
+        border: 2px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        font-family: inherit;
+        outline: none;
+        transition: var(--transition);
+    }
+    .error-search input::placeholder {
+        color: var(--text-muted);
+    }
+    .error-search input:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.1), 0 0 30px rgba(34, 211, 238, 0.08);
+        background: var(--bg-glass-hover);
+    }
+    .error-search .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        transition: var(--transition);
+        pointer-events: none;
+    }
+    .error-search input:focus ~ .search-icon {
+        color: var(--accent-cyan);
+    }
+    .error-search-label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-top: 0.75rem;
+    }
+    .error-search-label a {
+        color: var(--accent-cyan);
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    .error-search-label a:hover {
+        color: var(--accent-blue);
+    }
+    @media (max-width: 480px) {
+        .error-code { font-size: 4rem; }
+        .error-title { font-size: 1.25rem; }
+        .error-actions { flex-direction: column; }
+        .error-btn { width: 100%; justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+
+        <!-- Illustration -->
+        <div class="error-illustration">
+            <div class="icon-ring"></div>
+            <i class="fas fa-compass icon-main"></i>
+        </div>
+
+        <!-- Error Code -->
+        <div class="error-code">404</div>
+
+        <!-- Title -->
+        <h1 class="error-title">Page Not Found</h1>
+
+        <!-- Message -->
+        <p class="error-message">
+            Looks like this page drifted into the blockchain void.
+            The link may be broken or the page may have been removed.
+            Try heading home or searching for what you're looking for.
+        </p>
+
+        <!-- Action Buttons -->
+        <div class="error-actions">
+            <a href="/" class="error-btn error-btn-primary">
+                <i class="fas fa-house"></i> Go Home
+            </a>
+            <a href="/news" class="error-btn error-btn-ghost">
+                <i class="fas fa-newspaper"></i> Browse News
+            </a>
+        </div>
+
+        <!-- Search Bar -->
+        <form class="error-search" action="/search" method="get">
+            <input type="text" name="q" placeholder="Search for crypto news, coins, topics..." autocomplete="off">
+            <i class="fas fa-search search-icon"></i>
+        </form>
+        <p class="error-search-label">
+            or try one of our popular sections:
+            <a href="/news">Latest News</a> ·
+            <a href="/market">Market</a> ·
+            <a href="/about">About</a>
+        </p>
+
+    </div>
+</div>
+{% endblock %}

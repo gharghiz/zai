@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CryptositNews{% endblock %}</title>
+    <meta name="description" content="Real-time cryptocurrency news, AI-powered insights, and market analysis from 70+ sources.">
+    <meta name="keywords" content="crypto news, bitcoin, ethereum, defi, nft, blockchain, cryptocurrency, altcoins">
+    <meta name="author" content="CryptositNews">
+    <link rel="canonical" href="https://cryptositnews.com{{ request.path }}">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="googlebot" content="index, follow">
+    <meta name="theme-color" content="#050a18">
+    <meta name="color-scheme" content="dark light">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}CryptositNews - Real-time Crypto News & AI Insights{% endblock %}">
+    <meta property="og:description" content="{% block og_desc %}AI-powered cryptocurrency news aggregator with real-time updates from 70+ sources.{% endblock %}">
+    <meta property="og:url" content="https://cryptositnews.com{{ request.path }}">
+    <meta property="og:site_name" content="CryptositNews">
+    <meta property="og:locale" content="en_US">
+    {% block og_image %}{% endblock %}
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}CryptositNews{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_desc %}Real-time cryptocurrency news & AI insights{% endblock %}">
+    <meta name="twitter:site" content="@CryptositNews">
+
+    <!-- v7: JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "CryptositNews",
+        "url": "https://cryptositnews.com",
+        "description": "Real-time cryptocurrency news, AI-powered insights, and market analysis.",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://cryptositnews.com/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #050a18;
+            --bg-secondary: #0c1428;
+            --bg-card: rgba(12, 20, 40, 0.85);
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --bg-glass-hover: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.07);
+            --border-glow: rgba(6, 182, 212, 0.2);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-cyan: #22d3ee;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a78bfa;
+            --accent-green: #34d399;
+            --accent-red: #f87171;
+            --accent-yellow: #fbbf24;
+            --accent-orange: #fb923c;
+            --gradient-primary: linear-gradient(135deg, #22d3ee, #3b82f6, #a78bfa);
+            --gradient-card: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(167, 139, 250, 0.08));
+            --gradient-warm: linear-gradient(135deg, #f59e0b, #ef4444);
+            --shadow-glow: 0 0 40px rgba(34, 211, 238, 0.1);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+            --radius-xl: 20px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --radius-xs: 6px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Light mode overrides */
+        html.light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-glass: rgba(0, 0, 0, 0.04);
+            --bg-glass-hover: rgba(0, 0, 0, 0.08);
+            --border-glass: rgba(0, 0, 0, 0.1);
+            --border-glow: rgba(6, 182, 212, 0.3);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --shadow-glow: 0 0 40px rgba(34, 211, 238, 0.08);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 10%, rgba(34, 211, 238, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 90%, rgba(167, 139, 250, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ============================================
+           UPGRADE 6: Enhanced Neon Effects — Grid Overlay
+           ============================================ */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 60px,
+                    rgba(34, 211, 238, 0.025) 60px,
+                    rgba(34, 211, 238, 0.025) 61px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 60px,
+                    rgba(34, 211, 238, 0.025) 60px,
+                    rgba(34, 211, 238, 0.025) 61px
+                );
+            pointer-events: none;
+            z-index: 0;
+        }
+        html.light body::after { opacity: 0.4; }
+
+        /* ============================================
+           V4: Animated Particles Background
+           ============================================ */
+        #particlesCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        a { color: var(--accent-cyan); text-decoration: none; transition: var(--transition); }
+        a:hover { color: var(--accent-blue); }
+
+        /* ============================================
+           UPGRADE 6: Enhanced Scrollbar
+           ============================================ */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 4px;
+            border: 2px solid var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-blue));
+        }
+
+        /* ============================================
+           UPGRADE 1: Breaking News Banner
+           ============================================ */
+        .breaking-banner {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 200;
+            background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
+            background-size: 200% 100%;
+            animation: bannerShift 4s ease infinite;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            height: 38px;
+            font-size: 0.85rem;
+            color: white;
+            overflow: hidden;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+        .breaking-banner.hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        @keyframes bannerShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .breaking-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 4px;
+            font-weight: 800;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            flex-shrink: 0;
+            animation: neonPulse 1.5s ease infinite;
+        }
+        .breaking-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #fff;
+            animation: livePulse 1.2s ease infinite;
+        }
+        .breaking-marquee {
+            flex: 1;
+            overflow: hidden;
+            margin: 0 1rem;
+            white-space: nowrap;
+        }
+        .breaking-marquee-text {
+            display: inline-block;
+            animation: marquee 30s linear infinite;
+            padding-left: 100%;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        .breaking-close {
+            background: rgba(0, 0, 0, 0.3);
+            border: none;
+            color: white;
+            width: 28px; height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .breaking-close:hover { background: rgba(0, 0, 0, 0.5); }
+
+        /* ============================================
+           UPGRADE 8: Enhanced Animations
+           ============================================ */
+        @keyframes neonPulse {
+            0%, 100% { box-shadow: 0 0 4px rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 0 0 24px rgba(255, 255, 255, 0.2); }
+        }
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes livePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+            50% { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.15); }
+            50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.3); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        @keyframes dropdownIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastSlideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+        @keyframes chatPanelIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes chatPanelOut {
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 0; transform: translateY(20px) scale(0.95); }
+        }
+
+        /* Stagger delay support for fadeInUp */
+        .animate-in { animation: fadeInUp 0.5s ease forwards; opacity: 0; }
+        .animate-in[data-delay="1"] { animation-delay: 0.1s; }
+        .animate-in[data-delay="2"] { animation-delay: 0.2s; }
+        .animate-in[data-delay="3"] { animation-delay: 0.3s; }
+        .animate-in[data-delay="4"] { animation-delay: 0.4s; }
+        .animate-in[data-delay="5"] { animation-delay: 0.5s; }
+        .animate-in[data-delay="6"] { animation-delay: 0.6s; }
+        .animate-fade { animation: fadeIn 0.6s ease forwards; }
+        .animate-scale { animation: scaleIn 0.4s ease forwards; }
+        .animate-left { animation: slideInLeft 0.5s ease forwards; opacity: 0; }
+        .animate-right { animation: slideInRight 0.5s ease forwards; opacity: 0; }
+
+        /* ============================================
+           Navbar with Animated Gradient Border
+           ============================================ */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(5, 10, 24, 0.88);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            padding: 0 2rem;
+            height: 68px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1rem;
+            transition: var(--transition);
+        }
+        html.light .navbar { background: rgba(248, 250, 252, 0.88); }
+
+        /* Animated gradient bottom border on navbar */
+        .navbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+            background-size: 300% 100%;
+            animation: borderGlow 6s ease infinite;
+        }
+
+        /* Offset when breaking banner is visible */
+        .breaking-banner ~ .navbar { top: 38px; }
+        .breaking-banner ~ .reading-progress { top: 106px; }
+        .breaking-banner.hidden ~ .navbar { top: 0; }
+        .breaking-banner.hidden ~ .reading-progress { top: 68px; }
+
+        .navbar-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 1.35rem; font-weight: 900; letter-spacing: -0.5px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            position: relative;
+        }
+        .navbar-brand .brand-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: var(--gradient-primary);
+            display: flex; align-items: center; justify-content: center;
+            -webkit-text-fill-color: white;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
+            animation: neonPulse 3s ease infinite;
+        }
+        .navbar-brand .live-dot {
+            position: absolute; top: -2px; right: -8px;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--accent-green);
+            animation: livePulse 2s ease infinite;
+        }
+
+        .navbar-center { display: flex; gap: 2px; align-items: center; list-style: none; }
+        .navbar-center a, .navbar-center .dropdown-toggle {
+            padding: 8px 16px; border-radius: var(--radius-sm);
+            color: var(--text-secondary); font-weight: 500; font-size: 0.88rem;
+            transition: var(--transition); position: relative;
+        }
+        .navbar-center a:hover, .navbar-center a.active {
+            background: var(--bg-glass-hover); color: var(--text-primary);
+        }
+        .navbar-center a.active::after {
+            content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 3px; border-radius: 2px;
+            background: var(--gradient-primary);
+        }
+
+        /* ============================================
+           UPGRADE 5: Live Search Dropdown
+           ============================================ */
+        .navbar-search { position: relative; display: flex; align-items: center; }
+        .navbar-search input {
+            width: 200px; padding: 8px 14px 8px 36px;
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            border-radius: 24px; color: var(--text-primary);
+            font-size: 0.85rem; font-family: inherit;
+            outline: none; transition: var(--transition);
+        }
+        .navbar-search input::placeholder { color: var(--text-muted); }
+        .navbar-search input:focus {
+            width: 260px; border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
+            background: var(--bg-glass-hover);
+        }
+        .navbar-search > i {
+            position: absolute; left: 12px;
+            color: var(--text-muted); font-size: 0.85rem; pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Search Dropdown Panel */
+        .search-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 380px;
+            background: rgba(12, 20, 40, 0.98);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            z-index: 300;
+            overflow: hidden;
+            animation: dropdownIn 0.2s ease;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+        html.light .search-dropdown { background: rgba(255, 255, 255, 0.98); }
+        .search-dropdown.active { display: block; }
+
+        .search-dropdown-section { padding: 10px 14px; }
+        .search-dropdown-section:not(:last-child) { border-bottom: 1px solid var(--border-glass); }
+        .search-dropdown-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .search-dropdown-section-title i { font-size: 0.65rem; }
+
+        .search-dropdown-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 10px;
+            border-radius: var(--radius-xs);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .search-dropdown-item:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-primary);
+        }
+        .search-dropdown-item i {
+            width: 18px; text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .search-dropdown-item .item-badge {
+            margin-left: auto;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Search Loading Skeleton */
+        .search-skeleton {
+            padding: 8px 10px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .search-skeleton-icon {
+            width: 18px; height: 18px; border-radius: 4px;
+            background: linear-gradient(90deg, var(--bg-glass) 25%, var(--bg-glass-hover) 50%, var(--bg-glass) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            flex-shrink: 0;
+        }
+        .search-skeleton-text {
+            height: 14px; border-radius: 4px; flex: 1;
+            background: linear-gradient(90deg, var(--bg-glass) 25%, var(--bg-glass-hover) 50%, var(--bg-glass) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .search-dropdown-empty {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .search-dropdown-empty i { font-size: 1.5rem; margin-bottom: 8px; display: block; opacity: 0.5; }
+
+        /* Trending tags */
+        .search-trending-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .search-trending-tag {
+            padding: 5px 10px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .search-trending-tag:hover {
+            background: rgba(34, 211, 238, 0.1);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        /* ============================================
+           Categories Dropdown
+           ============================================ */
+        .dropdown { position: relative; }
+        .dropdown-toggle {
+            color: var(--text-secondary); font-weight: 500; font-size: 0.88rem;
+            transition: var(--transition); cursor: pointer; display: flex; align-items: center; gap: 6px;
+            background: none; border: none; font-family: inherit;
+        }
+        .dropdown-toggle:hover { background: var(--bg-glass-hover); color: var(--text-primary); }
+        .dropdown-toggle .fa-caret-down { font-size: 0.6rem; transition: transform 0.3s; }
+        .dropdown:hover .fa-caret-down,
+        .dropdown.open .fa-caret-down { transform: rotate(180deg); }
+        .dropdown-menu {
+            display: none; position: absolute; top: calc(100% + 4px); left: 0;
+            min-width: 240px; padding: 8px;
+            background: rgba(12, 20, 40, 0.98);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            z-index: 200;
+            animation: dropdownIn 0.2s ease;
+        }
+        .dropdown:hover .dropdown-menu,
+        .dropdown.open .dropdown-menu { display: block; }
+        .dropdown-menu a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; border-radius: var(--radius-sm);
+            color: var(--text-secondary); font-weight: 500; font-size: 0.85rem;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+        .dropdown-menu a:hover { background: var(--bg-glass-hover); color: var(--text-primary); transform: translateX(4px); }
+        .dropdown-menu a .cat-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; flex-shrink: 0;
+        }
+
+        /* ============================================
+           Right Side Controls
+           ============================================ */
+        .navbar-controls { display: flex; align-items: center; gap: 6px; }
+        .theme-toggle {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            color: var(--text-secondary); font-size: 1rem;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .theme-toggle:hover { background: var(--bg-glass-hover); color: var(--accent-yellow); transform: rotate(30deg); }
+        .mobile-menu-btn {
+            display: none; background: none; border: none;
+            color: var(--text-primary); font-size: 1.5rem; cursor: pointer;
+        }
+        .lang-toggle {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            color: var(--text-secondary); font-size: 0.8rem; font-weight: 800;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lang-toggle:hover { background: var(--bg-glass-hover); color: var(--accent-cyan); transform: scale(1.05); }
+
+        /* ============================================
+           V5: RTL Support
+           ============================================
+        */
+        [dir="rtl"] body { font-family: 'Cairo', 'Inter', sans-serif; }
+        [dir="rtl"] .navbar-center { flex-direction: row-reverse; }
+        [dir="rtl"] .navbar-search input:focus { width: 260px; }
+        [dir="rtl"] .navbar-search > i { left: auto; right: 12px; }
+        [dir="rtl"] .navbar-brand { flex-direction: row-reverse; }
+        [dir="rtl"] .dropdown-menu { left: auto; right: 0; }
+        [dir="rtl"] .dropdown-menu a:hover { transform: translateX(-4px); }
+        [dir="rtl"] .main-content { text-align: right; }
+        [dir="rtl"] .reading-progress .progress-text { right: auto; left: 24px; }
+        [dir="rtl"] .breaking-label { margin-left: 0; margin-right: auto; }
+        [dir="rtl"] .breaking-close { order: -1; }
+        [dir="rtl"] .chat-widget { right: auto; left: 24px; }
+        [dir="rtl"] .chat-panel { right: auto; left: 0; }
+        [dir="rtl"] .toast-container { right: auto; left: 24px; }
+        [dir="rtl"] .back-to-top { left: auto; right: 24px; }
+        [dir="rtl"] .mobile-menu-btn { margin-left: 0; margin-right: auto; }
+        [dir="rtl"] .footer-section a:hover { transform: translateX(-2px); }
+        .share-btn.facebook:hover { background: rgba(24,119,242,0.12); color: #1877F2; border-color: rgba(24,119,242,0.3); }
+        [dir="rtl"] .share-buttons { flex-direction: row-reverse; }
+        [dir="rtl"] .share-label { margin-right: 0; margin-left: 4px; }
+        [dir="rtl"] .cookie-consent { flex-direction: row-reverse; }
+        [dir="rtl"] .search-dropdown { left: auto; right: 50%; transform: translateX(50%); }
+        [dir="rtl"] .filter-search-wrapper i { left: auto; right: 12px; }
+        [dir="rtl"] .event-card { flex-direction: row-reverse; }
+        [dir="rtl"] .event-footer { justify-content: flex-start; }
+
+        /* ============================================
+           Main Content
+           ============================================ */
+        .main-content {
+            position: relative; z-index: 1;
+            max-width: 1320px; margin: 0 auto;
+            padding: 88px 2rem 2rem;
+        }
+        /* Extra padding when breaking banner visible */
+        body:has(.breaking-banner:not(.hidden)) .main-content { padding-top: 126px; }
+
+        /* ============================================
+           Cards — UPGRADE 6: Enhanced Hover Glow
+           ============================================ */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 0 20px rgba(34, 211, 238, 0.15),
+                0 0 40px rgba(34, 211, 238, 0.08),
+                0 0 60px rgba(59, 130, 246, 0.05);
+            border-color: rgba(34, 211, 238, 0.2);
+        }
+
+        /* ============================================
+           V4: 3D Tilt Effect on Cards
+           ============================================ */
+        .card-3d {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .card-3d:hover {
+            transform: translateY(-5px) rotateX(2deg) rotateY(-2deg);
+        }
+
+        /* ============================================
+           V6: Advanced Glassmorphism
+           ============================================ */
+        .glass-card-advanced {
+            background: rgba(12, 20, 40, 0.6);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-xl);
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card-advanced::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -50%; right: -50%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }
+        html.light .glass-card-advanced {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        /* V7: Enhanced Light Mode */
+        html.light .card {
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        }
+        html.light .card:hover {
+            box-shadow: 0 8px 32px rgba(34, 211, 238, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        html.light .btn-primary { box-shadow: 0 4px 16px rgba(34, 211, 238, 0.15); }
+        html.light .btn-ghost { color: var(--text-primary); }
+        html.light .toast { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); }
+        html.light .breaking-banner { filter: brightness(0.95); }
+        html.light .reading-progress .progress-text {
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--accent-blue);
+        }
+        html.light .search-dropdown { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1); }
+        html.light .dropdown-menu { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1); }
+        html.light .chat-panel { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12); }
+        html.light .theme-toggle:hover { color: var(--accent-cyan); }
+        .glass-ambient {
+            position: relative;
+        }
+        .glass-ambient::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                rgba(34, 211, 238, 0.06) 0%,
+                transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ============================================
+           Buttons
+           ============================================ */
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 20px; border-radius: var(--radius-sm);
+            font-weight: 600; font-size: 0.9rem;
+            border: none; cursor: pointer; transition: var(--transition);
+        }
+        .btn-primary { background: var(--gradient-primary); color: white; box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25); }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34, 211, 238, 0.3); }
+        .btn-ghost { background: var(--bg-glass); color: var(--text-primary); border: 1px solid var(--border-glass); }
+        .btn-ghost:hover { background: var(--bg-glass-hover); border-color: var(--border-glow); }
+
+        /* ============================================
+           Skeleton Loading
+           ============================================ */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-glass) 25%, var(--bg-glass-hover) 50%, var(--bg-glass) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+        .skeleton-text { height: 16px; margin-bottom: 8px; }
+        .skeleton-title { height: 24px; margin-bottom: 12px; width: 80%; }
+        .skeleton-img { height: 200px; border-radius: var(--radius-md); margin-bottom: 12px; }
+        .skeleton-card { padding: 1.2rem; border: 1px solid var(--border-glass); border-radius: var(--radius-lg); }
+
+        /* V6: Enhanced Skeleton Loading */
+        .skeleton-pulse {
+            animation: skeletonPulse 2s ease infinite;
+        }
+        @keyframes skeletonPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        .skeleton-card-enhanced {
+            padding: 1.2rem;
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+        }
+        .skeleton-card-enhanced .skeleton-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .skeleton-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, var(--bg-glass) 25%, var(--bg-glass-hover) 50%, var(--bg-glass) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        .skeleton-name {
+            height: 14px;
+            width: 120px;
+            background: linear-gradient(90deg, var(--bg-glass) 25%, var(--bg-glass-hover) 50%, var(--bg-glass) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-xs);
+        }
+
+        /* ============================================
+           UPGRADE 9: Reading Progress with Percentage
+           ============================================ */
+        .reading-progress {
+            position: fixed; top: 68px; left: 0; right: 0; height: 3px; z-index: 101;
+            background: var(--border-glass);
+        }
+        .reading-progress .bar {
+            height: 100%; width: 0%; border-radius: 0 2px 2px 0;
+            background: var(--gradient-primary);
+            transition: width 0.1s linear;
+        }
+        .reading-progress .progress-text {
+            position: fixed;
+            top: 72px;
+            right: 24px;
+            z-index: 102;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            background: rgba(12, 20, 40, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-glass);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .reading-progress .progress-text.visible { opacity: 1; }
+
+        /* ============================================
+           UPGRADE 2: Toast Notification System
+           ============================================ */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 10px;
+            max-width: 380px;
+            width: 100%;
+            pointer-events: none;
+        }
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: toastSlideIn 0.4s ease forwards;
+            pointer-events: all;
+            position: relative;
+            overflow: hidden;
+        }
+        .toast.dismissing { animation: toastSlideOut 0.3s ease forwards; }
+        .toast-icon {
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; flex-shrink: 0;
+        }
+        .toast-body { flex: 1; }
+        .toast-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 2px; }
+        .toast-message { color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4; }
+        .toast-close {
+            background: none; border: none;
+            color: var(--text-muted); cursor: pointer;
+            font-size: 0.85rem; padding: 2px;
+            transition: color 0.2s;
+        }
+        .toast-close:hover { color: var(--text-primary); }
+        .toast-progress {
+            position: absolute;
+            bottom: 0; left: 0;
+            height: 3px;
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            animation: toastCountdown 5s linear forwards;
+        }
+
+        /* Toast Types */
+        .toast-success { background: rgba(5, 46, 22, 0.95); border-color: rgba(52, 211, 153, 0.2); }
+        .toast-success .toast-icon { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); }
+        .toast-success .toast-progress { background: var(--accent-green); }
+        .toast-error { background: rgba(60, 10, 10, 0.95); border-color: rgba(248, 113, 113, 0.2); }
+        .toast-error .toast-icon { background: rgba(248, 113, 113, 0.15); color: var(--accent-red); }
+        .toast-error .toast-progress { background: var(--accent-red); }
+        .toast-info { background: rgba(8, 30, 46, 0.95); border-color: rgba(34, 211, 238, 0.2); }
+        .toast-info .toast-icon { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); }
+        .toast-info .toast-progress { background: var(--accent-cyan); }
+        .toast-breaking { background: rgba(60, 30, 5, 0.95); border-color: rgba(251, 146, 60, 0.2); }
+        .toast-breaking .toast-icon { background: rgba(251, 146, 60, 0.15); color: var(--accent-orange); }
+        .toast-breaking .toast-progress { background: var(--accent-orange); }
+
+        @keyframes toastCountdown {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        /* ============================================
+           UPGRADE 3: Floating AI Chat Widget
+           ============================================ */
+        .chat-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999;
+        }
+        .chat-toggle {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3), 0 0 40px rgba(34, 211, 238, 0.1);
+            transition: var(--transition);
+            position: relative;
+        }
+        .chat-toggle:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 30px rgba(34, 211, 238, 0.4), 0 0 60px rgba(34, 211, 238, 0.15);
+        }
+        .chat-toggle .chat-toggle-badge {
+            position: absolute;
+            top: -2px; right: -2px;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            border: 2px solid var(--bg-primary);
+            animation: livePulse 2s ease infinite;
+        }
+        .chat-toggle.active .fa-robot { display: none; }
+        .chat-toggle .fa-times { display: none; }
+        .chat-toggle.active .fa-times { display: block; }
+
+        .chat-panel {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 380px;
+            height: 500px;
+            max-height: calc(100vh - 120px);
+            background: rgba(12, 20, 40, 0.98);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .chat-panel.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+        html.light .chat-panel { background: rgba(255, 255, 255, 0.98); }
+
+        .chat-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(167, 139, 250, 0.1));
+            border-bottom: 1px solid var(--border-glass);
+        }
+        .chat-header-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.9rem;
+        }
+        .chat-header-info { flex: 1; }
+        .chat-header-title { font-weight: 700; font-size: 0.9rem; }
+        .chat-header-status { font-size: 0.72rem; color: var(--accent-green); display: flex; align-items: center; gap: 4px; }
+        .chat-header-status::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+        .chat-header-close {
+            background: none; border: none;
+            color: var(--text-muted); cursor: pointer;
+            font-size: 1rem; padding: 4px;
+            transition: var(--transition);
+        }
+        .chat-header-close:hover { color: var(--text-primary); }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            font-size: 0.84rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        .chat-msg.bot {
+            background: var(--bg-glass-hover);
+            border: 1px solid var(--border-glass);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-msg.user {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-msg-typing {
+            align-self: flex-start;
+            padding: 10px 14px;
+            display: flex; gap: 4px; align-items: center;
+        }
+        .chat-msg-typing span {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: typingBounce 1.2s ease infinite;
+        }
+        .chat-msg-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .chat-msg-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+
+        .chat-input-area {
+            display: flex; gap: 8px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-glass);
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+        }
+        .chat-input-area input::placeholder { color: var(--text-muted); }
+        .chat-input-area input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
+        }
+        .chat-input-area button {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: var(--gradient-primary);
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .chat-input-area button:hover { opacity: 0.9; transform: scale(1.05); }
+
+        /* ============================================
+           UPGRADE 4: Cookie Consent Banner
+           ============================================ */
+        .cookie-consent {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 998;
+            padding: 16px 2rem;
+            background: rgba(12, 20, 40, 0.7);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-top: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+        html.light .cookie-consent { background: rgba(255, 255, 255, 0.7); }
+        .cookie-consent.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .cookie-consent.hidden {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .cookie-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .cookie-text {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        .cookie-text a { color: var(--accent-cyan); text-decoration: underline; }
+        .cookie-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .cookie-btn-accept {
+            padding: 8px 20px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .cookie-btn-accept:hover { opacity: 0.9; transform: translateY(-1px); }
+        .cookie-btn-decline {
+            padding: 8px 20px;
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .cookie-btn-decline:hover { background: var(--bg-glass-hover); color: var(--text-primary); }
+
+        /* ============================================
+           Footer
+           ============================================ */
+        .footer {
+            position: relative; z-index: 1;
+            border-top: 1px solid var(--border-glass);
+            background: rgba(5, 10, 24, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 3rem 2rem 1.5rem;
+            margin-top: 4rem;
+        }
+        html.light .footer { background: rgba(248, 250, 252, 0.95); }
+        .footer-content {
+            max-width: 1320px; margin: 0 auto;
+            display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr;
+            gap: 2rem;
+        }
+        .footer-section h4 {
+            color: var(--accent-cyan); margin-bottom: 1rem; font-size: 0.95rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .footer-section a {
+            display: flex; align-items: center; gap: 8px;
+            color: var(--text-secondary); margin-bottom: 0.5rem; font-size: 0.85rem;
+        }
+        .footer-section a i { width: 16px; text-align: center; font-size: 0.75rem; }
+        .footer-section a:hover { color: var(--accent-cyan); transform: translateX(2px); }
+        .footer-desc {
+            color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.7;
+        }
+
+        /* Newsletter */
+        .newsletter-form { display: flex; gap: 8px; margin-top: 0.8rem; }
+        .newsletter-form input {
+            flex: 1; padding: 10px 14px;
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm); color: var(--text-primary);
+            font-size: 0.85rem; font-family: inherit; outline: none; transition: var(--transition);
+        }
+        .newsletter-form input::placeholder { color: var(--text-muted); }
+        .newsletter-form input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1); }
+        .newsletter-form button {
+            padding: 10px 20px; border-radius: var(--radius-sm);
+            background: var(--gradient-primary); color: white;
+            border: none; font-weight: 600; font-size: 0.85rem;
+            cursor: pointer; white-space: nowrap; transition: var(--transition);
+        }
+        .newsletter-form button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .footer-bottom {
+            max-width: 1320px; margin: 2rem auto 0;
+            padding-top: 1.5rem; border-top: 1px solid var(--border-glass);
+            display: flex; justify-content: space-between; align-items: center;
+            color: var(--text-muted); font-size: 0.8rem;
+        }
+        .footer-social { display: flex; gap: 12px; }
+        .footer-social a {
+            color: var(--text-muted); font-size: 1.1rem; transition: var(--transition);
+            width: 36px; height: 36px; border-radius: var(--radius-sm);
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0;
+        }
+        .footer-social a:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); background: rgba(34, 211, 238, 0.1); transform: translateY(-2px); }
+
+        /* ============================================
+           V6: Enhanced Footer
+           ============================================ */
+        .footer-enhanced {
+            background: rgba(5, 10, 24, 0.92);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-top: 1px solid var(--border-glass);
+            position: relative;
+            z-index: 1;
+        }
+        html.light .footer-enhanced {
+            background: rgba(248, 250, 252, 0.92);
+        }
+        .footer-enhanced::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+            background-size: 300% 100%;
+            animation: borderGlow 6s ease infinite;
+        }
+        .footer-live-ticker {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 0;
+            border-top: 1px solid var(--border-glass);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            overflow: hidden;
+        }
+        .footer-live-ticker .ticker-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+        .footer-ticker-scroll {
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .footer-ticker-scroll span {
+            display: inline-block;
+            animation: marquee 40s linear infinite;
+            padding-left: 100%;
+        }
+        .footer-ticker-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 1.5rem;
+        }
+        .footer-ticker-item .up { color: var(--accent-green); }
+        .footer-ticker-item .down { color: var(--accent-red); }
+
+        /* ============================================
+           Back to Top
+           ============================================ */
+        .back-to-top {
+            position: fixed; bottom: 24px; left: 24px; z-index: 99;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--gradient-primary); color: white;
+            border: none; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3);
+            opacity: 0; visibility: hidden; transform: translateY(10px);
+            transition: var(--transition);
+        }
+        .back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+        .back-to-top:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(34, 211, 238, 0.4); }
+
+        /* ============================================
+           V4: Mobile Bottom Navigation
+           ============================================ */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 997;
+            height: 64px;
+            background: rgba(5, 10, 24, 0.95);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-top: 1px solid var(--border-glass);
+            padding: 0 0.5rem;
+            align-items: center;
+            justify-content: space-around;
+        }
+        html.light .mobile-bottom-nav { background: rgba(248, 250, 252, 0.95); }
+        .mobile-nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            padding: 8px 12px; border-radius: 12px;
+            color: var(--text-muted); font-size: 0.65rem; font-weight: 600;
+            text-decoration: none; transition: var(--transition);
+            position: relative;
+        }
+        .mobile-nav-item i { font-size: 1.15rem; transition: var(--transition); }
+        .mobile-nav-item.active { color: var(--accent-cyan); }
+        .mobile-nav-item.active i { transform: scale(1.15); }
+        .mobile-nav-item.active::before {
+            content: '';
+            position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 3px; border-radius: 2px;
+            background: var(--gradient-primary);
+        }
+        .mobile-nav-item:hover { color: var(--text-primary); }
+        .mobile-nav-item:active { transform: scale(0.92); }
+
+        /* V6: Enhanced Mobile Bottom Nav */
+        .mobile-bottom-nav {
+            backdrop-filter: blur(30px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+            border-top: 1px solid var(--border-glass) !important;
+        }
+        .mobile-bottom-nav .nav-item {
+            position: relative;
+            transition: var(--transition);
+        }
+        .mobile-bottom-nav .nav-item:active {
+            transform: scale(0.92);
+        }
+        .mobile-bottom-nav .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: -1px; left: 50%;
+            transform: translateX(-50%);
+            width: 24px; height: 3px;
+            border-radius: 0 0 3px 3px;
+            background: var(--gradient-primary);
+        }
+        .mobile-bottom-nav .nav-item .nav-badge {
+            position: absolute;
+            top: -4px; right: calc(50% - 20px);
+            min-width: 16px; height: 16px;
+            border-radius: 8px;
+            background: var(--accent-red);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid var(--bg-primary);
+        }
+        @keyframes mobileBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        .mobile-bottom-nav .nav-item:active {
+            animation: mobileBounce 0.3s ease;
+        }
+
+        /* ============================================
+           V4: Notification Bell
+           ============================================ */
+        .notification-btn {
+            position: relative;
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            background: var(--bg-glass); border: 1px solid var(--border-glass);
+            color: var(--text-secondary); font-size: 1rem;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .notification-btn:hover { background: var(--bg-glass-hover); color: var(--accent-yellow); transform: rotate(-10deg); }
+        .notification-btn .notif-badge {
+            position: absolute; top: -3px; right: -3px;
+            min-width: 16px; height: 16px; padding: 0 4px;
+            border-radius: 10px; background: var(--accent-red);
+            color: white; font-size: 0.6rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--bg-primary);
+            animation: notifPop 0.4s ease;
+        }
+        @keyframes notifPop {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .notification-panel {
+            display: none;
+            position: absolute; top: calc(100% + 10px); right: 0;
+            width: 360px; max-height: 420px;
+            background: rgba(12, 20, 40, 0.98);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            z-index: 300; overflow: hidden;
+            animation: dropdownIn 0.2s ease;
+        }
+        .notification-panel.active { display: block; }
+        html.light .notification-panel { background: rgba(255, 255, 255, 0.98); }
+        .notif-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; border-bottom: 1px solid var(--border-glass);
+        }
+        .notif-header h4 { font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .notif-header h4 .notif-count { color: var(--accent-cyan); }
+        .notif-clear-btn {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 0.78rem; cursor: pointer; transition: var(--transition);
+        }
+        .notif-clear-btn:hover { color: var(--accent-red); }
+        .notif-list { max-height: 300px; overflow-y: auto; }
+        .notif-item {
+            display: flex; gap: 10px; padding: 12px 16px;
+            border-bottom: 1px solid var(--border-glass);
+            transition: var(--transition); cursor: pointer;
+        }
+        .notif-item:hover { background: var(--bg-glass-hover); }
+        .notif-item.unread { background: rgba(34, 211, 238, 0.04); }
+        .notif-item.unread::before {
+            content: '';
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--accent-cyan);
+            flex-shrink: 0; margin-top: 7px;
+        }
+        .notif-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; flex-shrink: 0;
+        }
+        .notif-content { flex: 1; min-width: 0; }
+        .notif-title { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .notif-time { font-size: 0.72rem; color: var(--text-muted); }
+        .notif-empty {
+            padding: 2rem; text-align: center; color: var(--text-muted);
+        }
+        .notif-empty i { font-size: 2rem; margin-bottom: 0.5rem; display: block; opacity: 0.4; }
+
+        /* ============================================
+           V4: Live Update Indicator
+           ============================================ */
+        .live-update-indicator {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px; border-radius: 20px;
+            background: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.15);
+            font-size: 0.7rem; font-weight: 600;
+            color: var(--accent-green);
+        }
+        .live-update-indicator .live-dot-sm {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--accent-green);
+            animation: livePulse 2s ease infinite;
+        }
+
+        /* ============================================
+           V4: Version Badge
+           ============================================ */
+        .version-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 8px; border-radius: 20px;
+            background: var(--gradient-primary);
+            color: white; font-size: 0.6rem; font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        /* ============================================
+           Utilities
+           ============================================ */
+        .text-gradient {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600;
+        }
+        .badge-cyan { background: rgba(34, 211, 238, 0.12); color: var(--accent-cyan); }
+        .badge-green { background: rgba(52, 211, 153, 0.12); color: var(--accent-green); }
+        .badge-red { background: rgba(248, 113, 113, 0.12); color: var(--accent-red); }
+        .badge-purple { background: rgba(167, 139, 250, 0.12); color: var(--accent-purple); }
+        .badge-yellow { background: rgba(251, 191, 36, 0.12); color: var(--accent-yellow); }
+
+        .sentiment-bullish { color: var(--accent-green); }
+        .sentiment-bearish { color: var(--accent-red); }
+        .sentiment-neutral { color: var(--text-muted); }
+
+        /* ============================================
+           Responsive
+           ============================================ */
+        @media (max-width: 1024px) {
+            .footer-content { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+            .chat-panel { width: 340px; }
+            .search-dropdown { width: 320px; }
+        }
+        @media (max-width: 768px) {
+            .navbar { padding: 0 1rem; }
+            .navbar-center { display: none; }
+            .navbar-search { display: none; }
+            .navbar-controls .theme-toggle { display: none; }
+            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+            .navbar-center.active {
+                display: flex; flex-direction: column;
+                position: absolute; top: 68px; left: 0; right: 0;
+                background: rgba(5, 10, 24, 0.97);
+                backdrop-filter: blur(24px);
+                padding: 1rem; border-bottom: 1px solid var(--border-glass);
+                gap: 2px;
+                animation: fadeIn 0.2s ease;
+            }
+            html.light .navbar-center.active { background: rgba(248, 250, 252, 0.97); }
+            .navbar-center.active .navbar-search {
+                display: flex; margin-top: 0.5rem;
+            }
+            .navbar-center.active .navbar-search input { width: 100%; }
+            .navbar-center.active .theme-toggle-mobile { display: flex; margin-top: 0.5rem; }
+            .main-content { padding: 80px 1rem 1rem; }
+            .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+
+            /* Breaking Banner mobile */
+            .breaking-banner { height: 34px; font-size: 0.8rem; }
+            .breaking-label { font-size: 0.65rem; padding: 3px 8px; }
+            .breaking-marquee { margin: 0 0.5rem; }
+
+            /* Chat Widget mobile */
+            .chat-panel {
+                width: calc(100vw - 32px);
+                right: -8px;
+                bottom: 66px;
+                height: 420px;
+                max-height: calc(100vh - 100px);
+            }
+            .chat-widget { bottom: 20px; right: 20px; }
+
+            /* Toast mobile */
+            .toast-container {
+                right: 16px; left: 16px;
+                max-width: none;
+                bottom: 16px;
+            }
+
+            /* Cookie consent mobile */
+            .cookie-consent {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px;
+                gap: 12px;
+            }
+            .cookie-text { max-width: none; }
+            .cookie-actions { width: 100%; justify-content: center; }
+
+            /* Search dropdown mobile */
+            .search-dropdown {
+                width: calc(100vw - 32px);
+                left: 0;
+                transform: none;
+            }
+
+            /* Back to top mobile */
+            .back-to-top { bottom: 20px; left: 20px; }
+
+            /* V4: Mobile bottom nav overrides */
+            .mobile-bottom-nav { display: flex; }
+            .main-content { padding-bottom: 80px; }
+            .back-to-top { bottom: 80px; }
+            .chat-widget { bottom: 80px; }
+            .cookie-consent { bottom: 64px; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<canvas id="particlesCanvas"></canvas>
+
+<!-- ============================================
+     UPGRADE 1: Breaking News Banner
+     ============================================ -->
+<div class="breaking-banner hidden" id="breakingBanner">
+    <span class="breaking-label">
+        <span class="breaking-dot"></span>
+        BREAKING
+    </span>
+    <div class="breaking-marquee">
+        <span class="breaking-marquee-text" id="breakingMarqueeText">
+            {% if breaking_headline %}
+                {{ breaking_headline }}
+            {% else %}
+                Loading breaking crypto news...
+            {% endif %}
+        </span>
+    </div>
+    <button class="breaking-close" onclick="closeBreakingBanner()" aria-label="Close breaking news">
+        <i class="fas fa-times"></i>
+    </button>
+</div>
+
+<!-- ============================================
+     UPGRADE 9: Reading Progress with Percentage
+     ============================================ -->
+<div class="reading-progress" id="readingProgress">
+    <div class="bar" id="readingBar"></div>
+    <span class="progress-text" id="progressText">0%</span>
+</div>
+
+<!-- ============================================
+     Navbar (with UPGRADE 5: Live Search)
+     ============================================ -->
+<nav class="navbar">
+    <a href="/" class="navbar-brand">
+        <span class="brand-icon"><i class="fas fa-bolt"></i></span>
+        CryptositNews
+        <span class="live-dot"></span>
+        <span class="version-badge" style="margin-left: 4px;">V5</span>
+    </a>
+    <ul class="navbar-center" id="navLinks">
+        <li><a href="/" {% if request.path == '/' %}class="active"{% endif %}><i class="fas fa-home" style="font-size:0.8rem;"></i> Home</a></li>
+        <li>
+            <div class="dropdown">
+                <button class="dropdown-toggle" onclick="toggleDropdown(event, this)">
+                    <i class="fas fa-th-large" style="font-size:0.8rem;"></i> Categories <i class="fas fa-caret-down"></i>
+                </button>
+                <div class="dropdown-menu">
+                    {% for cat in site_categories %}
+                    <a href="/news?category={{ cat.slug }}">
+                        <span class="cat-icon" style="background: {{ cat.color }}18; color: {{ cat.color }};"><i class="{{ cat.icon }}"></i></span>
+                        {{ cat.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </li>
+        <li><a href="/news" {% if request.path == '/news' and not request.args.get('category') %}class="active"{% endif %}><i class="fas fa-newspaper" style="font-size:0.8rem;"></i> News</a></li>
+        <li><a href="/archive" {% if request.path == '/archive' %}class="active"{% endif %}><i class="fas fa-archive" style="font-size:0.8rem;"></i> Archive</a></li>
+        <li><a href="/market" {% if request.path == '/market' %}class="active"{% endif %}><i class="fas fa-chart-line" style="font-size:0.8rem;"></i> Markets</a></li>
+        <li><a href="/whale-alerts" {% if request.path == '/whale-alerts' %}class="active"{% endif %}><i class="fas fa-water" style="font-size:0.8rem;"></i> Whales</a></li>
+        <li><a href="/airdrops" {% if request.path == '/airdrops' %}class="active"{% endif %}><i class="fas fa-parachute-box" style="font-size:0.8rem;"></i> Airdrops</a></li>
+        <li>
+            <div class="dropdown">
+                <button class="dropdown-toggle" onclick="toggleDropdown(event, this)">
+                    <i class="fas fa-ellipsis-h" style="font-size:0.8rem;"></i> More <i class="fas fa-caret-down"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="/weekly-report">
+                        <span class="cat-icon" style="background: rgba(251,191,36,0.1); color: #fbbf24;"><i class="fas fa-chart-bar"></i></span>
+                        Weekly Report
+                    </a>
+                    <a href="/academy">
+                        <span class="cat-icon" style="background: rgba(59,130,246,0.1); color: #60a5fa;"><i class="fas fa-graduation-cap"></i></span>
+                        Crypto Academy
+                    </a>
+                    <a href="/daily-summary">
+                        <span class="cat-icon" style="background: rgba(167,139,250,0.1); color: #a78bfa;"><i class="fas fa-robot"></i></span>
+                        AI Summary
+                    </a>
+                    <a href="/converter">
+                        <span class="cat-icon" style="background: rgba(34,211,238,0.1); color: #22d3ee;"><i class="fas fa-exchange-alt"></i></span>
+                        Converter
+                    </a>
+                    <a href="/calendar">
+                        <span class="cat-icon" style="background: rgba(251,146,60,0.1); color: #fb923c;"><i class="fas fa-calendar-alt"></i></span>
+                        Events Calendar
+                    </a>
+                    <a href="/about">
+                        <span class="cat-icon" style="background: rgba(148,163,184,0.1); color: #94a3b8;"><i class="fas fa-info-circle"></i></span>
+                        About
+                    </a>
+                </div>
+            </div>
+        </li>
+        <li class="navbar-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search news, coins..." autocomplete="off" value="{{ request.args.get('q', '') }}">
+            <!-- UPGRADE 5: Live Search Dropdown -->
+            <div class="search-dropdown" id="searchDropdown">
+                <!-- Default: Trending -->
+                <div id="searchDefault">
+                    <div class="search-dropdown-section">
+                        <div class="search-dropdown-section-title"><i class="fas fa-fire"></i> Trending Now</div>
+                        <div class="search-trending-tags">
+                            <a href="/search?q=Bitcoin" class="search-trending-tag"><i class="fab fa-bitcoin"></i> Bitcoin</a>
+                            <a href="/search?q=Ethereum" class="search-trending-tag"><i class="fab fa-ethereum"></i> Ethereum</a>
+                            <a href="/search?q=DeFi" class="search-trending-tag">DeFi</a>
+                            <a href="/search?q=NFT" class="search-trending-tag">NFT</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Loading Skeleton -->
+                <div id="searchLoading" style="display: none;">
+                    <div class="search-dropdown-section">
+                        <div class="search-dropdown-section-title"><i class="fas fa-newspaper"></i> Articles</div>
+                        <div class="search-skeleton"><div class="search-skeleton-icon"></div><div class="search-skeleton-text" style="width:70%"></div></div>
+                        <div class="search-skeleton"><div class="search-skeleton-icon"></div><div class="search-skeleton-text" style="width:85%"></div></div>
+                        <div class="search-skeleton"><div class="search-skeleton-icon"></div><div class="search-skeleton-text" style="width:60%"></div></div>
+                    </div>
+                    <div class="search-dropdown-section">
+                        <div class="search-dropdown-section-title"><i class="fas fa-coins"></i> Coins</div>
+                        <div class="search-skeleton"><div class="search-skeleton-icon"></div><div class="search-skeleton-text" style="width:75%"></div></div>
+                        <div class="search-skeleton"><div class="search-skeleton-icon"></div><div class="search-skeleton-text" style="width:65%"></div></div>
+                    </div>
+                </div>
+                <!-- Results -->
+                <div id="searchResults" style="display: none;"></div>
+            </div>
+        </li>
+    </ul>
+    <div class="navbar-controls">
+        <div style="position: relative;">
+            <button class="notification-btn" id="notifBtn" onclick="toggleNotifications()" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notif-badge" id="notifBadge">3</span>
+            </button>
+            <div class="notification-panel" id="notifPanel">
+                <div class="notif-header">
+                    <h4><i class="fas fa-bell"></i> Notifications <span class="notif-count" id="notifCount">(3)</span></h4>
+                    <button class="notif-clear-btn" onclick="clearNotifications()">Clear all</button>
+                </div>
+                <div class="notif-list" id="notifList">
+                    <div class="notif-item unread" onclick="window.location.href='/news'">
+                        <div class="notif-icon" style="background: rgba(220,38,38,0.12); color: var(--accent-red);"><i class="fas fa-fire"></i></div>
+                        <div class="notif-content">
+                            <div class="notif-title">Breaking: Major crypto market movement detected</div>
+                            <div class="notif-time">2 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="notif-item unread" onclick="window.location.href='/market'">
+                        <div class="notif-icon" style="background: rgba(52,211,153,0.12); color: var(--accent-green);"><i class="fas fa-chart-line"></i></div>
+                        <div class="notif-content">
+                            <div class="notif-title">BTC just crossed a key resistance level</div>
+                            <div class="notif-time">15 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="notif-item unread" onclick="window.location.href='/news?category=ethereum'">
+                        <div class="notif-icon" style="background: rgba(98,126,234,0.12); color: #627eea;"><i class="fab fa-ethereum"></i></div>
+                        <div class="notif-content">
+                            <div class="notif-title">New Ethereum upgrade announced</div>
+                            <div class="notif-time">1 hour ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
+            <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+        <button class="lang-toggle" onclick="toggleLanguage()" title="English / العربية">
+            <span id="langLabel">EN</span>
+        </button>
+        <button class="mobile-menu-btn" onclick="document.getElementById('navLinks').classList.toggle('active')">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ============================================
+     UPGRADE 3: Floating AI Chat Widget
+     ============================================ -->
+<div class="chat-widget" id="chatWidget">
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <div class="chat-header-icon"><i class="fas fa-robot"></i></div>
+            <div class="chat-header-info">
+                <div class="chat-header-title">Crypto AI Assistant</div>
+                <div class="chat-header-status">Online &mdash; powered by AI</div>
+            </div>
+            <button class="chat-header-close" onclick="toggleChat()" aria-label="Close chat">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg bot">
+                <strong style="color: var(--accent-cyan);">Crypto AI</strong><br>
+                Hi! I can help you find crypto news, market data, and analysis. Ask me anything about Bitcoin, DeFi, NFTs, or any crypto topic!
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Ask about crypto..." autocomplete="off"
+                   onkeydown="if(event.key==='Enter')sendChatMessage()">
+            <button onclick="sendChatMessage()" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    <button class="chat-toggle" id="chatToggle" onclick="toggleChat()" aria-label="Open AI chat">
+        <i class="fas fa-robot"></i>
+        <i class="fas fa-times"></i>
+        <span class="chat-toggle-badge"></span>
+    </button>
+</div>
+
+<!-- ============================================
+     UPGRADE 2: Toast Notification Container
+     ============================================ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================
+     Back to Top Button (moved to bottom-left)
+     ============================================ -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+    <i class="fas fa-chevron-up"></i>
+</button>
+
+<!-- ============================================
+     UPGRADE 4: Cookie Consent Banner
+     ============================================ -->
+<div class="cookie-consent" id="cookieConsent">
+    <span class="cookie-icon"><i class="fas fa-cookie-bite"></i></span>
+    <span class="cookie-text">
+        We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic.
+        By clicking "Accept", you consent to our use of cookies.
+        <a href="/privacy">Learn more</a>
+    </span>
+    <div class="cookie-actions">
+        <button class="cookie-btn-decline" onclick="declineCookies()">Decline</button>
+        <button class="cookie-btn-accept" onclick="acceptCookies()">Accept</button>
+    </div>
+</div>
+
+<!-- ============================================
+     V4: Mobile Bottom Navigation
+     ============================================ -->
+<nav class="mobile-bottom-nav">
+    <a href="/" class="mobile-nav-item {% if request.path == '/' %}active{% endif %}">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="/news" class="mobile-nav-item {% if request.path == '/news' %}active{% endif %}">
+        <i class="fas fa-newspaper"></i>
+        <span>News</span>
+    </a>
+    <a href="/market" class="mobile-nav-item {% if request.path == '/market' %}active{% endif %}">
+        <i class="fas fa-chart-line"></i>
+        <span>Markets</span>
+    </a>
+    <a href="/search" class="mobile-nav-item {% if request.path == '/search' %}active{% endif %}">
+        <i class="fas fa-search"></i>
+        <span>Search</span>
+    </a>
+    <a href="/bookmarks" class="mobile-nav-item {% if request.path == '/bookmarks' %}active{% endif %}">
+        <i class="fas fa-bookmark"></i>
+        <span>Saved</span>
+    </a>
+</nav>
+
+<!-- ============================================
+     Footer (with Bookmarks link in Quick Links)
+     ============================================ -->
+<footer class="footer footer-enhanced">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h4><i class="fas fa-bolt"></i> CryptositNews</h4>
+            <p class="footer-desc">
+                AI-powered cryptocurrency news aggregator delivering real-time crypto news, market analysis, and insights from 70+ sources to keep you ahead in the crypto space.
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0.6rem;">
+                <i class="fas fa-bell" style="color: var(--accent-cyan);"></i> Subscribe to our newsletter
+            </p>
+            <form class="newsletter-form" onsubmit="this.querySelector('button').innerHTML='<i class=\'fas fa-check\'></i> Subscribed!'; this.querySelector('button').style.background='var(--accent-green)'; return false;">
+                <input type="email" placeholder="your@email.com" required>
+                <button type="submit"><i class="fas fa-paper-plane"></i> Subscribe</button>
+            </form>
+        </div>
+        <div class="footer-section">
+            <h4>Quick Links</h4>
+            <a href="/"><i class="fas fa-home"></i> Home</a>
+            <a href="/news"><i class="fas fa-newspaper"></i> News</a>
+            <a href="/archive"><i class="fas fa-archive"></i> Archive</a>
+            <a href="/market"><i class="fas fa-chart-bar"></i> Markets</a>
+            <a href="/search"><i class="fas fa-search"></i> Search</a>
+            <a href="/bookmarks"><i class="fas fa-bookmark"></i> Bookmarks</a>
+            <a href="/whale-alerts"><i class="fas fa-water"></i> Whale Alerts</a>
+            <a href="/airdrops"><i class="fas fa-parachute-box"></i> Airdrops</a>
+            <a href="/calendar"><i class="fas fa-calendar-alt"></i> Events</a>
+            <a href="/about"><i class="fas fa-info-circle"></i> About</a>
+        </div>
+        <div class="footer-section">
+            <h4>Categories</h4>
+            {% for cat in site_categories[:6] %}
+            <a href="/news?category={{ cat.slug }}"><i class="{{ cat.icon }}" style="width: 16px; text-align: center;"></i> {{ cat.name }}</a>
+            {% endfor %}
+        </div>
+        <div class="footer-section">
+            <h4>Legal</h4>
+            <a href="/privacy"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+            <a href="/terms"><i class="fas fa-file-contract"></i> Terms of Service</a>
+            <a href="/contact"><i class="fas fa-envelope"></i> Contact Us</a>
+            <a href="/dmca"><i class="fas fa-copyright"></i> DMCA</a>
+        </div>
+        <div class="footer-section">
+            <h4>Live Data</h4>
+            <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-rss" style="color: var(--accent-orange);"></i> 35+ RSS Sources
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-coins" style="color: var(--accent-yellow);"></i> 20+ Tracked Coins
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-robot" style="color: var(--accent-purple);"></i> AI-Powered Analysis
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.82rem;">
+                <i class="fab fa-telegram" style="color: #0088cc;"></i> Telegram Bot
+            </p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>&copy; 2026 CryptositNews. All rights reserved.</span>
+        <div class="footer-social">
+            <a href="https://t.me/CryptositNews" target="_blank" title="Telegram"><i class="fab fa-telegram"></i></a>
+            <a href="/rss" title="RSS Feed"><i class="fas fa-rss"></i></a>
+            <a href="/sitemap.xml" title="Sitemap"><i class="fas fa-sitemap"></i></a>
+        </div>
+    </div>
+    <div class="footer-live-ticker">
+        <span class="ticker-label"><span class="live-dot-sm" style="width:6px;height:6px;border-radius:50%;background:var(--accent-green);animation:livePulse 2s ease infinite;display:inline-block;"></span> Live</span>
+        <div class="footer-ticker-scroll">
+            <span>
+                BTC $67,234 <span class="up">+2.3%</span> &bull;
+                ETH $3,456 <span class="up">+1.8%</span> &bull;
+                BNB $612 <span class="down">-0.5%</span> &bull;
+                SOL $178 <span class="up">+4.2%</span> &bull;
+                ADA $0.68 <span class="up">+1.1%</span> &bull;
+                XRP $0.62 <span class="down">-0.3%</span> &bull;
+                DOGE $0.165 <span class="up">+3.7%</span>
+            </span>
+        </div>
+    </div>
+</footer>
+
+<script>
+/* ============================================
+   DROPDOWN TOGGLE (click + hover support)
+   ============================================ */
+function toggleDropdown(e, btn) {
+    e.stopPropagation();
+    const dropdown = btn.closest('.dropdown');
+    const isOpen = dropdown.classList.contains('open');
+    // Close all other dropdowns first
+    document.querySelectorAll('.dropdown.open').forEach(d => {
+        if (d !== dropdown) d.classList.remove('open');
+    });
+    dropdown.classList.toggle('open', !isOpen);
+}
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+});
+// Prevent dropdown from closing when clicking inside the menu
+document.querySelectorAll('.dropdown-menu').forEach(menu => {
+    menu.addEventListener('click', function(e) {
+        if (e.target.closest('.dropdown-menu a')) {
+            e.target.closest('.dropdown').classList.remove('open');
+        }
+    });
+});
+
+/* ============================================
+   V7: ENHANCED THEME TOGGLE (System Preference + Smooth Transition)
+   ============================================ */
+function toggleTheme() {
+    const html = document.documentElement;
+    const isLight = html.classList.toggle('light');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    localStorage.setItem('theme_timestamp', Date.now());
+    const icon = document.getElementById('themeIcon');
+    if (icon) {
+        icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+        icon.style.transform = 'rotate(360deg) scale(1.2)';
+        setTimeout(function() { icon.style.transform = ''; }, 300);
+    }
+    // Update mobile icon too
+    const mobileIcon = document.getElementById('themeIconMobile');
+    if (mobileIcon) mobileIcon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+}
+// Initialize theme: localStorage > system preference > dark (default)
+(function() {
+    var saved = localStorage.getItem('theme');
+    var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+    var isLight = saved === 'light' || (!saved && prefersLight);
+    if (isLight) {
+        document.documentElement.classList.add('light');
+        var icon = document.getElementById('themeIcon');
+        if (icon) icon.className = 'fas fa-sun';
+        var mobileIcon = document.getElementById('themeIconMobile');
+        if (mobileIcon) mobileIcon.className = 'fas fa-sun';
+    }
+    // Listen for system theme changes
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+            if (!localStorage.getItem('theme')) {
+                document.documentElement.classList.toggle('light', !e.matches);
+                var icon = document.getElementById('themeIcon');
+                if (icon) icon.className = e.matches ? 'fas fa-moon' : 'fas fa-sun';
+            }
+        });
+    }
+})();
+
+/* ============================================
+   READING PROGRESS BAR WITH PERCENTAGE
+   ============================================ */
+(function() {
+    const bar = document.getElementById('readingBar');
+    const progressText = document.getElementById('progressText');
+    if (!bar) return;
+
+    function updateProgress() {
+        const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+        if (scrollable <= 0) return;
+        const scrolled = (window.scrollY / scrollable) * 100;
+        const pct = Math.min(Math.max(scrolled, 0), 100);
+        bar.style.width = pct + '%';
+        if (progressText) {
+            progressText.textContent = Math.round(pct) + '%';
+            progressText.classList.toggle('visible', pct > 2 && pct < 98);
+        }
+    }
+
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+})();
+
+/* ============================================
+   BACK TO TOP
+   ============================================ */
+(function() {
+    const btn = document.getElementById('backToTop');
+    if (!btn) return;
+    window.addEventListener('scroll', function() {
+        btn.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
+})();
+
+/* ============================================
+   MOBILE MENU
+   ============================================ */
+document.querySelectorAll('.navbar-center a').forEach(function(link) {
+    link.addEventListener('click', function() {
+        document.getElementById('navLinks').classList.remove('active');
+    });
+});
+
+/* ============================================
+   SCROLL ANIMATION OBSERVER
+   ============================================ */
+(function() {
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.style.animationPlayState = 'running';
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.animate-in').forEach(function(el) {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+    });
+})();
+
+/* ============================================
+   UPGRADE 1: BREAKING NEWS BANNER
+   ============================================ */
+function closeBreakingBanner() {
+    var banner = document.getElementById('breakingBanner');
+    if (banner) {
+        banner.classList.add('hidden');
+        localStorage.setItem('cryptositnews_breaking_dismissed', Date.now().toString());
+    }
+}
+(function() {
+    var banner = document.getElementById('breakingBanner');
+    if (!banner) return;
+
+    // Check if there is a breaking headline (Jinja2 template variable)
+    var hasBreaking = banner.querySelector('#breakingMarqueeText') &&
+                      banner.querySelector('#breakingMarqueeText').textContent.trim() !== 'Loading breaking crypto news...';
+
+    if (!hasBreaking) {
+        banner.classList.add('hidden');
+        return;
+    }
+
+    // Check localStorage: don't show if dismissed in last 4 hours
+    var dismissed = localStorage.getItem('cryptositnews_breaking_dismissed');
+    if (dismissed) {
+        var elapsed = Date.now() - parseInt(dismissed, 10);
+        if (elapsed < 4 * 60 * 60 * 1000) {
+            banner.classList.add('hidden');
+            return;
+        }
+    }
+
+    banner.classList.remove('hidden');
+    // Auto-fetch breaking news from API
+    fetch('/api/breaking')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success && data.data && data.data.length > 0) {
+                var headlines = data.data.map(function(a) { return a.title; }).join('  ●  ');
+                var marqueeEl = document.getElementById('breakingMarqueeText');
+                if (marqueeEl) marqueeEl.textContent = headlines;
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        })
+        .catch(function() { banner.classList.add('hidden'); });
+})();
+
+/* ============================================
+   V5: LANGUAGE TOGGLE (English / Arabic)
+   ============================================ */
+function toggleLanguage() {
+    var html = document.documentElement;
+    var langLabel = document.getElementById('langLabel');
+    var isArabic = html.getAttribute('dir') === 'rtl';
+    if (isArabic) {
+        html.setAttribute('dir', 'ltr');
+        html.setAttribute('lang', 'en');
+        if (langLabel) langLabel.textContent = 'EN';
+        localStorage.setItem('lang', 'en');
+    } else {
+        html.setAttribute('dir', 'rtl');
+        html.setAttribute('lang', 'ar');
+        if (langLabel) langLabel.textContent = 'AR';
+        localStorage.setItem('lang', 'ar');
+    }
+}
+(function() {
+    var saved = localStorage.getItem('lang');
+    if (saved === 'ar') {
+        document.documentElement.setAttribute('dir', 'rtl');
+        document.documentElement.setAttribute('lang', 'ar');
+        var langLabel = document.getElementById('langLabel');
+        if (langLabel) langLabel.textContent = 'AR';
+    }
+})();
+
+/* ============================================
+   UPGRADE 2: TOAST NOTIFICATION SYSTEM
+   ============================================ */
+var toastContainer = document.getElementById('toastContainer');
+var toastCounter = 0;
+
+function showToast(title, message, type) {
+    type = type || 'info';
+    if (!toastContainer) return;
+
+    var validTypes = ['success', 'error', 'info', 'breaking'];
+    if (validTypes.indexOf(type) === -1) type = 'info';
+
+    var iconMap = {
+        success: 'fa-check',
+        error: 'fa-exclamation-triangle',
+        info: 'fa-info-circle',
+        breaking: 'fa-bolt'
+    };
+
+    var id = 'toast-' + (++toastCounter);
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.id = id;
+    toast.innerHTML =
+        '<div class="toast-icon"><i class="fas ' + (iconMap[type] || iconMap.info) + '"></i></div>' +
+        '<div class="toast-body">' +
+            '<div class="toast-title">' + title + '</div>' +
+            (message ? '<div class="toast-message">' + message + '</div>' : '') +
+        '</div>' +
+        '<button class="toast-close" onclick="dismissToast(\'' + id + '\')" aria-label="Close"><i class="fas fa-times"></i></button>' +
+        '<div class="toast-progress"></div>';
+
+    toastContainer.appendChild(toast);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() { dismissToast(id); }, 5000);
+}
+
+function dismissToast(id) {
+    var toast = document.getElementById(id);
+    if (!toast || toast.classList.contains('dismissing')) return;
+    toast.classList.add('dismissing');
+    setTimeout(function() {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 300);
+}
+
+/* ============================================
+   UPGRADE 3: FLOATING AI CHAT WIDGET
+   ============================================ */
+var chatOpen = false;
+
+function toggleChat() {
+    chatOpen = !chatOpen;
+    var panel = document.getElementById('chatPanel');
+    var toggle = document.getElementById('chatToggle');
+    if (panel) panel.classList.toggle('active', chatOpen);
+    if (toggle) toggle.classList.toggle('active', chatOpen);
+    if (chatOpen) {
+        var input = document.getElementById('chatInput');
+        if (input) setTimeout(function() { input.focus(); }, 300);
+    }
+}
+
+function sendChatMessage() {
+    var input = document.getElementById('chatInput');
+    var messages = document.getElementById('chatMessages');
+    if (!input || !messages) return;
+
+    var text = input.value.trim();
+    if (!text) return;
+
+    // Add user message
+    var userMsg = document.createElement('div');
+    userMsg.className = 'chat-msg user';
+    userMsg.textContent = text;
+    messages.appendChild(userMsg);
+    input.value = '';
+
+    // Add typing indicator
+    var typing = document.createElement('div');
+    typing.className = 'chat-msg-typing';
+    typing.id = 'chatTyping';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    messages.appendChild(typing);
+    messages.scrollTop = messages.scrollHeight;
+
+    // Send to API
+    fetch('/api/search?q=' + encodeURIComponent(text))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            var typingEl = document.getElementById('chatTyping');
+            if (typingEl) typingEl.remove();
+
+            var botMsg = document.createElement('div');
+            botMsg.className = 'chat-msg bot';
+
+            if (data.results && data.results.length > 0) {
+                var html = '<strong style="color: var(--accent-cyan);">Crypto AI</strong><br>';
+                html += 'Found ' + data.results.length + ' results:<br>';
+                data.results.slice(0, 5).forEach(function(r) {
+                    html += '&bull; <a href="' + (r.url || '#') + '">' + (r.title || r.text || 'Result') + '</a><br>';
+                });
+                botMsg.innerHTML = html;
+            } else if (data.answer) {
+                botMsg.innerHTML = '<strong style="color: var(--accent-cyan);">Crypto AI</strong><br>' + data.answer;
+            } else {
+                botMsg.innerHTML = '<strong style="color: var(--accent-cyan);">Crypto AI</strong><br>I couldn\'t find specific results for "' + text + '". Try asking about Bitcoin, Ethereum, DeFi, or latest crypto news!';
+            }
+
+            messages.appendChild(botMsg);
+            messages.scrollTop = messages.scrollHeight;
+        })
+        .catch(function() {
+            var typingEl = document.getElementById('chatTyping');
+            if (typingEl) typingEl.remove();
+
+            var errMsg = document.createElement('div');
+            errMsg.className = 'chat-msg bot';
+            errMsg.innerHTML = '<strong style="color: var(--accent-red);">Error</strong><br>Sorry, I couldn\'t connect to the server. Please try again.';
+            messages.appendChild(errMsg);
+            messages.scrollTop = messages.scrollHeight;
+        });
+}
+
+/* ============================================
+   UPGRADE 4: COOKIE CONSENT BANNER
+   ============================================ */
+(function() {
+    var consent = localStorage.getItem('cryptositnews_cookie_consent');
+    var banner = document.getElementById('cookieConsent');
+    if (!banner) return;
+
+    if (!consent) {
+        // Show after a short delay
+        setTimeout(function() { banner.classList.add('visible'); }, 1500);
+    }
+})();
+
+function acceptCookies() {
+    localStorage.setItem('cryptositnews_cookie_consent', 'accepted');
+    var banner = document.getElementById('cookieConsent');
+    if (banner) banner.classList.remove('visible');
+    banner.classList.add('hidden');
+    showToast('Preferences Saved', 'You accepted cookies. Thank you!', 'success');
+}
+
+function declineCookies() {
+    localStorage.setItem('cryptositnews_cookie_consent', 'declined');
+    var banner = document.getElementById('cookieConsent');
+    if (banner) banner.classList.remove('visible');
+    banner.classList.add('hidden');
+    showToast('Preferences Saved', 'You declined cookies. Essential cookies only.', 'info');
+}
+
+/* ============================================
+   UPGRADE 5: LIVE SEARCH DROPDOWN
+   ============================================ */
+(function() {
+    var input = document.getElementById('searchInput');
+    var dropdown = document.getElementById('searchDropdown');
+    var searchDefault = document.getElementById('searchDefault');
+    var searchLoading = document.getElementById('searchLoading');
+    var searchResults = document.getElementById('searchResults');
+    if (!input || !dropdown) return;
+
+    var debounceTimer = null;
+
+    input.addEventListener('focus', function() {
+        dropdown.classList.add('active');
+        if (!input.value.trim()) {
+            searchDefault.style.display = 'block';
+            searchLoading.style.display = 'none';
+            searchResults.style.display = 'none';
+        }
+    });
+
+    input.addEventListener('input', function() {
+        var query = input.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (!query) {
+            searchDefault.style.display = 'block';
+            searchLoading.style.display = 'none';
+            searchResults.style.display = 'none';
+            return;
+        }
+
+        // Show loading skeleton
+        searchDefault.style.display = 'none';
+        searchLoading.style.display = 'block';
+        searchResults.style.display = 'none';
+
+        // Debounced search (300ms)
+        debounceTimer = setTimeout(function() {
+            fetch('/api/search/suggestions?q=' + encodeURIComponent(query))
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    searchLoading.style.display = 'none';
+                    searchResults.style.display = 'block';
+
+                    if (!data || (!data.articles && !data.coins)) {
+                        searchResults.innerHTML =
+                            '<div class="search-dropdown-empty">' +
+                                '<i class="fas fa-search"></i>' +
+                                'No results found for "' + query + '"' +
+                            '</div>';
+                        return;
+                    }
+
+                    var html = '';
+
+                    // Articles section
+                    if (data.articles && data.articles.length > 0) {
+                        html += '<div class="search-dropdown-section">';
+                        html += '<div class="search-dropdown-section-title"><i class="fas fa-newspaper"></i> Articles</div>';
+                        data.articles.slice(0, 3).forEach(function(a) {
+                            html += '<a href="' + (a.url || '#') + '" class="search-dropdown-item">';
+                            html += '<i class="fas fa-file-alt"></i>';
+                            html += '<span>' + (a.title || a.text || 'Article') + '</span>';
+                            if (a.source) {
+                                html += '<span class="item-badge badge-cyan">' + a.source + '</span>';
+                            }
+                            html += '</a>';
+                        });
+                        html += '</div>';
+                    }
+
+                    // Coins section
+                    if (data.coins && data.coins.length > 0) {
+                        html += '<div class="search-dropdown-section">';
+                        html += '<div class="search-dropdown-section-title"><i class="fas fa-coins"></i> Coins</div>';
+                        data.coins.slice(0, 3).forEach(function(c) {
+                            html += '<a href="/market?q=' + encodeURIComponent(c.name || c.symbol || '') + '" class="search-dropdown-item">';
+                            html += '<i class="fas fa-circle" style="font-size:0.5rem; color: var(--accent-yellow);"></i>';
+                            html += '<span>' + (c.name || c.symbol || 'Coin') + '</span>';
+                            if (c.symbol) {
+                                html += '<span class="item-badge badge-yellow">' + c.symbol + '</span>';
+                            }
+                            html += '</a>';
+                        });
+                        html += '</div>';
+                    }
+
+                    // Trending section
+                    html += '<div class="search-dropdown-section">';
+                    html += '<div class="search-dropdown-section-title"><i class="fas fa-fire"></i> Trending</div>';
+                    html += '<div class="search-trending-tags">';
+                    var trending = ['Bitcoin', 'Ethereum', 'Solana', 'DeFi'];
+                    trending.forEach(function(t) {
+                        html += '<a href="/search?q=' + encodeURIComponent(t + ' ' + query) + '" class="search-trending-tag">' + t + ' + ' + query + '</a>';
+                    });
+                    html += '</div></div>';
+
+                    searchResults.innerHTML = html;
+                })
+                .catch(function() {
+                    searchLoading.style.display = 'none';
+                    searchResults.style.display = 'block';
+                    searchResults.innerHTML =
+                        '<div class="search-dropdown-empty">' +
+                            '<i class="fas fa-exclamation-circle"></i>' +
+                            'Something went wrong. Try again.' +
+                        '</div>';
+                });
+        }, 300);
+    });
+
+    // Close on click outside
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && e.target !== input) {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    // Close on Escape
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            dropdown.classList.remove('active');
+            input.blur();
+        }
+    });
+
+    // Submit on Enter (navigate to search page)
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && input.value.trim()) {
+            window.location.href = '/search?q=' + encodeURIComponent(input.value.trim());
+        }
+    });
+})();
+
+/* ============================================
+   UPGRADE 7: BOOKMARK SYSTEM
+   ============================================ */
+var BOOKMARKS_KEY = 'cryptositnews_bookmarks';
+
+function getBookmarks() {
+    try {
+        var data = localStorage.getItem(BOOKMARKS_KEY);
+        return data ? JSON.parse(data) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveBookmarks(bookmarks) {
+    localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+}
+
+function toggleBookmark(articleId, title, url, source) {
+    if (!articleId) return;
+    var bookmarks = getBookmarks();
+
+    if (bookmarks[articleId]) {
+        delete bookmarks[articleId];
+        showToast('Bookmark Removed', '"' + title + '" removed from bookmarks', 'info');
+    } else {
+        bookmarks[articleId] = {
+            id: articleId,
+            title: title || 'Untitled',
+            url: url || '#',
+            source: source || '',
+            savedAt: new Date().toISOString()
+        };
+        showToast('Bookmarked!', '"' + title + '" saved to bookmarks', 'success');
+    }
+
+    saveBookmarks(bookmarks);
+    updateAllBookmarkButtons();
+}
+
+function isBookmarked(articleId) {
+    if (!articleId) return false;
+    var bookmarks = getBookmarks();
+    return !!bookmarks[articleId];
+}
+
+function updateAllBookmarkButtons() {
+    document.querySelectorAll('[data-bookmark-id]').forEach(function(btn) {
+        var id = btn.getAttribute('data-bookmark-id');
+        var icon = btn.querySelector('i') || btn;
+        if (isBookmarked(id)) {
+            btn.classList.add('bookmarked');
+            if (icon) {
+                icon.className = icon.className.replace(/fa-regular|far|fa-bookmark/, '').trim();
+                icon.classList.add('fas', 'fa-bookmark');
+                icon.style.color = 'var(--accent-yellow)';
+            }
+        } else {
+            btn.classList.remove('bookmarked');
+            if (icon) {
+                icon.className = icon.className.replace(/fas|fa-bookmark/, '').trim();
+                icon.classList.add('far', 'fa-bookmark');
+                icon.style.color = '';
+            }
+        }
+    });
+}
+
+// Initialize bookmark button states on page load
+(function() {
+    updateAllBookmarkButtons();
+})();
+
+/* ============================================
+   V4: Animated Particles Background
+   ============================================ */
+(function() {
+    const canvas = document.getElementById('particlesCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const PARTICLE_COUNT = 60;
+    let w, h;
+
+    function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.vx = (Math.random() - 0.5) * 0.4;
+            this.vy = (Math.random() - 0.5) * 0.4;
+            this.size = Math.random() * 2 + 0.5;
+            this.opacity = Math.random() * 0.4 + 0.1;
+            const colors = ['34,211,238', '59,130,246', '167,139,250'];
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > w) this.vx *= -1;
+            if (this.y < 0 || this.y > h) this.vy *= -1;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+    function drawLines() {
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 150) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(34, 211, 238, ${0.06 * (1 - dist / 150)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    // Respect reduced motion
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function animate() {
+        ctx.clearRect(0, 0, w, h);
+        if (!prefersReduced) {
+            particles.forEach(p => { p.update(); p.draw(); });
+            drawLines();
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
+})();
+
+/* ============================================
+   V4: Notification Bell
+   ============================================ */
+function toggleNotifications() {
+    const panel = document.getElementById('notifPanel');
+    if (panel) panel.classList.toggle('active');
+}
+function clearNotifications() {
+    const list = document.getElementById('notifList');
+    const badge = document.getElementById('notifBadge');
+    const count = document.getElementById('notifCount');
+    if (list) list.innerHTML = '<div class="notif-empty"><i class="fas fa-check-circle"></i>All caught up!</div>';
+    if (badge) badge.style.display = 'none';
+    if (count) count.textContent = '(0)';
+}
+// Close notification panel on outside click
+document.addEventListener('click', function(e) {
+    const panel = document.getElementById('notifPanel');
+    const btn = document.getElementById('notifBtn');
+    if (panel && btn && !btn.contains(e.target) && !panel.contains(e.target)) {
+        panel.classList.remove('active');
+    }
+});
+
+/* ============================================
+   V4: Live Update Auto-Refresh Timer
+   ============================================ */
+(function() {
+    const indicators = document.querySelectorAll('.live-update-indicator .live-time');
+    if (indicators.length === 0) return;
+    function updateTime() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        indicators.forEach(el => el.textContent = timeStr);
+    }
+    updateTime();
+    setInterval(updateTime, 30000);
+})();
+</script>
+{% block extra_js %}{% endblock %}
+<script>
+// V6: Glassmorphism ambient light effect
+document.addEventListener('DOMContentLoaded', function() {
+    var ambientCards = document.querySelectorAll('.glass-ambient');
+    if (ambientCards.length) {
+        document.addEventListener('mousemove', function(e) {
+            ambientCards.forEach(function(card) {
+                var rect = card.getBoundingClientRect();
+                var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+                var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+                card.style.setProperty('--mouse-x', x + '%');
+                card.style.setProperty('--mouse-y', y + '%');
+            });
+        });
+    }
+});
+</script>
+</body>
+</html>

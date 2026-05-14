@@ -1,0 +1,26 @@
+# ═══════════════════════════════════════════════════════════════
+# CryptositNews v7.0 — Requirements
+# ═══════════════════════════════════════════════════════════════
+
+# Core Framework
+flask==3.1.1
+gunicorn==23.0.0
+flask-cors==5.0.1
+
+# Security & Performance (NEW in v7)
+flask-limiter>=3.12.0
+flask-compress>=1.17
+flask-talisman>=1.3.0
+
+# Data Processing
+feedparser==6.0.11
+requests==2.32.3
+urllib3==2.3.0
+python-dateutil==2.9.0
+python-dotenv==1.1.1
+
+# AI
+openai>=1.60.0,<3.0.0
+
+# Database (uncomment if using PostgreSQL)
+# psycopg2-binary==2.9.9

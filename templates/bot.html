@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Telegram Bot - CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bot-hero {
+        text-align: center; padding: 2rem 0;
+    }
+    .bot-hero h1 {
+        font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem;
+    }
+    .bot-hero p {
+        color: var(--text-secondary); max-width: 600px; margin: 0 auto;
+        font-size: 1rem; line-height: 1.7;
+    }
+
+    /* Bot Features */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    .feature-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-glow);
+    }
+    .feature-icon {
+        width: 60px; height: 60px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%;
+        background: var(--gradient-card);
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+        color: var(--accent-cyan);
+    }
+    .feature-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .feature-card p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
+
+    /* Bot Stats */
+    .bot-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+    .bot-stat {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .bot-stat .stat-number {
+        font-size: 2rem; font-weight: 800;
+    }
+    .bot-stat .stat-label {
+        color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* How It Works */
+    .how-it-works {
+        margin: 3rem 0;
+    }
+    .how-it-works h2 { text-align: center; margin-bottom: 2rem; }
+    .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    .step {
+        text-align: center; padding: 1.5rem;
+    }
+    .step-number {
+        width: 48px; height: 48px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        color: white; font-weight: 800; font-size: 1.2rem;
+        margin: 0 auto 1rem;
+    }
+    .step h4 { margin-bottom: 0.5rem; }
+    .step p { color: var(--text-secondary); font-size: 0.85rem; }
+
+    /* Join CTA */
+    .join-cta {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(139, 92, 246, 0.1));
+        border: 1px solid rgba(6, 182, 212, 0.2);
+        border-radius: var(--radius-lg);
+        padding: 3rem;
+        text-align: center;
+        margin: 3rem 0;
+    }
+    .join-cta h2 { margin-bottom: 1rem; }
+    .join-cta p { color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+    @media (max-width: 768px) {
+        .bot-hero h1 { font-size: 1.6rem; }
+        .features-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Bot Hero -->
+<section class="bot-hero">
+    <h1 class="text-gradient"><i class="fab fa-telegram"></i> Telegram Bot</h1>
+    <p>
+        Get real-time crypto news delivered straight to your Telegram channel.
+        Our AI-powered bot analyzes sentiment, summarizes articles, and highlights key market insights.
+    </p>
+</section>
+
+<!-- Bot Stats -->
+{% if stats and stats.bot_stats %}
+<div class="bot-stats-grid">
+    <div class="bot-stat">
+        <div class="stat-number text-gradient">{{ stats.bot_stats.total_articles_scraped or 0 }}</div>
+        <div class="stat-label">Articles Scraped</div>
+    </div>
+    <div class="bot-stat">
+        <div class="stat-number text-gradient">{{ stats.bot_stats.total_articles_posted or 0 }}</div>
+        <div class="stat-label">Telegram Posts</div>
+    </div>
+    <div class="bot-stat">
+        <div class="stat-number text-gradient">{{ stats.bot_stats.total_ai_summaries or 0 }}</div>
+        <div class="stat-label">AI Summaries</div>
+    </div>
+    <div class="bot-stat">
+        <div class="stat-number text-gradient">{{ stats.total_sources or 0 }}</div>
+        <div class="stat-label">RSS Sources</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Features -->
+<div class="features-grid">
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-rss"></i></div>
+        <h3>35+ RSS Sources</h3>
+        <p>Aggregates news from CoinDesk, CoinTelegraph, Decrypt, and dozens more crypto publications worldwide.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-robot"></i></div>
+        <h3>AI Analysis</h3>
+        <p>GPT-4o-mini powered summaries, sentiment analysis, and market impact assessments for every article.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+        <h3>Real-time Updates</h3>
+        <p>Scraper runs every minute to ensure you get the latest breaking news as it happens.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
+        <h3>Sentiment Scoring</h3>
+        <p>Each article receives a sentiment score from very bearish to very bullish with emoji indicators.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-filter"></i></div>
+        <h3>Smart Filtering</h3>
+        <p>Automatic deduplication and keyword-based filtering ensure only relevant crypto content is posted.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-globe"></i></div>
+        <h3>Multi-language</h3>
+        <p>Supports English and Arabic content detection and processing from international sources.</p>
+    </div>
+</div>
+
+<!-- How It Works -->
+<div class="how-it-works">
+    <h2><i class="fas fa-cogs" style="color: var(--accent-cyan);"></i> How It Works</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h4>Scrape</h4>
+            <p>RSS feeds from 35+ crypto news sources are fetched in parallel every minute.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h4>Analyze</h4>
+            <p>AI processes each article - generating summaries, sentiment scores, and extracting keywords.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h4>Filter</h4>
+            <p>Duplicate and low-quality articles are removed. Only the best content passes through.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <h4>Deliver</h4>
+            <p>Formatted articles with images and analysis are posted directly to your Telegram channel.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Join CTA -->
+<div class="join-cta">
+    <h2><i class="fab fa-telegram" style="color: var(--accent-cyan);"></i> Join Our Channel</h2>
+    <p>Get the latest crypto news and AI insights delivered to your Telegram.</p>
+    <a href="{{ telegram_channel }}" target="_blank" class="btn btn-primary">
+        <i class="fab fa-telegram"></i> Open Telegram Channel
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}DMCA - CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-page { max-width: 800px; margin: 0 auto; }
+    .legal-page h1 {
+        font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;
+    }
+    .legal-page .updated {
+        color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem;
+    }
+    .legal-page h2 {
+        font-size: 1.3rem; font-weight: 700; margin: 2rem 0 0.8rem;
+        color: var(--accent-cyan);
+    }
+    .legal-page p, .legal-page li {
+        color: var(--text-secondary); font-size: 0.92rem; line-height: 1.8;
+        margin-bottom: 0.8rem;
+    }
+    .legal-page ul, .legal-page ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    .legal-page li { margin-bottom: 0.4rem; }
+    .legal-page a { color: var(--accent-cyan); }
+    .dmca-notice {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin: 2rem 0;
+    }
+    .dmca-notice h3 { color: var(--accent-yellow); margin-bottom: 1rem; }
+    .dmca-notice p { font-size: 0.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <h1 class="text-gradient">DMCA Policy</h1>
+    <p class="updated">Last updated: May 11, 2026</p>
+
+    <p>CryptositNews respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 ("DMCA"), we will respond expeditiously to claims of copyright infringement committed using our services.</p>
+
+    <h2>1. Our Content Aggregation Approach</h2>
+    <p>CryptositNews is a news aggregation service that automatically collects and displays headlines, summaries, and links to cryptocurrency news articles from publicly available RSS feeds and online sources. We provide proper attribution by clearly displaying the original source name and linking directly to the original article on the publisher's website. We do not reproduce full articles; we only display headlines, brief summaries, and thumbnail images that accompany the RSS feeds.</p>
+    <p>We believe our use of content constitutes fair use under applicable copyright law, as it is transformative, non-commercial in nature, uses only brief excerpts, and does not negatively affect the market for the original works. However, if you believe that your copyrighted material is being used in a way that constitutes copyright infringement, please follow the procedure below.</p>
+
+    <h2>2. Reporting Copyright Infringement</h2>
+    <p>If you believe that content available on our website infringes one or more of your copyrights, please notify us by providing the following information in accordance with the DMCA:</p>
+    <ol>
+        <li><strong>Identification of the copyrighted work:</strong> A description of the copyrighted work that you claim has been infringed, including the URL or a copy of the original work if possible.</li>
+        <li><strong>Identification of the infringing material:</strong> The URL or specific location on our website where the allegedly infringing material is located, so that we can locate it.</li>
+        <li><strong>Your contact information:</strong> Your full name, mailing address, telephone number, and email address.</li>
+        <li><strong>A statement of good faith:</strong> A statement that you have a good faith belief that the use of the material in the manner complained of is not authorized by the copyright owner, its agent, or the law.</li>
+        <li><strong>A statement under penalty of perjury:</strong> A statement, made under penalty of perjury, that the information in your notice is accurate and that you are the copyright owner or authorized to act on behalf of the copyright owner.</li>
+        <li><strong>Your physical or electronic signature:</strong> A physical signature of the person authorized to act on behalf of the owner of the copyright, or an electronic signature.</li>
+    </ol>
+
+    <div class="dmca-notice">
+        <h3><i class="fas fa-envelope"></i> DMCA Contact Information</h3>
+        <p>Please send all DMCA takedown notices to:</p>
+        <p><strong>Email:</strong> <a href="mailto:dmca@cryptositnews.com">dmca@cryptositnews.com</a></p>
+        <p><strong>Subject Line:</strong> DMCA Takedown Notice - [Your Content Title]</p>
+        <p>We aim to respond to all valid DMCA notices within 48 hours of receipt.</p>
+    </div>
+
+    <h2>3. Counter-Notification</h2>
+    <p>If you believe that your content was removed or disabled as a result of a mistake or misidentification, you may send a counter-notification to our designated DMCA agent. Your counter-notification must include:</p>
+    <ul>
+        <li>Identification of the material that has been removed or disabled and the location at which the material appeared before it was removed or disabled</li>
+        <li>A statement under penalty of perjury that you have a good faith belief that the material was removed or disabled as a result of mistake or misidentification</li>
+        <li>Your name, address, telephone number, and email address</li>
+        <li>A statement that you consent to the jurisdiction of the federal court in your district and that you will accept service of process from the person who filed the original DMCA notice</li>
+        <li>Your physical or electronic signature</li>
+    </ul>
+
+    <h2>4. Repeat Infringers</h2>
+    <p>In accordance with the DMCA and other applicable law, we reserve the right to terminate access to our services for users or entities that are repeat infringers of copyrights.</p>
+
+    <h2>5. Disclaimer</h2>
+    <p>The information provided on this page is for general informational purposes only and does not constitute legal advice. We recommend consulting with a qualified legal professional for specific questions regarding copyright law and the DMCA.</p>
+</div>
+{% endblock %}

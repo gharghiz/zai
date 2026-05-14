@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookmarks - CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       v3: Bookmarks Page Header
+       ============================================ */
+    .bookmarks-header {
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .bookmarks-header-left {
+        display: flex; align-items: center; gap: 12px;
+    }
+    .bookmarks-header-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 146, 60, 0.15));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; color: var(--accent-yellow);
+    }
+    .bookmarks-header h1 {
+        font-size: 1.6rem; font-weight: 900;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .bookmark-count-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 26px; height: 26px; padding: 0 8px;
+        background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 20px; font-size: 0.78rem; font-weight: 800;
+        color: var(--accent-yellow);
+    }
+    .bookmarks-actions {
+        display: flex; gap: 8px; align-items: center;
+    }
+    .bookmarks-actions .btn { font-size: 0.82rem; padding: 8px 16px; }
+    .btn-share {
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); border-radius: var(--radius-sm);
+        cursor: pointer; font-family: inherit; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 6px;
+        transition: var(--transition);
+    }
+    .btn-share:hover { background: var(--bg-glass-hover); border-color: var(--border-glow); color: var(--accent-cyan); }
+    .btn-clear-all {
+        background: rgba(248, 113, 113, 0.08); border: 1px solid rgba(248, 113, 113, 0.15);
+        color: var(--accent-red); border-radius: var(--radius-sm);
+        cursor: pointer; font-family: inherit; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 6px;
+        transition: var(--transition);
+    }
+    .btn-clear-all:hover { background: rgba(248, 113, 113, 0.15); border-color: rgba(248, 113, 113, 0.3); }
+
+    /* ============================================
+       v3: Skeleton Loading Grid
+       ============================================ */
+    .skeleton-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    .skeleton-card-lg {
+        padding: 0; border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .skeleton-card-lg .skeleton-img { height: 180px; border-radius: 0; margin-bottom: 0; }
+    .skeleton-card-lg .skeleton-body { padding: 1.2rem; }
+    .skeleton-card-lg .skeleton-body .skeleton-text { width: 40%; height: 12px; }
+    .skeleton-card-lg .skeleton-body .skeleton-title { margin-top: 8px; }
+
+    /* ============================================
+       v3: Empty State
+       ============================================ */
+    .empty-state {
+        text-align: center; padding: 5rem 2rem; max-width: 500px; margin: 0 auto;
+    }
+    .empty-state-illustration {
+        width: 140px; height: 140px; margin: 0 auto 1.5rem;
+        background: var(--gradient-card); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        animation: float 3s ease infinite; position: relative;
+    }
+    .empty-state-illustration i { font-size: 3.5rem; color: var(--text-muted); opacity: 0.3; }
+    .empty-state-illustration .empty-ring {
+        position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px;
+        border-radius: 50%; border: 2px dashed var(--border-glass);
+        animation: float 4s ease infinite reverse;
+    }
+    .empty-state h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 0.6rem; }
+    .empty-state p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.7; margin-bottom: 1.5rem; }
+    .empty-state .btn-primary { font-size: 0.9rem; padding: 12px 24px; }
+
+    /* ============================================
+       v3: Bookmarked Articles Grid
+       ============================================ */
+    .bookmarks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    .bookmark-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); overflow: hidden; transition: var(--transition);
+        position: relative;
+    }
+    .bookmark-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0 20px rgba(34, 211, 238, 0.1), 0 0 40px rgba(34, 211, 238, 0.05);
+        border-color: rgba(34, 211, 238, 0.2);
+    }
+    .bookmark-card-img-wrapper {
+        overflow: hidden; position: relative;
+    }
+    .bookmark-card-img {
+        width: 100%; height: 180px; object-fit: cover;
+        background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+        transition: transform 0.5s ease;
+    }
+    .bookmark-card:hover .bookmark-card-img { transform: scale(1.03); }
+    .bookmark-card-img-placeholder {
+        width: 100%; height: 180px;
+        background: var(--gradient-card);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .bookmark-card-img-placeholder i { font-size: 2.5rem; color: var(--accent-cyan); opacity: 0.2; }
+
+    .bookmark-card-body { padding: 1.2rem; }
+    .bookmark-card-meta { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+    .bookmark-card-title {
+        font-size: 1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .bookmark-card-title a { color: var(--text-primary); }
+    .bookmark-card-title a:hover { color: var(--accent-cyan); }
+    .bookmark-card-summary {
+        color: var(--text-secondary); font-size: 0.82rem; line-height: 1.6; margin-bottom: 12px;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .bookmark-card-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 0.78rem; color: var(--text-muted);
+    }
+    .bookmark-card-footer .saved-date { display: flex; align-items: center; gap: 4px; }
+
+    /* v3: Remove Bookmark Button */
+    .remove-bookmark-btn {
+        position: absolute; top: 10px; right: 10px; z-index: 2;
+        width: 32px; height: 32px; border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8); font-size: 0.75rem;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: var(--transition); opacity: 0;
+    }
+    .bookmark-card:hover .remove-bookmark-btn { opacity: 1; }
+    .remove-bookmark-btn:hover { background: rgba(248, 113, 113, 0.8); border-color: var(--accent-red); color: white; }
+
+    /* v3: Confirmation Modal */
+    .confirm-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+        z-index: 500; display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .confirm-overlay.active { opacity: 1; pointer-events: all; }
+    .confirm-dialog {
+        background: rgba(12, 20, 40, 0.98); backdrop-filter: blur(24px);
+        border: 1px solid var(--border-glass); border-radius: var(--radius-xl);
+        padding: 2rem; max-width: 400px; width: 90%;
+        text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        transform: scale(0.95); transition: transform 0.3s ease;
+    }
+    html.light .confirm-dialog { background: rgba(255, 255, 255, 0.98); }
+    .confirm-overlay.active .confirm-dialog { transform: scale(1); }
+    .confirm-icon {
+        width: 56px; height: 56px; border-radius: 50%;
+        background: rgba(248, 113, 113, 0.12); color: var(--accent-red);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; margin: 0 auto 1rem;
+    }
+    .confirm-dialog h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .confirm-dialog p { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+    .confirm-actions .btn { min-width: 110px; justify-content: center; }
+    .btn-danger { background: rgba(248, 113, 113, 0.15); color: var(--accent-red); border: 1px solid rgba(248, 113, 113, 0.2); }
+    .btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
+
+    /* v3: Card Remove Animation */
+    @keyframes cardRemove {
+        to { opacity: 0; transform: scale(0.9) translateY(-10px); }
+    }
+    .bookmark-card.removing { animation: cardRemove 0.3s ease forwards; }
+
+    @media (max-width: 768px) {
+        .bookmarks-header { flex-direction: column; align-items: flex-start; }
+        .bookmarks-actions { width: 100%; }
+        .bookmarks-grid { grid-template-columns: 1fr; }
+        .skeleton-grid { grid-template-columns: 1fr; }
+        .remove-bookmark-btn { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- v3: Page Header -->
+<div class="bookmarks-header animate-in">
+    <div class="bookmarks-header-left">
+        <div class="bookmarks-header-icon"><i class="fas fa-bookmark"></i></div>
+        <h1>
+            My Bookmarks
+            <span class="bookmark-count-badge" id="bookmarkCount">0</span>
+        </h1>
+    </div>
+    <div class="bookmarks-actions" id="bookmarksActions" style="display:none;">
+        <button class="btn-share" id="shareBookmarks" title="Copy all bookmark links to clipboard">
+            <i class="fas fa-share-nodes"></i> Share
+        </button>
+        <button class="btn-clear-all" id="clearAllBtn" title="Remove all bookmarks">
+            <i class="fas fa-trash-can"></i> Clear All
+        </button>
+    </div>
+</div>
+
+<!-- v3: Skeleton Loading -->
+<div class="skeleton-grid" id="skeletonGrid">
+    <div class="skeleton-card-lg">
+        <div class="skeleton skeleton-img"></div>
+        <div class="skeleton-body">
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text" style="width:70%;"></div>
+        </div>
+    </div>
+    <div class="skeleton-card-lg">
+        <div class="skeleton skeleton-img"></div>
+        <div class="skeleton-body">
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text" style="width:60%;"></div>
+        </div>
+    </div>
+    <div class="skeleton-card-lg">
+        <div class="skeleton skeleton-img"></div>
+        <div class="skeleton-body">
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text" style="width:80%;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- v3: Empty State -->
+<div class="empty-state" id="emptyState" style="display:none;">
+    <div class="empty-state-illustration">
+        <div class="empty-ring"></div>
+        <i class="far fa-bookmark"></i>
+    </div>
+    <h2>No bookmarks yet</h2>
+    <p>Start browsing news articles and bookmark the ones you find interesting. They'll appear here for easy access later.</p>
+    <a href="/news" class="btn btn-primary">
+        <i class="fas fa-newspaper"></i> Browse News
+    </a>
+</div>
+
+<!-- v3: Bookmarks Grid (JS populated) -->
+<div class="bookmarks-grid" id="bookmarksGrid" style="display:none;"></div>
+
+<!-- v3: Confirmation Modal -->
+<div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-dialog">
+        <div class="confirm-icon"><i class="fas fa-triangle-exclamation"></i></div>
+        <h3>Clear All Bookmarks?</h3>
+        <p>This will permanently remove all your saved bookmarks. This action cannot be undone.</p>
+        <div class="confirm-actions">
+            <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
+            <button class="btn btn-danger" id="confirmClear"><i class="fas fa-trash-can"></i> Clear All</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const BOOKMARKS_KEY = 'cryptositnews_bookmarks';
+    const bookmarksGrid = document.getElementById('bookmarksGrid');
+    const emptyState = document.getElementById('emptyState');
+    const skeletonGrid = document.getElementById('skeletonGrid');
+    const bookmarkCountEl = document.getElementById('bookmarkCount');
+    const bookmarksActions = document.getElementById('bookmarksActions');
+    const confirmOverlay = document.getElementById('confirmOverlay');
+
+    // ============================================
+    // v3: localStorage Bookmark Management
+    // ============================================
+    function getBookmarks() {
+        try { return JSON.parse(localStorage.getItem(BOOKMARKS_KEY)) || []; }
+        catch(e) { return []; }
+    }
+
+    function saveBookmarks(bookmarks) {
+        localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+    }
+
+    function removeBookmark(id) {
+        let bookmarks = getBookmarks();
+        bookmarks = bookmarks.filter(function(b) { return b.id !== id; });
+        saveBookmarks(bookmarks);
+        return bookmarks;
+    }
+
+    function clearAllBookmarks() {
+        localStorage.removeItem(BOOKMARKS_KEY);
+    }
+
+    // ============================================
+    // v3: Render Bookmark Cards
+    // ============================================
+    function renderBookmarks() {
+        const bookmarks = getBookmarks();
+
+        // Hide skeleton
+        skeletonGrid.style.display = 'none';
+
+        // Update count
+        bookmarkCountEl.textContent = bookmarks.length;
+
+        if (bookmarks.length === 0) {
+            emptyState.style.display = 'block';
+            bookmarksGrid.style.display = 'none';
+            bookmarksActions.style.display = 'none';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        bookmarksGrid.style.display = 'grid';
+        bookmarksActions.style.display = 'flex';
+
+        bookmarksGrid.innerHTML = bookmarks.map(function(b, idx) {
+            var savedDate = '';
+            if (b.savedAt) {
+                try {
+                    var d = new Date(b.savedAt);
+                    savedDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                } catch(e) { savedDate = ''; }
+            }
+
+            var imageHtml;
+            if (b.image_url) {
+                imageHtml = '<div class="bookmark-card-img-wrapper">' +
+                    '<img src="' + escapeAttr(b.image_url) + '" alt="" class="bookmark-card-img" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=bookmark-card-img-placeholder><i class=fas fa-newspaper></i></div>\'">' +
+                    '</div>';
+            } else {
+                imageHtml = '<div class="bookmark-card-img-placeholder"><i class="fas fa-newspaper"></i></div>';
+            }
+
+            return '<div class="bookmark-card animate-in" style="animation-delay:' + (idx * 0.06) + 's" data-bookmark-id="' + escapeAttr(b.id) + '">' +
+                '<button class="remove-bookmark-btn" data-remove-id="' + escapeAttr(b.id) + '" title="Remove bookmark"><i class="fas fa-times"></i></button>' +
+                imageHtml +
+                '<div class="bookmark-card-body">' +
+                    '<div class="bookmark-card-meta">' +
+                        (b.source ? '<span class="badge badge-cyan">' + escapeHtml(b.source) + '</span>' : '') +
+                        (b.category ? '<span class="badge badge-purple">' + escapeHtml(b.category) + '</span>' : '') +
+                    '</div>' +
+                    '<h3 class="bookmark-card-title"><a href="' + escapeAttr(b.url || '/news/' + b.id) + '">' + escapeHtml(b.title) + '</a></h3>' +
+                    (b.summary ? '<p class="bookmark-card-summary">' + escapeHtml(b.summary) + '</p>' : '') +
+                    '<div class="bookmark-card-footer">' +
+                        '<span class="saved-date"><i class="fas fa-bookmark" style="color:var(--accent-yellow);margin-right:4px;font-size:0.7rem;"></i>' + (savedDate || 'Saved') + '</span>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        // Bind remove buttons
+        bookmarksGrid.querySelectorAll('.remove-bookmark-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var id = this.getAttribute('data-remove-id');
+                var card = this.closest('.bookmark-card');
+                card.classList.add('removing');
+                setTimeout(function() {
+                    removeBookmark(id);
+                    renderBookmarks();
+                }, 300);
+            });
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function escapeAttr(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ============================================
+    // v3: Share Bookmarks
+    // ============================================
+    document.getElementById('shareBookmarks').addEventListener('click', function() {
+        var bookmarks = getBookmarks();
+        if (!bookmarks.length) return;
+
+        var baseUrl = window.location.origin;
+        var links = bookmarks.map(function(b) {
+            return baseUrl + (b.url || '/news/' + b.id);
+        }).join('\n');
+
+        var text = 'Check out these crypto news articles I bookmarked on CryptositNews:\n\n' + links;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('Links copied to clipboard!', 'success');
+            }).catch(function() {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    });
+
+    function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showToast('Links copied to clipboard!', 'success');
+        } catch(e) {
+            showToast('Could not copy to clipboard', 'error');
+        }
+        document.body.removeChild(ta);
+    }
+
+    // ============================================
+    // v3: Toast Notification Helper
+    // ============================================
+    function showToast(message, type) {
+        type = type || 'info';
+        var container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        var iconMap = { success: 'fa-check', error: 'fa-times', info: 'fa-info' };
+
+        var toast = document.createElement('div');
+        toast.className = 'toast toast-' + type;
+        toast.innerHTML =
+            '<div class="toast-icon"><i class="fas ' + (iconMap[type] || 'fa-info') + '"></i></div>' +
+            '<div class="toast-body"><div class="toast-title">' + escapeHtml(message) + '</div></div>' +
+            '<button class="toast-close" onclick="this.parentElement.classList.add(\'dismissing\');setTimeout(function(){this.parentElement.remove()}.bind(this),300)"><i class="fas fa-times"></i></button>' +
+            '<div class="toast-progress"></div>';
+        container.appendChild(toast);
+
+        setTimeout(function() {
+            if (toast.parentElement) {
+                toast.classList.add('dismissing');
+                setTimeout(function() { if (toast.parentElement) toast.remove(); }, 300);
+            }
+        }, 5000);
+    }
+
+    // ============================================
+    // v3: Clear All with Confirmation Modal
+    // ============================================
+    document.getElementById('clearAllBtn').addEventListener('click', function() {
+        confirmOverlay.classList.add('active');
+    });
+
+    document.getElementById('confirmCancel').addEventListener('click', function() {
+        confirmOverlay.classList.remove('active');
+    });
+
+    confirmOverlay.addEventListener('click', function(e) {
+        if (e.target === confirmOverlay) {
+            confirmOverlay.classList.remove('active');
+        }
+    });
+
+    document.getElementById('confirmClear').addEventListener('click', function() {
+        clearAllBookmarks();
+        confirmOverlay.classList.remove('active');
+        renderBookmarks();
+        showToast('All bookmarks cleared', 'info');
+    });
+
+    // ============================================
+    // v3: Initialize (simulate loading delay)
+    // ============================================
+    setTimeout(function() {
+        renderBookmarks();
+    }, 600);
+
+    // Listen for storage changes (from other tabs)
+    window.addEventListener('storage', function(e) {
+        if (e.key === BOOKMARKS_KEY) {
+            renderBookmarks();
+        }
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,457 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - CryptositNews{% endblock %}
+{% block og_title %}Admin Dashboard - CryptositNews{% endblock %}
+{% block og_desc %}CryptositNews administration panel.{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard" style="max-width: 1400px; margin: 0 auto; padding: 88px 2rem 3rem;">
+
+    <!-- Header -->
+    <div class="admin-header" style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 900; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                    <i class="fas fa-shield-alt" style="-webkit-text-fill-color: var(--accent-cyan); margin-right: 8px;"></i>
+                    Admin Dashboard
+                </h1>
+                <p style="color: var(--text-secondary); margin-top: 4px; font-size: 0.9rem;">
+                    CryptositNews Administration Panel
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="color: var(--text-muted); font-size: 0.8rem;">
+                    <i class="fas fa-clock"></i> Last scrape: <span id="lastScrape">Loading...</span>
+                </span>
+                <button onclick="triggerScrape()" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8rem;">
+                    <i class="fas fa-sync-alt"></i> Scrape Now
+                </button>
+                <a href="/" class="btn btn-ghost" style="padding: 8px 16px; font-size: 0.8rem;">
+                    <i class="fas fa-home"></i> Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="card animate-in" data-delay="1" style="padding: 1.5rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(34, 211, 238, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-newspaper" style="font-size: 1.2rem; color: var(--accent-cyan);"></i>
+            </div>
+            <div style="font-size: 2rem; font-weight: 900; color: var(--text-primary);" id="stat-articles">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Total Articles</div>
+        </div>
+        <div class="card animate-in" data-delay="2" style="padding: 1.5rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(52, 211, 153, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fab fa-telegram" style="font-size: 1.2rem; color: var(--accent-green);"></i>
+            </div>
+            <div style="font-size: 2rem; font-weight: 900; color: var(--text-primary);" id="stat-posted">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Posted to Telegram</div>
+        </div>
+        <div class="card animate-in" data-delay="3" style="padding: 1.5rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(167, 139, 250, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-brain" style="font-size: 1.2rem; color: var(--accent-purple);"></i>
+            </div>
+            <div style="font-size: 2rem; font-weight: 900; color: var(--text-primary);" id="stat-ai">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">AI Summaries</div>
+        </div>
+        <div class="card animate-in" data-delay="4" style="padding: 1.5rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-rss" style="font-size: 1.2rem; color: var(--accent-blue);"></i>
+            </div>
+            <div style="font-size: 2rem; font-weight: 900; color: var(--text-primary);" id="stat-sources">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Active Sources</div>
+        </div>
+        <div class="card animate-in" data-delay="5" style="padding: 1.5rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(251, 146, 60, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                <i class="fas fa-fire" style="font-size: 1.2rem; color: var(--accent-orange);"></i>
+            </div>
+            <div style="font-size: 2rem; font-weight: 900; color: var(--text-primary);" id="stat-breaking">0</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Breaking News</div>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;" class="admin-two-col">
+
+        <!-- Recent Articles -->
+        <div class="card animate-in" data-delay="2" style="padding: 0; overflow: hidden;">
+            <div style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">
+                    <i class="fas fa-newspaper" style="color: var(--accent-cyan); margin-right: 6px;"></i>
+                    Latest Articles
+                </h3>
+                <a href="/news" style="font-size: 0.75rem; color: var(--accent-cyan);">View All</a>
+            </div>
+            <div id="recent-articles" style="max-height: 400px; overflow-y: auto; padding: 0.5rem;">
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Overview -->
+        <div class="card animate-in" data-delay="3" style="padding: 0; overflow: hidden;">
+            <div style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">
+                    <i class="fas fa-chart-line" style="color: var(--accent-green); margin-right: 6px;"></i>
+                    Market Overview
+                </h3>
+                <a href="/market" style="font-size: 0.75rem; color: var(--accent-cyan);">Full Market</a>
+            </div>
+            <div id="market-overview" style="max-height: 400px; overflow-y: auto; padding: 0.5rem;">
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sources & Categories -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;" class="admin-two-col">
+        <!-- Sources Distribution -->
+        <div class="card animate-in" data-delay="4" style="padding: 0; overflow: hidden;">
+            <div style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-glass);">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">
+                    <i class="fas fa-rss" style="color: var(--accent-purple); margin-right: 6px;"></i>
+                    News Sources Distribution
+                </h3>
+            </div>
+            <div id="sources-dist" style="padding: 1rem; max-height: 350px; overflow-y: auto;">
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="card animate-in" data-delay="5" style="padding: 0; overflow: hidden;">
+            <div style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-glass);">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">
+                    <i class="fas fa-tags" style="color: var(--accent-yellow); margin-right: 6px;"></i>
+                    Category Breakdown
+                </h3>
+            </div>
+            <div id="category-breakdown" style="padding: 1rem; max-height: 350px; overflow-y: auto;">
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Articles -->
+    <div class="card animate-in" data-delay="6" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
+        <div style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-glass);">
+            <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">
+                <i class="fas fa-fire" style="color: var(--accent-orange); margin-right: 6px;"></i>
+                Most Popular Articles (by views)
+            </h3>
+        </div>
+        <div id="popular-articles" style="padding: 0.5rem 1rem;">
+            <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                <i class="fas fa-spinner fa-spin"></i> Loading...
+            </div>
+        </div>
+    </div>
+
+    <!-- System Info -->
+    <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">
+            <i class="fas fa-server" style="color: var(--accent-cyan); margin-right: 6px;"></i>
+            System Information
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="padding: 1rem; background: var(--bg-glass); border-radius: var(--radius-sm);">
+                <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px;">Health Status</div>
+                <div style="color: var(--accent-green); font-weight: 700;" id="health-status">
+                    <i class="fas fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i> Checking...
+                </div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-glass); border-radius: var(--radius-sm);">
+                <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px;">Version</div>
+                <div style="color: var(--text-primary); font-weight: 700;">v7.0 (Enhanced)</div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-glass); border-radius: var(--radius-sm);">
+                <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px;">Python</div>
+                <div style="color: var(--text-primary); font-weight: 700;">3.12.7</div>
+            </div>
+            <div style="padding: 1rem; background: var(--bg-glass); border-radius: var(--radius-sm);">
+                <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px;">Framework</div>
+                <div style="color: var(--text-primary); font-weight: 700;">Flask 3.0.3</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    @media (max-width: 768px) {
+        .admin-two-col { grid-template-columns: 1fr !important; }
+        .admin-header > div { flex-direction: column; align-items: flex-start !important; }
+    }
+    .admin-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 12px; border-radius: var(--radius-sm);
+        transition: var(--transition); cursor: pointer;
+    }
+    .admin-item:hover { background: var(--bg-glass-hover); }
+    .admin-item-num {
+        width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem; font-weight: 700;
+        background: var(--bg-glass); color: var(--text-muted); flex-shrink: 0;
+    }
+    .admin-item-num.top3 { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); color: white; }
+    .admin-item-title {
+        flex: 1; font-size: 0.82rem; color: var(--text-primary); font-weight: 500;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .admin-item-meta {
+        font-size: 0.7rem; color: var(--text-muted); white-space: nowrap;
+    }
+    .admin-bar {
+        height: 6px; border-radius: 3px; background: var(--bg-glass);
+        overflow: hidden; flex: 1;
+    }
+    .admin-bar-fill {
+        height: 100%; border-radius: 3px;
+        background: var(--gradient-primary);
+        transition: width 0.6s ease;
+    }
+    .market-row {
+        display: grid; grid-template-columns: 2.5rem 1fr auto auto auto;
+        gap: 8px; align-items: center;
+        padding: 8px 12px; border-radius: var(--radius-sm);
+        transition: var(--transition);
+    }
+    .market-row:hover { background: var(--bg-glass-hover); }
+    .market-rank {
+        font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+        text-align: center;
+    }
+    .market-name {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
+    }
+    .market-name img {
+        width: 24px; height: 24px; border-radius: 50%;
+    }
+    .market-price {
+        font-size: 0.82rem; font-weight: 600; color: var(--text-primary);
+    }
+    .market-change {
+        font-size: 0.78rem; font-weight: 700; padding: 3px 8px;
+        border-radius: 4px; text-align: right; min-width: 80px;
+    }
+    .market-change.up { background: rgba(52, 211, 153, 0.1); color: var(--accent-green); }
+    .market-change.down { background: rgba(248, 113, 113, 0.1); color: var(--accent-red); }
+</style>
+
+<script>
+// ---- Load Dashboard Data ----
+document.addEventListener('DOMContentLoaded', async function() {
+    await Promise.all([
+        loadStats(),
+        loadRecentArticles(),
+        loadMarketOverview(),
+        loadSources(),
+        loadCategories(),
+        loadPopularArticles(),
+        checkHealth()
+    ]);
+});
+
+async function loadStats() {
+    try {
+        const r = await fetch('/api/stats');
+        const d = await r.json();
+        if (d.success && d.data) {
+            animateCounter('stat-articles', d.data.total_articles || 0);
+            animateCounter('stat-posted', d.data.total_posted || 0);
+            animateCounter('stat-ai', d.data.total_ai_summaries || 0);
+            animateCounter('stat-sources', d.data.total_sources || 0);
+            animateCounter('stat-breaking', d.data.total_breaking || 0);
+            if (d.data.last_scrape_at) {
+                document.getElementById('lastScrape').textContent = d.data.last_scrape_at;
+            }
+        }
+    } catch(e) { console.error('Stats error:', e); }
+}
+
+async function loadRecentArticles() {
+    try {
+        const r = await fetch('/api/news?per_page=10');
+        const d = await r.json();
+        if (d.success && d.data) {
+            const c = document.getElementById('recent-articles');
+            if (d.data.length === 0) {
+                c.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted)">No articles yet</div>';
+                return;
+            }
+            c.innerHTML = d.data.map((a, i) => `
+                <div class="admin-item" onclick="location.href='/news/${a.id}'">
+                    <div class="admin-item-num">${i + 1}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="admin-item-title">${escHtml(a.title)}</div>
+                        <div class="admin-item-meta">${escHtml(a.source || '')} &middot; ${a.time_ago || ''}</div>
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">👁 ${a.views || 0}</div>
+                </div>
+            `).join('');
+        }
+    } catch(e) { console.error('Articles error:', e); }
+}
+
+async function loadMarketOverview() {
+    try {
+        const r = await fetch('/api/prices?limit=10');
+        const d = await r.json();
+        if (d.success && d.data) {
+            const c = document.getElementById('market-overview');
+            c.innerHTML = d.data.map((coin, i) => {
+                const ch = coin.change_24h || 0;
+                const isUp = ch >= 0;
+                return `
+                <div class="market-row">
+                    <div class="market-rank">${i + 1}</div>
+                    <div class="market-name">
+                        ${coin.image ? '<img src="' + coin.image + '" alt="" onerror="this.style.display=\'none\'">' : ''}
+                        <div>
+                            <div>${escHtml(coin.name)}</div>
+                            <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">${coin.symbol}</div>
+                        </div>
+                    </div>
+                    <div class="market-price">${coin.formatted_price || '$0'}</div>
+                    <div class="market-change ${isUp ? 'up' : 'down'}">${isUp ? '+' : ''}${coin.formatted_change_24h || '0%'}</div>
+                </div>`;
+            }).join('');
+        }
+    } catch(e) { console.error('Market error:', e); }
+}
+
+async function loadSources() {
+    try {
+        const r = await fetch('/api/sources');
+        const d = await r.json();
+        if (d.success && d.data) {
+            const c = document.getElementById('sources-dist');
+            c.innerHTML = d.data.slice(0, 15).map(s => {
+                const count = s.count || s.article_count || 0;
+                const maxCount = Math.max(...d.data.map(x => x.count || x.article_count || 0), 1);
+                const pct = Math.round((count / maxCount) * 100);
+                return `
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:0.82rem;font-weight:600;color:var(--text-primary);">${escHtml(s.name || s.source || 'Unknown')}</span>
+                        <span style="font-size:0.75rem;color:var(--text-muted);">${count}</span>
+                    </div>
+                    <div class="admin-bar"><div class="admin-bar-fill" style="width:${pct}%"></div></div>
+                </div>`;
+            }).join('');
+        }
+    } catch(e) { console.error('Sources error:', e); }
+}
+
+async function loadCategories() {
+    try {
+        const r = await fetch('/api/categories');
+        const d = await r.json();
+        if (d.success && d.data) {
+            const c = document.getElementById('category-breakdown');
+            c.innerHTML = d.data.slice(0, 12).map(cat => {
+                const count = cat.count || cat.article_count || 0;
+                const maxCount = Math.max(...d.data.map(x => x.count || x.article_count || 0), 1);
+                const pct = Math.round((count / maxCount) * 100);
+                const catInfo = {{ site_categories | tojson }};
+                const info = catInfo.find(c => c.slug === (cat.name || cat.category));
+                const icon = info ? info.icon : 'fas fa-tag';
+                const color = info ? info.color : 'var(--accent-cyan)';
+                return `
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="font-size:0.82rem;font-weight:600;color:var(--text-primary);">
+                            <i class="${icon}" style="color:${color};margin-right:6px;font-size:0.75rem;"></i>
+                            ${escHtml(cat.name || cat.category || 'Unknown')}
+                        </span>
+                        <span style="font-size:0.75rem;color:var(--text-muted);">${count}</span>
+                    </div>
+                    <div class="admin-bar"><div class="admin-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+                </div>`;
+            }).join('');
+        }
+    } catch(e) { console.error('Categories error:', e); }
+}
+
+async function loadPopularArticles() {
+    try {
+        const r = await fetch('/api/popular');
+        const d = await r.json();
+        if (d.success && d.data) {
+            const c = document.getElementById('popular-articles');
+            c.innerHTML = '<div style="display:grid;gap:4px;">' + d.data.map((a, i) => `
+                <div class="admin-item" onclick="location.href='/news/${a.id}'">
+                    <div class="admin-item-num ${i < 3 ? 'top3' : ''}">${i + 1}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="admin-item-title">${escHtml(a.title)}</div>
+                        <div class="admin-item-meta">${escHtml(a.source || '')} &middot; ${a.time_ago || ''}</div>
+                    </div>
+                    <div style="font-size:0.85rem;font-weight:700;color:var(--accent-cyan);">👁 ${a.views || 0}</div>
+                </div>
+            `).join('') + '</div>';
+        }
+    } catch(e) { console.error('Popular error:', e); }
+}
+
+async function checkHealth() {
+    try {
+        const r = await fetch('/health');
+        const d = await r.json();
+        const el = document.getElementById('health-status');
+        if (d.status === 'ok') {
+            el.innerHTML = '<i class="fas fa-circle" style="font-size:0.5rem;margin-right:4px;color:var(--accent-green);"></i> Operational';
+            el.style.color = 'var(--accent-green)';
+        }
+    } catch(e) {
+        document.getElementById('health-status').innerHTML = '<i class="fas fa-circle" style="font-size:0.5rem;margin-right:4px;color:var(--accent-red);"></i> Error';
+    }
+}
+
+async function triggerScrape() {
+    const btn = event.target.closest('button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scraping...';
+    try {
+        const r = await fetch('/api/scrape-now', { method: 'POST' });
+        const d = await r.json();
+        showToast(d.success ? 'success' : 'error', d.message || 'Scrape complete', d.message || '');
+    } catch(e) {
+        showToast('error', 'Scrape failed', e.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Scrape Now';
+    // Reload data
+    setTimeout(() => { loadStats(); loadRecentArticles(); }, 2000);
+}
+
+function animateCounter(id, target) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let current = 0;
+    const step = Math.max(1, Math.floor(target / 30));
+    const interval = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(interval); }
+        el.textContent = current.toLocaleString();
+    }, 30);
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+</script>
+{% endblock %}

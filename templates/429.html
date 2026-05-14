@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}429 - Too Many Requests | CryptositNews{% endblock %}
+{% block og_title %}429 - Too Many Requests | CryptositNews{% endblock %}
+{% block og_desc %}You're making too many requests. Please slow down and try again.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-page {
+        display: flex; align-items: center; justify-content: center;
+        min-height: 70vh; padding: 2rem 1rem;
+    }
+    .error-container {
+        text-align: center; max-width: 520px; width: 100%;
+        animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .error-illustration {
+        width: 160px; height: 160px; margin: 0 auto 2rem; border-radius: 50%;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(251, 146, 60, 0.08));
+        border: 1px solid rgba(251, 191, 36, 0.12);
+        display: flex; align-items: center; justify-content: center;
+        position: relative; animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .error-illustration .icon-main { font-size: 3.5rem; color: var(--accent-yellow); opacity: 0.8; }
+    .error-illustration .icon-ring {
+        position: absolute; width: 100%; height: 100%; border-radius: 50%;
+        border: 2px solid transparent; border-top-color: var(--accent-yellow); border-right-color: var(--accent-orange);
+        animation: spin 4s linear infinite; opacity: 0.3;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-code {
+        font-size: 5rem; font-weight: 900; line-height: 1; margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, var(--accent-yellow), var(--accent-orange));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .error-title { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.75rem; }
+    .error-message { color: var(--text-secondary); font-size: 1rem; line-height: 1.7; margin-bottom: 2rem; }
+    .error-actions {
+        display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 2rem;
+    }
+    .error-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 24px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9rem;
+        font-family: inherit; cursor: pointer; transition: var(--transition); text-decoration: none; border: none;
+    }
+    .error-btn-primary {
+        background: var(--gradient-primary); color: #fff;
+        box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25);
+    }
+    .error-btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34, 211, 238, 0.3); }
+    .error-hint {
+        margin-top: 2rem; padding: 1rem 1.25rem; background: var(--bg-glass);
+        border: 1px solid var(--border-glass); border-radius: var(--radius-md);
+        color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;
+    }
+    .error-hint i { color: var(--accent-yellow); margin-right: 4px; }
+    .countdown-timer {
+        display: inline-block; padding: 6px 14px; border-radius: 8px;
+        background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.2);
+        color: var(--accent-yellow); font-size: 1.1rem; font-weight: 800;
+        font-variant-numeric: tabular-nums; margin: 0.5rem 0;
+    }
+    @media (max-width: 480px) {
+        .error-code { font-size: 4rem; }
+        .error-title { font-size: 1.25rem; }
+        .error-actions { flex-direction: column; }
+        .error-btn { width: 100%; justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+        <div class="error-illustration">
+            <div class="icon-ring"></div>
+            <i class="fas fa-hourglass-half icon-main"></i>
+        </div>
+        <div class="error-code">429</div>
+        <h1 class="error-title">Slow Down!</h1>
+        <p class="error-message">
+            You're making too many requests too quickly.
+            Our systems are rate-limited to ensure fair access for all users.
+            Please wait a moment and try again.
+        </p>
+        <div class="countdown-timer" id="countdownTimer">60</div>
+        <div class="error-actions">
+            <a href="/" class="error-btn error-btn-primary"><i class="fas fa-house"></i> Go Home</a>
+            <a href="/news" class="error-btn error-btn-ghost"><i class="fas fa-newspaper"></i> Browse News</a>
+        </div>
+        <div class="error-hint">
+            <i class="fas fa-circle-info"></i>
+            This page will automatically refresh when the cooldown ends.
+            If the problem persists, <a href="/contact" style="color: var(--accent-cyan); font-weight: 600;">contact our team</a>.
+        </div>
+    </div>
+</div>
+<script>
+let seconds = 60;
+const timer = setInterval(function() {
+    seconds--;
+    const el = document.getElementById('countdownTimer');
+    if (el) el.textContent = seconds;
+    if (seconds <= 0) {
+        clearInterval(timer);
+        window.location.reload();
+    }
+}, 1000);
+</script>
+{% endblock %}

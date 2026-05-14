@@ -1,0 +1,718 @@
+{% extends "base.html" %}
+
+{% block title %}Airdrop Tracker - CryptositNews{% endblock %}
+{% block og_title %}Airdrop Tracker - Active & Upcoming Crypto Airdrops | CryptositNews{% endblock %}
+{% block og_desc %}Track the latest active and upcoming cryptocurrency airdrops. Filter by status and trust level. Never miss a free token distribution.{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============ HERO ============ */
+    .airdrops-hero {
+        text-align: center;
+        padding: 2rem 0 2.5rem;
+        margin-bottom: 2rem;
+    }
+    .airdrops-hero h1 {
+        font-size: 2.4rem;
+        font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.8rem;
+    }
+    .airdrops-hero p {
+        color: var(--text-secondary);
+        font-size: 1.05rem;
+        max-width: 650px;
+        margin: 0 auto;
+    }
+
+    /* ============ STATS ROW ============ */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 1.2rem 1rem;
+        text-align: center;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--border-glow);
+        box-shadow: var(--shadow-glow);
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: var(--stat-accent, var(--gradient-primary));
+    }
+    .stat-card .stat-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .stat-card .stat-label {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+    .stat-card .stat-label i {
+        font-size: 0.6rem;
+    }
+
+    /* ============ FILTER SECTIONS ============ */
+    .filter-section {
+        margin-bottom: 1rem;
+    }
+    .filter-section-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        padding-left: 4px;
+    }
+    .filter-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    /* ============ FILTER TABS ============ */
+    .filter-tab {
+        padding: 8px 20px;
+        border-radius: 24px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .filter-tab:hover {
+        background: var(--bg-glass-hover);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+    }
+    .filter-tab.active {
+        color: white;
+        border-color: transparent;
+    }
+    .filter-tab.active[data-filter="all"] {
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+        box-shadow: 0 4px 16px rgba(34, 211, 238, 0.3);
+    }
+    .filter-tab.active[data-filter="distributed"] {
+        background: linear-gradient(135deg, #64748b, #475569);
+        box-shadow: 0 4px 16px rgba(100, 116, 139, 0.3);
+    }
+    .filter-tab.active[data-filter="not_distributed"] {
+        background: linear-gradient(135deg, var(--accent-green), #059669);
+        box-shadow: 0 4px 16px rgba(52, 211, 153, 0.3);
+    }
+    .filter-tab.active[data-filter="verified"] {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    .filter-tab.active[data-filter="unverified"] {
+        background: linear-gradient(135deg, var(--accent-orange), #ea580c);
+        box-shadow: 0 4px 16px rgba(251, 146, 60, 0.3);
+    }
+    .filter-tab .tab-count {
+        font-size: 0.68rem;
+        padding: 1px 6px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.15);
+        font-weight: 700;
+    }
+    .filter-tab:not(.active) .tab-count {
+        background: var(--bg-glass-hover);
+        color: var(--text-muted);
+    }
+
+    /* ============ AIRDROP GRID ============ */
+    .airdrop-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 1.2rem;
+    }
+
+    /* ============ AIRDROP CARD ============ */
+    .airdrop-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .airdrop-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--border-glow);
+        box-shadow: 0 0 30px rgba(34, 211, 238, 0.12);
+    }
+    .airdrop-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: var(--card-accent, var(--gradient-primary));
+    }
+
+    /* Card Header */
+    .airdrop-card-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 1rem;
+    }
+    .airdrop-logo {
+        width: 48px; height: 48px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 900; font-size: 1rem; color: white;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .airdrop-card-info h3 {
+        font-size: 1.1rem; font-weight: 800;
+        color: var(--text-primary);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .airdrop-card-info .airdrop-symbol {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: var(--bg-glass);
+        color: var(--text-muted);
+    }
+
+    /* Trust Badge (مضمون / غير مضمون) */
+    .trust-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 20px;
+        font-size: 0.7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px;
+        margin-left: auto;
+    }
+    .trust-badge.verified {
+        background: rgba(59, 130, 246, 0.12);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    .trust-badge.unverified {
+        background: rgba(251, 146, 60, 0.12);
+        color: var(--accent-orange);
+        border: 1px solid rgba(251, 146, 60, 0.2);
+    }
+    .trust-badge i { font-size: 0.65rem; }
+
+    /* Status Badge */
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 20px;
+        font-size: 0.72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .status-badge.active {
+        background: rgba(52, 211, 153, 0.12);
+        color: var(--accent-green);
+        border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+    .status-badge.upcoming {
+        background: rgba(59, 130, 246, 0.12);
+        color: var(--accent-blue);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    .status-badge.ended {
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--text-muted);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .status-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+    }
+    .status-dot.active { background: var(--accent-green); animation: livePulse 2s ease infinite; }
+    .status-dot.upcoming { background: var(--accent-blue); }
+    .status-dot.ended { background: var(--text-muted); }
+
+    /* Card Body */
+    .airdrop-card-body {
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        line-height: 1.7;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Card Badges Row */
+    .airdrop-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+
+    /* Card Meta */
+    .airdrop-meta {
+        display: flex; flex-wrap: wrap; gap: 10px;
+        margin-bottom: 1rem;
+    }
+    .airdrop-meta-item {
+        display: flex; align-items: center; gap: 5px;
+        font-size: 0.78rem; color: var(--text-muted);
+        font-weight: 500;
+    }
+    .airdrop-meta-item i {
+        font-size: 0.72rem; color: var(--accent-cyan);
+    }
+    .airdrop-meta-item .value {
+        color: var(--accent-green);
+        font-weight: 700;
+    }
+
+    /* Requirements */
+    .airdrop-requirements {
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm);
+        padding: 0.8rem 1rem;
+        margin-bottom: 1rem;
+    }
+    .airdrop-requirements h4 {
+        font-size: 0.72rem; font-weight: 700;
+        color: var(--accent-cyan);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    .airdrop-requirements ul {
+        list-style: none; padding: 0;
+    }
+    .airdrop-requirements li {
+        font-size: 0.8rem; color: var(--text-secondary);
+        padding: 3px 0;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .airdrop-requirements li::before {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 0.65rem;
+        color: var(--accent-green);
+        flex-shrink: 0;
+    }
+
+    /* Difficulty */
+    .difficulty-badge {
+        padding: 3px 10px; border-radius: 12px;
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    }
+    .difficulty-badge.easy {
+        background: rgba(52, 211, 153, 0.12); color: var(--accent-green);
+    }
+    .difficulty-badge.medium {
+        background: rgba(251, 191, 36, 0.12); color: var(--accent-yellow);
+    }
+    .difficulty-badge.hard {
+        background: rgba(248, 113, 113, 0.12); color: var(--accent-red);
+    }
+
+    /* Card Actions */
+    .airdrop-card-actions {
+        display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .airdrop-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: var(--radius-sm);
+        font-size: 0.82rem; font-weight: 600;
+        border: 1px solid var(--border-glass);
+        background: var(--bg-glass);
+        color: var(--text-secondary);
+        cursor: pointer; transition: var(--transition);
+        text-decoration: none;
+    }
+    .airdrop-btn:hover {
+        background: var(--bg-glass-hover);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+    }
+    .airdrop-btn.primary {
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(34, 211, 238, 0.2);
+    }
+    .airdrop-btn.primary:hover {
+        opacity: 0.9;
+        box-shadow: 0 6px 20px rgba(34, 211, 238, 0.3);
+    }
+
+    /* End Date */
+    .end-date-badge {
+        font-size: 0.75rem;
+        color: var(--accent-orange);
+        font-weight: 600;
+        display: flex; align-items: center; gap: 5px;
+        margin-bottom: 1rem;
+    }
+    .end-date-badge i { font-size: 0.7rem; }
+
+    /* Empty State */
+    .airdrop-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+    }
+    .airdrop-empty i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    .airdrop-empty p {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    /* Disclaimer */
+    .airdrop-disclaimer {
+        margin-top: 3rem;
+        padding: 1.2rem 1.5rem;
+        background: rgba(251, 191, 36, 0.06);
+        border: 1px solid rgba(251, 191, 36, 0.15);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+    .airdrop-disclaimer strong {
+        color: var(--accent-yellow);
+    }
+
+    /* RTL Adjustments */
+    [dir="rtl"] .airdrop-card-header {
+        flex-direction: row-reverse;
+    }
+    [dir="rtl"] .trust-badge {
+        margin-left: 0;
+        margin-right: auto;
+    }
+    [dir="rtl"] .airdrop-meta {
+        flex-direction: row-reverse;
+    }
+    [dir="rtl"] .airdrop-card-actions {
+        flex-direction: row-reverse;
+    }
+
+    /* No results animation */
+    @keyframes emptyBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    @media (max-width: 768px) {
+        .airdrops-hero h1 { font-size: 1.6rem; }
+        .airdrop-grid { grid-template-columns: 1fr; }
+        .stats-row { grid-template-columns: repeat(3, 1fr); }
+        .filter-tabs { gap: 6px; }
+        .filter-tab { padding: 6px 14px; font-size: 0.78rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <!-- Hero -->
+    <div class="airdrops-hero">
+        <h1><i class="fas fa-parachute-box"></i> Airdrop Tracker</h1>
+        <p>Track the latest active and upcoming cryptocurrency airdrops. Filter by distribution status and trust level.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card animate-in" data-delay="1" style="--stat-accent: var(--accent-cyan);">
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label"><i class="fas fa-parachute-box"></i> Total</div>
+        </div>
+        <div class="stat-card animate-in" data-delay="2" style="--stat-accent: var(--accent-green);">
+            <div class="stat-value">{{ stats.active }}</div>
+            <div class="stat-label"><i class="fas fa-bolt"></i> Active</div>
+        </div>
+        <div class="stat-card animate-in" data-delay="3" style="--stat-accent: var(--accent-blue);">
+            <div class="stat-value">{{ stats.upcoming }}</div>
+            <div class="stat-label"><i class="fas fa-clock"></i> Upcoming</div>
+        </div>
+        <div class="stat-card animate-in" data-delay="4" style="--stat-accent: #64748b;">
+            <div class="stat-value">{{ stats.distributed }}</div>
+            <div class="stat-label"><i class="fas fa-check-circle"></i> Distributed</div>
+        </div>
+        <div class="stat-card animate-in" data-delay="5" style="--stat-accent: #3b82f6;">
+            <div class="stat-value">{{ stats.verified }}</div>
+            <div class="stat-label"><i class="fas fa-shield-halved"></i> Verified</div>
+        </div>
+        <div class="stat-card animate-in" data-delay="6" style="--stat-accent: var(--accent-orange);">
+            <div class="stat-value">{{ stats.unverified }}</div>
+            <div class="stat-label"><i class="fas fa-triangle-exclamation"></i> Unverified</div>
+        </div>
+    </div>
+
+    <!-- Filter: Distribution Status -->
+    <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-filter"></i> Distribution Status</div>
+        <div class="filter-tabs" id="statusFilters">
+            <button class="filter-tab active" data-filter="all" data-group="status" onclick="filterAirdrops('all', 'status', this)">
+                <i class="fas fa-th-large"></i> All
+                <span class="tab-count">{{ stats.total }}</span>
+            </button>
+            <button class="filter-tab" data-filter="distributed" data-group="status" onclick="filterAirdrops('distributed', 'status', this)">
+                <i class="fas fa-check-circle"></i> Distributed
+                <span class="tab-count">{{ stats.distributed }}</span>
+            </button>
+            <button class="filter-tab" data-filter="not_distributed" data-group="status" onclick="filterAirdrops('not_distributed', 'status', this)">
+                <i class="fas fa-hourglass-half"></i> Not Yet Distributed
+                <span class="tab-count">{{ stats.not_distributed }}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter: Trust Level -->
+    <div class="filter-section">
+        <div class="filter-section-title"><i class="fas fa-shield-halved"></i> Trust Level</div>
+        <div class="filter-tabs" id="trustFilters">
+            <button class="filter-tab active" data-filter="all" data-group="trust" onclick="filterAirdrops('all', 'trust', this)">
+                <i class="fas fa-globe"></i> All
+                <span class="tab-count">{{ stats.total }}</span>
+            </button>
+            <button class="filter-tab" data-filter="verified" data-group="trust" onclick="filterAirdrops('verified', 'trust', this)">
+                <i class="fas fa-shield-halved"></i> Verified
+                <span class="tab-count">{{ stats.verified }}</span>
+            </button>
+            <button class="filter-tab" data-filter="unverified" data-group="trust" onclick="filterAirdrops('unverified', 'trust', this)">
+                <i class="fas fa-triangle-exclamation"></i> Unverified
+                <span class="tab-count">{{ stats.unverified }}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Airdrop Grid -->
+    <div class="airdrop-grid" id="airdropGrid">
+        {% for drop in airdrops %}
+        <div class="airdrop-card animate-in"
+             data-status="{{ drop.status }}"
+             data-verified="{{ 'true' if drop.verified else 'false' }}"
+             data-delay="{{ loop.index0 % 6 + 1 }}"
+             style="--card-accent: {{ drop.color }};">
+
+            <!-- Header -->
+            <div class="airdrop-card-header">
+                <div class="airdrop-logo" style="background: {{ drop.color }};">
+                    {{ drop.logo }}
+                </div>
+                <div class="airdrop-card-info">
+                    <h3>
+                        {{ drop.name }}
+                        <span class="airdrop-symbol">{{ drop.symbol }}</span>
+                    </h3>
+                </div>
+                <!-- Trust Badge -->
+                <span class="trust-badge {{ 'verified' if drop.verified else 'unverified' }}">
+                    <i class="fas {{ 'fa-shield-halved' if drop.verified else 'fa-triangle-exclamation' }}"></i>
+                    {{ 'Verified' if drop.verified else 'Unverified' }}
+                </span>
+            </div>
+
+            <!-- Badges Row -->
+            <div class="airdrop-badges">
+                <span class="status-badge {{ drop.status }}">
+                    <span class="status-dot {{ drop.status }}"></span>
+                    {{ drop.status }}
+                </span>
+                <span class="difficulty-badge {{ drop.difficulty }}">{{ drop.difficulty }}</span>
+                <span class="airdrop-meta-item">
+                    <i class="fas fa-layer-group"></i> {{ drop.category }}
+                </span>
+                <span class="airdrop-meta-item">
+                    <i class="fas fa-link"></i> {{ drop.chain }}
+                </span>
+            </div>
+
+            <!-- Body -->
+            <div class="airdrop-card-body">{{ drop.description }}</div>
+
+            <!-- Meta -->
+            <div class="airdrop-meta">
+                <span class="airdrop-meta-item">
+                    <i class="fas fa-coins"></i>
+                    Est: <span class="value">{{ drop.estimated_value }}</span>
+                </span>
+                <span class="airdrop-meta-item">
+                    <i class="fas fa-gem"></i>
+                    Total: <span class="value">{{ drop.total_value }}</span>
+                </span>
+                {% if drop.participants != 'TBA' %}
+                <span class="airdrop-meta-item">
+                    <i class="fas fa-users"></i> {{ drop.participants }}
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- End Date -->
+            {% if drop.status != 'ended' %}
+            <div class="end-date-badge">
+                <i class="fas fa-calendar-alt"></i>
+                Ends: {{ drop.end_date }}
+            </div>
+            {% endif %}
+            {% if drop.status == 'ended' %}
+            <div class="end-date-badge" style="color: var(--text-muted);">
+                <i class="fas fa-check"></i>
+                Distribution completed on {{ drop.end_date }}
+            </div>
+            {% endif %}
+
+            <!-- Requirements -->
+            <div class="airdrop-requirements">
+                <h4><i class="fas fa-list-check"></i> Requirements</h4>
+                <ul>
+                    {% for req in drop.requirements %}
+                    <li>{{ req }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Actions -->
+            <div class="airdrop-card-actions">
+                {% if drop.status == 'active' %}
+                <a href="{{ drop.website }}" target="_blank" rel="noopener" class="airdrop-btn primary">
+                    <i class="fas fa-external-link-alt"></i> Visit Site
+                </a>
+                {% elif drop.status == 'upcoming' %}
+                <a href="{{ drop.website }}" target="_blank" rel="noopener" class="airdrop-btn primary">
+                    <i class="fas fa-bell"></i> Get Ready
+                </a>
+                {% elif drop.status == 'ended' %}
+                <a href="{{ drop.website }}" target="_blank" rel="noopener" class="airdrop-btn primary" style="opacity: 0.6;">
+                    <i class="fas fa-check-circle"></i> Completed
+                </a>
+                {% endif %}
+                <a href="{{ drop.twitter }}" target="_blank" rel="noopener" class="airdrop-btn">
+                    <i class="fab fa-twitter"></i> Twitter
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Empty State -->
+        <div class="airdrop-empty" id="emptyState" style="display: none;">
+            <i class="fas fa-box-open" style="animation: emptyBounce 2s ease infinite;"></i>
+            <p>No airdrops match the selected filters.</p>
+        </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="airdrop-disclaimer">
+        <strong><i class="fas fa-exclamation-triangle"></i> Disclaimer:</strong>
+        Airdrop information is provided for educational purposes only. Always verify information from official sources. Never share your private keys or seed phrases. Some airdrops may require gas fees. "Verified" means the project has officially launched its token; "Unverified" means the airdrop is rumored or not yet confirmed. CryptositNews is not responsible for any losses incurred.
+    </div>
+</div>
+
+<script>
+    // Current active filters
+    let currentStatusFilter = 'all';
+    let currentTrustFilter = 'all';
+
+    function filterAirdrops(value, group, btn) {
+        // Update the active tab in this group
+        const groupSelector = btn.getAttribute('data-group') === 'status' ? '#statusFilters' : '#trustFilters';
+        document.querySelectorAll(groupSelector + ' .filter-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update the current filter
+        if (group === 'status') {
+            currentStatusFilter = value;
+        } else {
+            currentTrustFilter = value;
+        }
+
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const cards = document.querySelectorAll('.airdrop-card');
+        let visibleCount = 0;
+
+        cards.forEach((card, i) => {
+            const status = card.getAttribute('data-status');
+            const verified = card.getAttribute('data-verified');
+
+            let showByStatus = true;
+            let showByTrust = true;
+
+            // Status filter
+            if (currentStatusFilter === 'distributed') {
+                showByStatus = (status === 'ended');
+            } else if (currentStatusFilter === 'not_distributed') {
+                showByStatus = (status === 'active' || status === 'upcoming');
+            }
+
+            // Trust filter
+            if (currentTrustFilter === 'verified') {
+                showByTrust = (verified === 'true');
+            } else if (currentTrustFilter === 'unverified') {
+                showByTrust = (verified === 'false');
+            }
+
+            const show = showByStatus && showByTrust;
+
+            if (show) {
+                card.style.display = '';
+                card.style.animation = `fadeInUp 0.4s ease forwards ${visibleCount * 0.05}s`;
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+                card.style.animation = '';
+            }
+        });
+
+        // Show/hide empty state
+        const emptyState = document.getElementById('emptyState');
+        if (emptyState) {
+            emptyState.style.display = visibleCount === 0 ? '' : 'none';
+        }
+    }
+</script>
+{% endblock %}

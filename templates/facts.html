@@ -1,0 +1,696 @@
+{% extends "base.html" %}
+
+{% block title %}Crypto Facts & Quizzes - CryptositNews{% endblock %}
+{% block og_title %}Crypto Facts & Quizzes - CryptositNews{% endblock %}
+{% block og_desc %}Discover amazing crypto facts and test your knowledge with interactive quizzes on CryptositNews.{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 88px 2rem 3rem;">
+
+    <!-- Page Header -->
+    <div style="text-align: center; margin-bottom: 2.5rem;" class="animate-in">
+        <div style="display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(34, 211, 238, 0.15)); padding: 6px 18px; border-radius: 24px; margin-bottom: 12px; border: 1px solid rgba(251, 191, 36, 0.2);">
+            <i class="fas fa-lightbulb" style="color: var(--accent-yellow);"></i>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-yellow); letter-spacing: 0.5px;">DID YOU KNOW?</span>
+        </div>
+        <h1 style="font-size: 2.2rem; font-weight: 900; background: linear-gradient(135deg, var(--accent-yellow), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            Crypto Facts & Quizzes
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; max-width: 600px; margin: 8px auto 0;">
+            Discover fascinating facts about cryptocurrency, blockchain, and the decentralized future. Test your knowledge with our interactive quizzes!
+        </p>
+    </div>
+
+    <!-- Fact of the Day -->
+    <div class="card animate-in" data-delay="1" style="padding: 0; overflow: hidden; margin-bottom: 2rem; border: 1px solid rgba(251, 191, 36, 0.2);">
+        <div style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(34, 211, 238, 0.08)); padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-glass); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--accent-yellow), var(--accent-orange)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-star" style="color: white; font-size: 0.9rem;"></i>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-yellow); letter-spacing: 1px; text-transform: uppercase;">Fact of the Day</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">A new fact every day</div>
+            </div>
+        </div>
+        <div id="daily-fact" style="padding: 1.5rem;">
+            <div style="text-align: center; color: var(--text-muted); padding: 1rem;">
+                <i class="fas fa-spinner fa-spin"></i> Loading...
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div style="display: flex; gap: 8px; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap;" class="animate-in" data-delay="2">
+        <button class="fact-tab active" data-tab="facts" onclick="switchTab('facts')">
+            <i class="fas fa-book-open"></i> Explore Facts
+        </button>
+        <button class="fact-tab" data-tab="quiz" onclick="switchTab('quiz')">
+            <i class="fas fa-brain"></i> Take Quiz
+        </button>
+        <button class="fact-tab" data-tab="stats" onclick="switchTab('stats')">
+            <i class="fas fa-chart-bar"></i> Database Stats
+        </button>
+    </div>
+
+    <!-- ==================== FACTS TAB ==================== -->
+    <div id="tab-facts" class="tab-content">
+        <!-- Category Filter -->
+        <div style="display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; justify-content: center;" id="fact-category-filters">
+            <!-- Filled by JS -->
+        </div>
+
+        <!-- Facts Grid -->
+        <div id="facts-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem;">
+            <!-- Filled by JS -->
+        </div>
+
+        <!-- Load More -->
+        <div style="text-align: center; margin-top: 1.5rem;" id="facts-load-more">
+            <button class="btn btn-ghost" onclick="loadMoreFacts()" id="load-more-btn">
+                <i class="fas fa-plus"></i> Load More Facts
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== QUIZ TAB ==================== -->
+    <div id="tab-quiz" class="tab-content" style="display: none;">
+
+        <!-- Quiz Settings -->
+        <div id="quiz-settings" class="card" style="padding: 2rem; max-width: 600px; margin: 0 auto 1.5rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.5rem; text-align: center;">
+                <i class="fas fa-cog" style="color: var(--accent-cyan); margin-right: 6px;"></i>
+                Quiz Settings
+            </h3>
+
+            <!-- Difficulty -->
+            <div style="margin-bottom: 1.2rem;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Difficulty</label>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="quiz-difficulty-filters">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Category -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">Category</label>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="quiz-category-filters">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="startQuiz()" style="width: 100%; justify-content: center; padding: 14px;">
+                <i class="fas fa-play"></i> Start Quiz
+            </button>
+        </div>
+
+        <!-- Quiz Area -->
+        <div id="quiz-area" style="display: none; max-width: 700px; margin: 0 auto;">
+            <!-- Progress -->
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);" id="quiz-progress-text">Question 1 / 10</span>
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--accent-cyan);" id="quiz-score">Score: 0</span>
+                </div>
+                <div style="height: 6px; background: var(--bg-glass); border-radius: 3px; overflow: hidden;">
+                    <div id="quiz-progress-bar" style="height: 100%; background: var(--gradient-primary); border-radius: 3px; transition: width 0.4s ease; width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="card" style="padding: 2rem;" id="quiz-question-card">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+                    <span id="quiz-q-difficulty" style="font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 12px;"></span>
+                    <span id="quiz-q-category" style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted);"></span>
+                </div>
+                <h3 id="quiz-question" style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); line-height: 1.5; margin-bottom: 1.5rem;"></h3>
+                <div id="quiz-options" style="display: grid; gap: 10px;"></div>
+            </div>
+
+            <!-- Explanation -->
+            <div id="quiz-explanation" style="display: none; margin-top: 1rem;" class="card" style="border-left: 3px solid var(--accent-cyan);">
+            </div>
+
+            <!-- Next Button -->
+            <div style="text-align: center; margin-top: 1.2rem;">
+                <button id="quiz-next-btn" class="btn btn-primary" onclick="nextQuestion()" style="display: none;">
+                    Next Question <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Results -->
+        <div id="quiz-results" style="display: none; max-width: 600px; margin: 0 auto;">
+            <div class="card" style="padding: 2.5rem; text-align: center;">
+                <div id="results-icon" style="font-size: 4rem; margin-bottom: 1rem;"></div>
+                <h2 id="results-title" style="font-size: 1.5rem; font-weight: 900; margin-bottom: 0.5rem;"></h2>
+                <p id="results-subtitle" style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;"></p>
+
+                <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <div style="font-size: 2.5rem; font-weight: 900; color: var(--accent-cyan);" id="results-score">0</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Correct</div>
+                    </div>
+                    <div style="width: 1px; background: var(--border-glass);"></div>
+                    <div>
+                        <div style="font-size: 2.5rem; font-weight: 900; color: var(--text-primary);" id="results-total">0</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Total</div>
+                    </div>
+                    <div style="width: 1px; background: var(--border-glass);"></div>
+                    <div>
+                        <div style="font-size: 2.5rem; font-weight: 900; color: var(--accent-green);" id="results-pct">0%</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Score</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="startQuiz()"><i class="fas fa-redo"></i> Try Again</button>
+                    <button class="btn btn-ghost" onclick="switchTab('facts')"><i class="fas fa-book-open"></i> Explore Facts</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== STATS TAB ==================== -->
+    <div id="tab-stats" class="tab-content" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div class="card" style="padding: 1.5rem; text-align: center;">
+                <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(251, 191, 36, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                    <i class="fas fa-lightbulb" style="font-size: 1.3rem; color: var(--accent-yellow);"></i>
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 900; color: var(--text-primary);" id="stat-total-facts">0</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Crypto Facts</div>
+            </div>
+            <div class="card" style="padding: 1.5rem; text-align: center;">
+                <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(34, 211, 238, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                    <i class="fas fa-question-circle" style="font-size: 1.3rem; color: var(--accent-cyan);"></i>
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 900; color: var(--text-primary);" id="stat-total-quiz">0</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Quiz Questions</div>
+            </div>
+            <div class="card" style="padding: 1.5rem; text-align: center;">
+                <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(167, 139, 250, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                    <i class="fas fa-layer-group" style="font-size: 1.3rem; color: var(--accent-purple);"></i>
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 900; color: var(--text-primary);" id="stat-categories">0</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Categories</div>
+            </div>
+        </div>
+
+        <!-- Difficulty Breakdown -->
+        <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem;">
+                <i class="fas fa-signal" style="color: var(--accent-yellow); margin-right: 6px;"></i>
+                Quiz Difficulty Breakdown
+            </h3>
+            <div id="difficulty-breakdown"></div>
+        </div>
+
+        <!-- Facts by Category -->
+        <div class="card" style="padding: 1.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 1rem;">
+                <i class="fas fa-th-large" style="color: var(--accent-cyan); margin-right: 6px;"></i>
+                Facts by Category
+            </h3>
+            <div id="facts-category-breakdown"></div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .fact-tab {
+        padding: 10px 20px; border-radius: 24px; border: 1px solid var(--border-glass);
+        background: var(--bg-glass); color: var(--text-secondary);
+        font-size: 0.85rem; font-weight: 600; cursor: pointer;
+        transition: var(--transition); display: flex; align-items: center; gap: 6px;
+        font-family: inherit;
+    }
+    .fact-tab:hover { background: var(--bg-glass-hover); border-color: var(--border-glow); }
+    .fact-tab.active {
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+        color: white; border-color: transparent;
+        box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25);
+    }
+    .fact-filter-btn {
+        padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-glass);
+        background: var(--bg-glass); color: var(--text-secondary);
+        font-size: 0.78rem; font-weight: 600; cursor: pointer;
+        transition: var(--transition); display: inline-flex; align-items: center; gap: 5px;
+        font-family: inherit;
+    }
+    .fact-filter-btn:hover { background: var(--bg-glass-hover); }
+    .fact-filter-btn.active {
+        background: var(--accent-cyan); color: white;
+        border-color: var(--accent-cyan); box-shadow: 0 2px 10px rgba(34, 211, 238, 0.3);
+    }
+
+    .fact-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.5rem;
+        transition: var(--transition); cursor: pointer;
+        position: relative; overflow: hidden;
+    }
+    .fact-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
+        border-color: rgba(34, 211, 238, 0.2);
+    }
+    .fact-card .fact-icon {
+        width: 42px; height: 42px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; flex-shrink: 0;
+    }
+    .fact-card .fact-text {
+        font-size: 0.88rem; color: var(--text-primary); line-height: 1.6; font-weight: 500;
+    }
+    .fact-card .fact-detail {
+        max-height: 0; overflow: hidden; transition: max-height 0.4s ease, margin 0.4s ease, opacity 0.3s ease;
+        opacity: 0; margin-top: 0;
+    }
+    .fact-card.expanded .fact-detail {
+        max-height: 500px; opacity: 1; margin-top: 12px;
+    }
+    .fact-card .fact-meta {
+        font-size: 0.72rem; color: var(--text-muted);
+        display: flex; align-items: center; gap: 12px; margin-top: 10px;
+    }
+    .fact-card .expand-hint {
+        font-size: 0.7rem; color: var(--text-muted); margin-top: 8px;
+        display: flex; align-items: center; gap: 4px;
+    }
+    .fact-card.expanded .expand-hint span { display: none; }
+    .fact-card.expanded .expand-hint::after { content: 'Click to collapse'; }
+
+    /* Quiz Styles */
+    .quiz-option {
+        padding: 14px 18px; border-radius: var(--radius-md);
+        border: 2px solid var(--border-glass); background: var(--bg-glass);
+        color: var(--text-primary); font-size: 0.9rem; font-weight: 500;
+        cursor: pointer; transition: var(--transition); text-align: left;
+        display: flex; align-items: center; gap: 12px; font-family: inherit;
+        width: 100%;
+    }
+    .quiz-option:hover:not(.disabled) {
+        border-color: var(--accent-cyan); background: rgba(34, 211, 238, 0.05);
+    }
+    .quiz-option .option-letter {
+        width: 32px; height: 32px; border-radius: 8px;
+        background: var(--bg-glass-hover); display: flex; align-items: center;
+        justify-content: center; font-weight: 800; font-size: 0.82rem;
+        color: var(--text-muted); flex-shrink: 0; transition: var(--transition);
+    }
+    .quiz-option.correct {
+        border-color: var(--accent-green); background: rgba(52, 211, 153, 0.08);
+    }
+    .quiz-option.correct .option-letter {
+        background: var(--accent-green); color: white;
+    }
+    .quiz-option.wrong {
+        border-color: var(--accent-red); background: rgba(248, 113, 113, 0.08);
+    }
+    .quiz-option.wrong .option-letter {
+        background: var(--accent-red); color: white;
+    }
+    .quiz-option.disabled { pointer-events: none; opacity: 0.7; }
+    .quiz-option.disabled.correct { opacity: 1; }
+
+    .quiz-explanation-box {
+        padding: 1.2rem; border-radius: var(--radius-md);
+        border-left: 3px solid var(--accent-cyan);
+        background: rgba(34, 211, 238, 0.05);
+        margin-top: 1rem;
+    }
+    .quiz-explanation-box.wrong-answer {
+        border-left-color: var(--accent-red);
+        background: rgba(248, 113, 113, 0.05);
+    }
+    .quiz-explanation-box h4 {
+        font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .quiz-explanation-box p {
+        font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        #facts-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<script>
+// ---- State ----
+let allFacts = [];
+let displayedFacts = 0;
+let currentFactCategory = 'all';
+let quizQuestions = [];
+let currentQuizIndex = 0;
+let quizScore = 0;
+let quizDifficulty = 'all';
+let quizCategory = 'all';
+let quizAnswered = false;
+
+const factCategories = {{ fact_categories | tojson }};
+const quizDifficulties = {{ quiz_difficulties | tojson }};
+const quizCategories = {{ quiz_categories | tojson }};
+
+// ---- Tab Switching ----
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.fact-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).style.display = 'block';
+    document.querySelector('.fact-tab[data-tab="' + tab + '"]').classList.add('active');
+    if (tab === 'stats') loadStatsTab();
+}
+
+// ---- Facts ----
+function initFactFilters() {
+    const c = document.getElementById('fact-category-filters');
+    c.innerHTML = factCategories.map(cat =>
+        `<button class="fact-filter-btn ${cat.slug === 'all' ? 'active' : ''}" onclick="filterFacts('${cat.slug}')">
+            <i class="${cat.icon}" style="color:${cat.color};font-size:0.7rem;"></i>
+            ${cat.name}
+        </button>`
+    ).join('');
+}
+
+async function loadFacts() {
+    try {
+        const r = await fetch('/api/facts?category=' + currentFactCategory + '&limit=30');
+        const d = await r.json();
+        if (d.success) {
+            allFacts = d.data;
+            displayedFacts = 0;
+            document.getElementById('facts-grid').innerHTML = '';
+            appendFacts();
+        }
+    } catch(e) { console.error(e); }
+}
+
+function filterFacts(category) {
+    currentFactCategory = category;
+    document.querySelectorAll('#fact-category-filters .fact-filter-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent.trim().includes(
+            category === 'all' ? 'All' : category.charAt(0).toUpperCase() + category.slice(1)
+        ));
+    });
+    loadFacts();
+}
+
+function appendFacts() {
+    const grid = document.getElementById('facts-grid');
+    const factsToRender = allFacts.slice(displayedFacts, displayedFacts + 6);
+    factsToRender.forEach((fact, i) => {
+        const catInfo = factCategories.find(c => c.slug === fact.category) || {};
+        grid.innerHTML += `
+        <div class="fact-card" onclick="toggleFact(this)" style="animation: fadeInUp 0.4s ease ${i * 0.08}s forwards; opacity: 0;">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+                <div class="fact-icon" style="background:${catInfo.color || '#22d3ee'}22;">
+                    <i class="${catInfo.icon || 'fas fa-info-circle'}" style="color:${catInfo.color || '#22d3ee'};"></i>
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div class="fact-text">${escHtml(fact.fact)}</div>
+                    <div class="fact-detail">
+                        <div style="font-size:0.82rem;color:var(--text-secondary);line-height:1.6;border-top:1px solid var(--border-glass);padding-top:12px;">
+                            ${escHtml(fact.detail || fact.fact)}
+                        </div>
+                    </div>
+                    <div class="fact-meta">
+                        <span><i class="${catInfo.icon}" style="color:${catInfo.color};"></i> ${catInfo.name || fact.category}</span>
+                        <span><i class="fas fa-calendar"></i> ${fact.year || ''}</span>
+                        ${fact.source ? '<span><i class="fas fa-link"></i> ' + escHtml(fact.source) + '</span>' : ''}
+                    </div>
+                    <div class="expand-hint"><i class="fas fa-chevron-down" style="font-size:0.6rem;"></i> <span>Click to read more</span></div>
+                </div>
+            </div>
+        </div>`;
+    });
+    displayedFacts += factsToRender.length;
+    document.getElementById('load-more-btn').style.display = displayedFacts >= allFacts.length ? 'none' : '';
+}
+
+function loadMoreFacts() { appendFacts(); }
+
+function toggleFact(el) { el.classList.toggle('expanded'); }
+
+// ---- Daily Fact ----
+async function loadDailyFact() {
+    try {
+        const r = await fetch('/api/facts/daily');
+        const d = await r.json();
+        if (d.success && d.data) {
+            const f = d.data;
+            const catInfo = factCategories.find(c => c.slug === f.category) || {};
+            document.getElementById('daily-fact').innerHTML = `
+                <div style="display:flex;align-items:flex-start;gap:14px;">
+                    <div class="fact-icon" style="background:${catInfo.color || '#fbbf24'}22; width:44px; height:44px;">
+                        <i class="${catInfo.icon || 'fas fa-lightbulb'}" style="color:${catInfo.color || '#fbbf24'}; font-size:1.1rem;"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <p style="font-size:0.95rem;color:var(--text-primary);line-height:1.7;font-weight:500;">${escHtml(f.fact)}</p>
+                        <div style="margin-top:10px;font-size:0.78rem;color:var(--text-muted);display:flex;gap:14px;flex-wrap:wrap;">
+                            <span><i class="${catInfo.icon}" style="color:${catInfo.color};"></i> ${catInfo.name || f.category}</span>
+                            <span><i class="fas fa-calendar"></i> ${f.year || ''}</span>
+                            ${f.source ? '<span><i class="fas fa-link"></i> ' + escHtml(f.source) + '</span>' : ''}
+                        </div>
+                    </div>
+                </div>`;
+        }
+    } catch(e) { console.error(e); }
+}
+
+// ---- Quiz ----
+function initQuizFilters() {
+    // Difficulty
+    const df = document.getElementById('quiz-difficulty-filters');
+    df.innerHTML = quizDifficulties.map(d =>
+        `<button class="fact-filter-btn ${d.slug === 'all' ? 'active' : ''}" onclick="selectQuizDifficulty('${d.slug}')">
+            <i class="${d.icon}" style="color:${d.color};font-size:0.7rem;"></i> ${d.name}
+        </button>`
+    ).join('');
+    // Categories
+    const cf = document.getElementById('quiz-category-filters');
+    cf.innerHTML = quizCategories.map(c =>
+        `<button class="fact-filter-btn ${c.slug === 'all' ? 'active' : ''}" onclick="selectQuizCategory('${c.slug}')">
+            ${c.name}
+        </button>`
+    ).join('');
+}
+
+function selectQuizDifficulty(d) {
+    quizDifficulty = d;
+    document.querySelectorAll('#quiz-difficulty-filters .fact-filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.closest('.fact-filter-btn').classList.add('active');
+}
+
+function selectQuizCategory(c) {
+    quizCategory = c;
+    document.querySelectorAll('#quiz-category-filters .fact-filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.closest('.fact-filter-btn').classList.add('active');
+}
+
+async function startQuiz() {
+    try {
+        const params = new URLSearchParams();
+        if (quizDifficulty !== 'all') params.set('difficulty', quizDifficulty);
+        if (quizCategory !== 'all') params.set('category', quizCategory);
+        params.set('limit', '10');
+        const r = await fetch('/api/facts/quiz?' + params.toString());
+        const d = await r.json();
+        if (d.success && d.data.length > 0) {
+            quizQuestions = d.data;
+            currentQuizIndex = 0;
+            quizScore = 0;
+            document.getElementById('quiz-settings').style.display = 'none';
+            document.getElementById('quiz-results').style.display = 'none';
+            document.getElementById('quiz-area').style.display = 'block';
+            renderQuestion();
+        } else {
+            showToast('info', 'No Questions', 'No quiz questions found for this selection.');
+        }
+    } catch(e) { console.error(e); }
+}
+
+function renderQuestion() {
+    const q = quizQuestions[currentQuizIndex];
+    quizAnswered = false;
+
+    // Progress
+    document.getElementById('quiz-progress-text').textContent = `Question ${currentQuizIndex + 1} / ${quizQuestions.length}`;
+    document.getElementById('quiz-score').textContent = `Score: ${quizScore}`;
+    document.getElementById('quiz-progress-bar').style.width = ((currentQuizIndex / quizQuestions.length) * 100) + '%';
+
+    // Difficulty badge
+    const diff = q.difficulty || 'easy';
+    const diffColors = { easy: '#34d399', medium: '#fbbf24', hard: '#f87171' };
+    const diffBg = { easy: 'rgba(52,211,153,0.1)', medium: 'rgba(251,191,36,0.1)', hard: 'rgba(248,113,113,0.1)' };
+    document.getElementById('quiz-q-difficulty').textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
+    document.getElementById('quiz-q-difficulty').style.cssText = `font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:12px;color:${diffColors[diff]};background:${diffBg[diff]};`;
+    document.getElementById('quiz-q-category').textContent = (q.category || '').charAt(0).toUpperCase() + (q.category || '').slice(1);
+
+    // Question
+    document.getElementById('quiz-question').textContent = q.question;
+
+    // Options
+    const letters = ['A', 'B', 'C', 'D'];
+    document.getElementById('quiz-options').innerHTML = (q.options || []).map((opt, i) =>
+        `<button class="quiz-option" onclick="selectAnswer(${i})">
+            <span class="option-letter">${letters[i]}</span>
+            <span>${escHtml(opt)}</span>
+        </button>`
+    ).join('');
+
+    // Hide explanation and next
+    document.getElementById('quiz-explanation').style.display = 'none';
+    document.getElementById('quiz-next-btn').style.display = 'none';
+}
+
+function selectAnswer(index) {
+    if (quizAnswered) return;
+    quizAnswered = true;
+
+    const q = quizQuestions[currentQuizIndex];
+    const correct = q.correct;
+    const options = document.querySelectorAll('.quiz-option');
+
+    options.forEach((opt, i) => {
+        opt.classList.add('disabled');
+        if (i === correct) opt.classList.add('correct');
+        if (i === index && i !== correct) opt.classList.add('wrong');
+    });
+
+    if (index === correct) quizScore++;
+    document.getElementById('quiz-score').textContent = `Score: ${quizScore}`;
+
+    // Show explanation
+    const expDiv = document.getElementById('quiz-explanation');
+    const isCorrect = index === correct;
+    expDiv.innerHTML = `
+        <div class="quiz-explanation-box ${isCorrect ? '' : 'wrong-answer'}">
+            <h4 style="color:${isCorrect ? 'var(--accent-green)' : 'var(--accent-red)'};">
+                <i class="fas ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                ${isCorrect ? 'Correct!' : 'Incorrect'}
+            </h4>
+            <p>${escHtml(q.explanation || '')}</p>
+        </div>`;
+    expDiv.style.display = 'block';
+
+    // Show next button
+    const nextBtn = document.getElementById('quiz-next-btn');
+    nextBtn.style.display = 'inline-flex';
+    nextBtn.innerHTML = currentQuizIndex >= quizQuestions.length - 1
+        ? 'See Results <i class="fas fa-trophy"></i>'
+        : 'Next Question <i class="fas fa-arrow-right"></i>';
+}
+
+function nextQuestion() {
+    currentQuizIndex++;
+    if (currentQuizIndex >= quizQuestions.length) {
+        showResults();
+    } else {
+        renderQuestion();
+    }
+}
+
+function showResults() {
+    document.getElementById('quiz-area').style.display = 'none';
+    const resultsDiv = document.getElementById('quiz-results');
+    resultsDiv.style.display = 'block';
+
+    const total = quizQuestions.length;
+    const pct = Math.round((quizScore / total) * 100);
+
+    document.getElementById('results-score').textContent = quizScore;
+    document.getElementById('results-total').textContent = total;
+    document.getElementById('results-pct').textContent = pct + '%';
+
+    let icon, title, subtitle;
+    if (pct >= 80) {
+        icon = '<i class="fas fa-trophy" style="color: var(--accent-yellow);"></i>';
+        title = 'Outstanding!';
+        subtitle = 'You really know your crypto! You\'re a true blockchain expert.';
+    } else if (pct >= 60) {
+        icon = '<i class="fas fa-medal" style="color: var(--accent-cyan);"></i>';
+        title = 'Great Job!';
+        subtitle = 'Solid crypto knowledge! Keep learning and you\'ll be an expert in no time.';
+    } else if (pct >= 40) {
+        icon = '<i class="fas fa-book-reader" style="color: var(--accent-purple);"></i>';
+        title = 'Not Bad!';
+        subtitle = 'You have some crypto knowledge. Check out our facts section to learn more!';
+    } else {
+        icon = '<i class="fas fa-graduation-cap" style="color: var(--accent-orange);"></i>';
+        title = 'Keep Learning!';
+        subtitle = 'Every expert was once a beginner. Explore our facts and try again!';
+    }
+
+    document.getElementById('results-icon').innerHTML = icon;
+    document.getElementById('results-title').textContent = title;
+    document.getElementById('results-subtitle').textContent = subtitle;
+}
+
+// ---- Stats Tab ----
+async function loadStatsTab() {
+    try {
+        const r = await fetch('/api/facts/stats');
+        const d = await r.json();
+        if (d.success && d.data) {
+            const s = d.data;
+            document.getElementById('stat-total-facts').textContent = s.total_facts;
+            document.getElementById('stat-total-quiz').textContent = s.total_questions;
+            document.getElementById('stat-categories').textContent = s.categories;
+
+            // Difficulty breakdown
+            const diffs = s.difficulties || {};
+            const maxD = Math.max(diffs.easy || 0, diffs.medium || 0, diffs.hard || 0, 1);
+            const diffColors = { easy: '#34d399', medium: '#fbbf24', hard: '#f87171' };
+            const diffIcons = { easy: 'fas fa-seedling', medium: 'fas fa-bolt', hard: 'fas fa-fire' };
+            document.getElementById('difficulty-breakdown').innerHTML = ['easy', 'medium', 'hard'].map(d => `
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                    <div style="width:100px;font-size:0.85rem;font-weight:600;color:var(--text-primary);">
+                        <i class="${diffIcons[d]}" style="color:${diffColors[d]};margin-right:6px;"></i>
+                        ${d.charAt(0).toUpperCase() + d.slice(1)}
+                    </div>
+                    <div style="flex:1;height:8px;background:var(--bg-glass);border-radius:4px;overflow:hidden;">
+                        <div style="height:100%;width:${(diffs[d] / maxD) * 100}%;background:${diffColors[d]};border-radius:4px;transition:width 0.6s;"></div>
+                    </div>
+                    <div style="width:30px;text-align:right;font-size:0.85rem;font-weight:700;color:var(--text-primary);">${diffs[d] || 0}</div>
+                </div>
+            `).join('');
+
+            // Facts by category
+            const factsData = s.facts_by_category || {};
+            const maxF = Math.max(...Object.values(factsData), 1);
+            document.getElementById('facts-category-breakdown').innerHTML = Object.entries(factsData).map(([cat, count]) => {
+                const catInfo = factCategories.find(c => c.slug === cat) || {};
+                return `
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                    <div style="width:100px;font-size:0.82rem;font-weight:600;color:var(--text-primary);">
+                        <i class="${catInfo.icon || 'fas fa-tag'}" style="color:${catInfo.color || '#22d3ee'};margin-right:4px;font-size:0.7rem;"></i>
+                        ${catInfo.name || cat}
+                    </div>
+                    <div style="flex:1;height:8px;background:var(--bg-glass);border-radius:4px;overflow:hidden;">
+                        <div style="height:100%;width:${(count / maxF) * 100}%;background:${catInfo.color || '#22d3ee'};border-radius:4px;transition:width 0.6s;"></div>
+                    </div>
+                    <div style="width:30px;text-align:right;font-size:0.82rem;font-weight:700;color:var(--text-primary);">${count}</div>
+                </div>`;
+            }).join('');
+        }
+    } catch(e) { console.error(e); }
+}
+
+// ---- Utilities ----
+function escHtml(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+
+// ---- Init ----
+document.addEventListener('DOMContentLoaded', function() {
+    initFactFilters();
+    initQuizFilters();
+    loadDailyFact();
+    loadFacts();
+});
+</script>
+{% endblock %}

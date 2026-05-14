@@ -1,0 +1,1101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - CryptositNews{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ article.title }}{% endblock %}
+{% block og_desc %}{{ article.summary[:200] if article.summary else '' }}{% endblock %}
+{% block og_image %}
+{% if article.image_url %}<meta property="og:image" content="{{ article.image_url }}">{% endif %}
+<meta property="article:published_time" content="{{ article.published_at[:19] if article.published_at and article.published_at is string else '' }}">
+<meta property="article:section" content="{{ article.category or 'News' }}">
+<meta property="article:tag" content="crypto, {{ article.category or '' }}">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .article-container { max-width: 820px; margin: 0 auto; }
+    .breadcrumb {
+        color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;
+        display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .breadcrumb a { color: var(--text-muted); transition: var(--transition); }
+    .breadcrumb a:hover { color: var(--accent-cyan); }
+    .breadcrumb .separator { font-size: 0.6rem; }
+    .breadcrumb .breadcrumb-title {
+        color: var(--text-secondary); max-width: 200px; overflow: hidden;
+        text-overflow: ellipsis; white-space: nowrap; display: inline-block;
+        font-weight: 500;
+    }
+
+    .article-header { margin-bottom: 2rem; }
+    .article-header .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+    .article-header .title-row {
+        display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1rem;
+    }
+    .article-header h1 {
+        font-size: 2.1rem; font-weight: 900; line-height: 1.25;
+        letter-spacing: -0.3px; flex: 1;
+    }
+    .article-header .info {
+        display: flex; gap: 1.5rem; color: var(--text-muted); font-size: 0.85rem; flex-wrap: wrap;
+    }
+    .article-header .info span { display: flex; align-items: center; gap: 6px; }
+    .article-header .info i { color: var(--accent-cyan); font-size: 0.8rem; }
+
+    /* Bookmark button next to title */
+    .bookmark-article-btn {
+        width: 44px; height: 44px; border-radius: var(--radius-md);
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-muted); font-size: 1.1rem;
+        cursor: pointer; transition: var(--transition);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; margin-top: 4px;
+    }
+    .bookmark-article-btn:hover {
+        background: rgba(251, 113, 133, 0.15); border-color: #fb7185;
+        color: #fb7185; transform: scale(1.08);
+    }
+    .bookmark-article-btn.bookmarked {
+        color: #fb7185; background: rgba(251, 113, 133, 0.15);
+        border-color: rgba(251, 113, 133, 0.3);
+    }
+    .bookmark-article-btn.bookmarked:hover { background: rgba(251, 113, 133, 0.25); }
+    @keyframes bookmarkPop {
+        0% { transform: scale(1); }
+        40% { transform: scale(1.25); }
+        70% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+    }
+    .bookmark-article-btn.pop i { animation: bookmarkPop 0.35s ease; }
+
+    /* Reading time badge */
+    .reading-time-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 10px; border-radius: 20px;
+        background: rgba(59, 130, 246, 0.12); color: var(--accent-blue);
+        font-size: 0.75rem; font-weight: 700;
+    }
+
+    .article-image {
+        width: 100%; max-height: 420px; object-fit: cover;
+        border-radius: var(--radius-xl); margin-bottom: 2rem;
+        background: var(--gradient-card);
+        border: 1px solid var(--border-glass);
+    }
+
+    /* AI Summary Box */
+    .article-summary-box {
+        background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(167,139,250,0.06));
+        border: 1px solid rgba(34, 211, 238, 0.15);
+        border-left: 4px solid var(--accent-cyan);
+        padding: 1.5rem 1.8rem;
+        border-radius: var(--radius-lg); margin-bottom: 2rem;
+        font-size: 1rem; line-height: 1.8; color: var(--text-secondary);
+        position: relative;
+    }
+    .article-summary-box .ai-label {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.5px; color: var(--accent-cyan); margin-bottom: 0.6rem;
+    }
+    .article-summary-box .ai-label i { font-size: 0.85rem; }
+
+    /* AI Insights */
+    .ai-insights {
+        background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(167,139,250,0.08));
+        border: 1px solid rgba(34, 211, 238, 0.12);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem 1.8rem; margin-bottom: 2rem;
+        position: relative; overflow: hidden;
+    }
+    .ai-insights::before {
+        content: ''; position: absolute; top: -50%; right: -50%;
+        width: 200px; height: 200px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(167,139,250,0.06), transparent 70%);
+        pointer-events: none;
+    }
+    .ai-insights h3 {
+        font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 0.8rem;
+        display: flex; align-items: center; gap: 8px;
+        text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;
+    }
+    .ai-insights p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7; position: relative; }
+
+    /* Enhanced Sentiment Bar with Gradient */
+    .sentiment-display {
+        display: flex; align-items: center; gap: 12px; margin-bottom: 2rem;
+        padding: 1rem 1.5rem; background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md);
+    }
+    .sentiment-bar {
+        flex: 1; height: 10px; border-radius: 5px;
+        background: var(--bg-glass-hover); overflow: hidden; position: relative;
+    }
+    .sentiment-bar-fill {
+        height: 100%; border-radius: 5px; transition: width 1s ease;
+        position: relative;
+    }
+    .sentiment-bar-fill::after {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+        animation: shimmer 2s ease infinite;
+        background-size: 200% 100%;
+    }
+    .sentiment-bar-fill.bullish {
+        background: linear-gradient(90deg, var(--accent-green), #4ade80, var(--accent-green));
+        box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+    }
+    .sentiment-bar-fill.bearish {
+        background: linear-gradient(90deg, var(--accent-red), #fca5a5, var(--accent-red));
+        box-shadow: 0 0 12px rgba(248, 113, 113, 0.4);
+    }
+    .sentiment-bar-fill.neutral {
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-cyan));
+        box-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+    }
+    .sentiment-score {
+        font-weight: 800; font-size: 1.1rem; min-width: 50px; text-align: center;
+    }
+    .sentiment-label-text { font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Table of Contents */
+    .toc {
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); padding: 1rem 1.5rem; margin-bottom: 2rem;
+    }
+    .toc h4 {
+        font-size: 0.78rem; color: var(--accent-cyan); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px;
+        margin-bottom: 0.6rem; display: flex; align-items: center; gap: 6px;
+    }
+    .toc ol { padding-left: 1.2rem; }
+    .toc li { margin-bottom: 0.35rem; }
+    .toc a {
+        color: var(--text-secondary); font-size: 0.85rem;
+        transition: var(--transition); display: inline-block;
+    }
+    .toc a:hover { color: var(--accent-cyan); transform: translateX(4px); }
+
+    .article-content {
+        font-size: 1rem; line-height: 1.9; color: var(--text-secondary); margin-bottom: 2rem;
+    }
+    .article-content p { margin-bottom: 1.2rem; }
+
+    .keywords { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 2rem; }
+    .keyword-tag {
+        padding: 6px 14px; border-radius: 20px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        font-size: 0.8rem; color: var(--text-secondary); text-decoration: none;
+        transition: var(--transition); font-weight: 500;
+    }
+    .keyword-tag:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(34,211,238,0.06); transform: translateY(-2px); }
+
+    /* Enhanced Share Bar */
+    .share-buttons {
+        display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 2rem;
+        padding: 1rem 1.2rem; background: var(--bg-glass);
+        border: 1px solid var(--border-glass); border-radius: var(--radius-md);
+    }
+    .share-label {
+        color: var(--text-muted); font-size: 0.85rem; display: flex;
+        align-items: center; gap: 6px; margin-right: 4px;
+    }
+    .share-btn {
+        padding: 8px 14px; border-radius: var(--radius-sm);
+        background: var(--bg-glass-hover); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.82rem;
+        cursor: pointer; transition: var(--transition);
+        display: flex; align-items: center; gap: 6px; font-weight: 500;
+        text-decoration: none;
+    }
+    .share-btn:hover { color: var(--text-primary); transform: translateY(-2px); border-color: var(--border-glow); }
+    .share-btn.twitter:hover { background: rgba(29,161,242,0.12); color: #1DA1F2; border-color: rgba(29,161,242,0.3); }
+    .share-btn.facebook:hover { background: rgba(24,119,242,0.12); color: #1877F2; border-color: rgba(24,119,242,0.3); }
+    .share-btn.telegram:hover { background: rgba(34,158,217,0.12); color: #229ED9; border-color: rgba(34,158,217,0.3); }
+    .share-btn.reddit:hover { background: rgba(255,69,0,0.12); color: #FF4500; border-color: rgba(255,69,0,0.3); }
+    .share-btn.linkedin:hover { background: rgba(10,102,194,0.12); color: #0A66C2; border-color: rgba(10,102,194,0.3); }
+    .share-btn.whatsapp:hover { background: rgba(37,211,102,0.12); color: #25D366; border-color: rgba(37,211,102,0.3); }
+    .share-btn.copy-link:hover { background: rgba(34,211,238,0.12); color: var(--accent-cyan); border-color: rgba(34,211,238,0.3); }
+    .share-btn.copied {
+        background: rgba(52,211,153,0.12) !important; color: var(--accent-green) !important;
+        border-color: rgba(52,211,153,0.3) !important;
+    }
+
+    /* Article Reactions */
+    .reactions-bar {
+        display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 2rem;
+        padding: 1rem 1.2rem; background: var(--bg-glass);
+        border: 1px solid var(--border-glass); border-radius: var(--radius-md);
+        align-items: center;
+    }
+
+    /* Article Rating Stars */
+    .rating-star {
+        background: none; border: none; cursor: pointer;
+        font-size: 1.2rem; color: var(--text-muted);
+        transition: var(--transition); padding: 2px;
+    }
+    .rating-star:hover,
+    .rating-star.active {
+        color: #fbbf24; transform: scale(1.15);
+    }
+    .rating-star.active {
+        text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+    }
+    .reactions-label {
+        color: var(--text-muted); font-size: 0.82rem; display: flex;
+        align-items: center; gap: 6px; margin-right: 4px; font-weight: 500;
+    }
+    .reaction-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: 24px;
+        background: var(--bg-glass-hover); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.85rem;
+        cursor: pointer; transition: var(--transition); font-weight: 600;
+    }
+    .reaction-btn:hover { transform: translateY(-2px); }
+    .reaction-btn.active { border-color: var(--border-glow); }
+    .reaction-btn.bullish:hover, .reaction-btn.bullish.active {
+        background: rgba(52,211,153,0.12); color: var(--accent-green);
+        border-color: rgba(52,211,153,0.3); box-shadow: 0 0 12px rgba(52,211,153,0.15);
+    }
+    .reaction-btn.bearish:hover, .reaction-btn.bearish.active {
+        background: rgba(248,113,113,0.12); color: var(--accent-red);
+        border-color: rgba(248,113,113,0.3); box-shadow: 0 0 12px rgba(248,113,113,0.15);
+    }
+    .reaction-btn.interesting:hover, .reaction-btn.interesting.active {
+        background: rgba(251,191,36,0.12); color: var(--accent-yellow);
+        border-color: rgba(251,191,36,0.3); box-shadow: 0 0 12px rgba(251,191,36,0.15);
+    }
+    .reaction-count {
+        font-size: 0.78rem; min-width: 14px; text-align: center;
+        opacity: 0.7;
+    }
+    @keyframes reactPop {
+        0% { transform: scale(1) translateY(0); }
+        30% { transform: scale(1.15) translateY(-3px); }
+        100% { transform: scale(1) translateY(0); }
+    }
+    .reaction-btn.pop { animation: reactPop 0.3s ease; }
+
+    /* Related Articles with images */
+    .related-section { margin-top: 3rem; }
+    .related-section h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    .related-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); transition: var(--transition);
+        overflow: hidden;
+    }
+    .related-card:hover { transform: translateY(-3px); border-color: var(--border-glow); box-shadow: var(--shadow-glow); }
+    .related-card-img {
+        width: 100%; height: 140px; object-fit: cover;
+        background: var(--gradient-card);
+    }
+    .related-card-img-placeholder {
+        width: 100%; height: 140px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--gradient-card);
+    }
+    .related-card-img-placeholder i { font-size: 2rem; color: var(--accent-cyan); opacity: 0.15; }
+    .related-card-body { padding: 1rem 1.2rem; }
+    .related-card .rc-meta { display: flex; gap: 8px; margin-bottom: 8px; font-size: 0.78rem; color: var(--text-muted); align-items: center; }
+    .related-card .rc-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 0; line-height: 1.4; }
+    .related-card .rc-title a { color: var(--text-primary); transition: var(--transition); }
+    .related-card .rc-title a:hover { color: var(--accent-cyan); }
+
+    /* Enhanced Source CTA with glow */
+    .source-link {
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        text-align: center; margin-top: 2rem;
+        padding: 16px 28px; border-radius: var(--radius-md);
+        background: var(--gradient-primary); color: white;
+        font-weight: 700; font-size: 0.95rem;
+        transition: var(--transition);
+        box-shadow: 0 4px 20px rgba(34, 211, 238, 0.25);
+        position: relative; overflow: hidden;
+    }
+    .source-link::before {
+        content: '';
+        position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        animation: ctaShimmer 3s ease infinite;
+    }
+    @keyframes ctaShimmer {
+        0% { left: -100%; }
+        50%, 100% { left: 100%; }
+    }
+    .source-link:hover {
+        color: white; transform: translateY(-3px);
+        box-shadow: 0 8px 40px rgba(34, 211, 238, 0.35), 0 0 60px rgba(34, 211, 238, 0.15);
+    }
+
+    /* Scroll-triggered section animations */
+    .article-section-animate {
+        opacity: 0; transform: translateY(24px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .article-section-animate.visible {
+        opacity: 1; transform: translateY(0);
+    }
+
+    .share-btn.audio-playing {
+        background: rgba(34,211,238,0.15) !important;
+        color: var(--accent-cyan) !important;
+        border-color: rgba(34,211,238,0.3) !important;
+        animation: audioPulse 1.5s ease infinite;
+    }
+    @keyframes audioPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(34,211,238,0.2); }
+        50% { box-shadow: 0 0 0 6px rgba(34,211,238,0); }
+    }
+
+    /* ============================================
+       V5: Comments Section
+       ============================================ */
+    .comments-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-glass);
+    }
+    .comments-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+    .comments-header h2 {
+        font-size: 1.3rem; font-weight: 800;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .comment-count-badge {
+        font-size: 0.78rem; font-weight: 700;
+        padding: 3px 10px; border-radius: 12px;
+        background: rgba(34,211,238,0.12); color: var(--accent-cyan);
+    }
+
+    .comment-form {
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 1.2rem;
+        margin-bottom: 2rem;
+    }
+    .comment-form-row {
+        display: flex; gap: 10px; margin-bottom: 10px;
+    }
+    .comment-form-row input {
+        flex: 1; padding: 10px 14px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary); font-size: 0.88rem;
+        font-family: inherit; outline: none;
+        transition: var(--transition);
+    }
+    .comment-form-row input:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 0 3px rgba(34,211,238,0.1);
+    }
+    .comment-form textarea {
+        width: 100%; padding: 10px 14px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary); font-size: 0.88rem;
+        font-family: inherit; outline: none; resize: vertical;
+        min-height: 80px; transition: var(--transition);
+    }
+    .comment-form textarea:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 0 3px rgba(34,211,238,0.1);
+    }
+    .comment-form-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 10px;
+    }
+    .char-count {
+        font-size: 0.75rem; color: var(--text-muted);
+    }
+
+    .comment-item {
+        padding: 1rem 1.2rem;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md);
+        margin-bottom: 10px;
+        animation: fadeInUp 0.3s ease forwards;
+    }
+    .comment-item-header {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 8px;
+    }
+    .comment-avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: var(--gradient-card);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 0.8rem; color: var(--accent-cyan);
+        flex-shrink: 0;
+    }
+    .comment-author {
+        font-weight: 700; font-size: 0.88rem; color: var(--text-primary);
+    }
+    .comment-date {
+        font-size: 0.72rem; color: var(--text-muted); margin-left: auto;
+    }
+    .comment-text {
+        color: var(--text-secondary); font-size: 0.88rem;
+        line-height: 1.7; word-wrap: break-word;
+    }
+    .comment-actions {
+        display: flex; gap: 12px; margin-top: 8px;
+    }
+    .comment-vote-btn {
+        display: inline-flex; align-items: center; gap: 4px;
+        background: none; border: none; color: var(--text-muted);
+        font-size: 0.78rem; cursor: pointer; transition: var(--transition);
+        padding: 2px 6px; border-radius: 4px;
+    }
+    .comment-vote-btn:hover {
+        color: var(--accent-cyan); background: var(--bg-glass-hover);
+    }
+    .comment-vote-btn.voted-up { color: var(--accent-green); }
+    .comment-vote-btn.voted-down { color: var(--accent-red); }
+
+    .comments-empty {
+        text-align: center; padding: 2rem;
+        color: var(--text-muted);
+    }
+    .comments-empty i { font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.4; }
+
+    .comments-loading { display: flex; flex-direction: column; gap: 10px; }
+
+    @media (max-width: 768px) {
+        .comment-form-row { flex-direction: column; }
+        .article-header .title-row { flex-direction: column; }
+        .bookmark-article-btn { align-self: flex-start; }
+        .article-header h1 { font-size: 1.5rem; }
+        .related-grid { grid-template-columns: 1fr; }
+        .share-buttons { gap: 6px; }
+        .share-btn { padding: 6px 10px; font-size: 0.78rem; }
+        .reactions-bar { gap: 6px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="article-container animate-in">
+    <!-- Breadcrumb with article title -->
+    <nav class="breadcrumb">
+        <a href="/"><i class="fas fa-home"></i> Home</a>
+        <i class="fas fa-chevron-right separator"></i>
+        <a href="/news">News</a>
+        <i class="fas fa-chevron-right separator"></i>
+        {% if article.category %}<a href="/news?category={{ article.category }}">{{ article.category | title }}</a>
+        <i class="fas fa-chevron-right separator"></i>{% endif %}
+        <span class="breadcrumb-title" title="{{ article.title }}">{{ article.title }}</span>
+    </nav>
+
+    <div class="article-header article-section-animate">
+        <div class="meta">
+            <span class="badge badge-cyan">{{ article.source or 'Unknown' }}</span>
+            {% if article.category %}<span class="badge badge-purple">{{ article.category }}</span>{% endif %}
+            {% if article.sentiment_label %}
+            <span class="badge badge-{{ 'green' if article.sentiment_label in ['bullish', 'very_bullish'] else ('red' if article.sentiment_label in ['bearish', 'very_bearish'] else 'cyan') }}">
+                {{ article.sentiment_label | replace('_', ' ') | title }}
+            </span>
+            {% endif %}
+            {% if article.is_posted %}<span class="badge" style="background: rgba(34,158,217,0.12); color: #229ED9;"><i class="fab fa-telegram"></i> Telegram</span>{% endif %}
+        </div>
+        <div class="title-row">
+            <h1>{{ article.title }}</h1>
+            <button class="bookmark-article-btn" id="bookmarkArticleBtn" onclick="toggleArticleBookmark()">
+                <i class="far fa-heart"></i>
+            </button>
+        </div>
+        <div class="info">
+            <span><i class="far fa-clock"></i> {{ article.time_ago or 'Unknown' }}</span>
+            <span><i class="far fa-eye"></i> {{ article.views or 0 }} views</span>
+            <span><i class="far fa-calendar"></i> {{ article.published_at[:10] if article.published_at and article.published_at is string else '' }}</span>
+            {% if article.content %}
+            {% set word_count = article.content | wordcount %}
+            {% set read_min = [1, word_count // 200] | max %}
+            <span><i class="far fa-book-open"></i> {{ word_count }} words</span>
+            <span class="reading-time-badge"><i class="fas fa-hourglass-half"></i> {{ read_min }} min read</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if article.image_url %}
+    <img src="{{ article.image_url }}" alt="{{ article.title }}" class="article-image article-section-animate" loading="lazy" onerror="this.style.display='none'">
+    {% endif %}
+
+    <!-- Enhanced Sentiment Display -->
+    {% if article.sentiment_score is not none %}
+    <div class="sentiment-display article-section-animate">
+        <span class="sentiment-label-text">{{ article.sentiment_label | replace('_', ' ') | title }}</span>
+        <div class="sentiment-bar">
+            <div class="sentiment-bar-fill {% if article.sentiment_score > 0.1 %}bullish{% elif article.sentiment_score < -0.1 %}bearish{% else %}neutral{% endif %}" style="width: {{ (article.sentiment_score + 1) / 2 * 100 }}%;"></div>
+        </div>
+        <span class="sentiment-score" style="color: {% if article.sentiment_score > 0.1 %}var(--accent-green){% elif article.sentiment_score < -0.1 %}var(--accent-red){% else %}var(--accent-cyan){% endif %};">{{ '%.0f' | format(article.sentiment_score * 100) }}</span>
+    </div>
+    {% endif %}
+
+    {% if article.summary %}
+    <div class="article-summary-box article-section-animate">
+        <div class="ai-label"><i class="fas fa-robot"></i> AI Summary</div>
+        {{ article.summary }}
+    </div>
+    {% endif %}
+
+    {% if article.ai_insights %}
+    <div class="ai-insights article-section-animate">
+        <h3><i class="fas fa-brain"></i> AI Analysis</h3>
+        <p>{{ article.ai_insights }}</p>
+    </div>
+    {% endif %}
+
+    {% if article.content %}
+    <!-- Mini Table of Contents -->
+    <div class="toc article-section-animate" id="toc">
+        <h4><i class="fas fa-list"></i> Quick Overview</h4>
+        <ol>
+            <li><a href="#content-section">Full Article</a></li>
+        </ol>
+    </div>
+    <div class="article-content article-section-animate" id="content-section">{{ article.content[:3000] }}</div>
+    {% endif %}
+
+    {% if article.keywords and article.keywords != '[]' %}
+    <div class="keywords article-section-animate">
+        <i class="fas fa-tags" style="color: var(--text-muted); margin-right: 4px;"></i>
+        {% if article.keywords is string %}
+            {% set kw_clean = article.keywords | replace('[', '') | replace(']', '') | replace("'", '') | replace('"', '') %}
+            {% for kw in kw_clean.split(',') %}
+            {% if kw | trim %}
+            <a href="/search?q={{ kw | trim }}" class="keyword-tag">{{ kw | trim }}</a>
+            {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Article Rating (5 Stars) -->
+    <div class="reactions-bar article-section-animate" id="articleRating">
+        <span class="reactions-label"><i class="fas fa-star"></i> Rate:</span>
+        <div id="ratingStars" style="display:flex;gap:4px;">
+            <button class="rating-star" data-value="1" onclick="rateArticle(1)" title="Poor"><i class="fas fa-star"></i></button>
+            <button class="rating-star" data-value="2" onclick="rateArticle(2)" title="Fair"><i class="fas fa-star"></i></button>
+            <button class="rating-star" data-value="3" onclick="rateArticle(3)" title="Good"><i class="fas fa-star"></i></button>
+            <button class="rating-star" data-value="4" onclick="rateArticle(4)" title="Very Good"><i class="fas fa-star"></i></button>
+            <button class="rating-star" data-value="5" onclick="rateArticle(5)" title="Excellent"><i class="fas fa-star"></i></button>
+        </div>
+        <span id="ratingText" style="font-size:0.78rem;color:var(--text-muted);font-weight:600;"></span>
+        <span id="ratingAvg" style="font-size:0.78rem;color:var(--accent-cyan);font-weight:700;"></span>
+    </div>
+
+    <!-- Article Reactions -->
+    <div class="reactions-bar article-section-animate" id="reactionsBar">
+        <span class="reactions-label"><i class="fas fa-hand-pointer"></i> React:</span>
+        <button class="reaction-btn bullish" onclick="toggleReaction(this, 'bullish')" data-type="bullish">
+            <span>📈</span> Bullish <span class="reaction-count" id="count-bullish">0</span>
+        </button>
+        <button class="reaction-btn bearish" onclick="toggleReaction(this, 'bearish')" data-type="bearish">
+            <span>📉</span> Bearish <span class="reaction-count" id="count-bearish">0</span>
+        </button>
+        <button class="reaction-btn interesting" onclick="toggleReaction(this, 'interesting')" data-type="interesting">
+            <span>🤔</span> Interesting <span class="reaction-count" id="count-interesting">0</span>
+        </button>
+    </div>
+
+    <!-- Enhanced Share Bar -->
+    <div class="share-buttons article-section-animate">
+        <span class="share-label"><i class="fas fa-share-alt"></i> Share:</span>
+        <a href="https://twitter.com/intent/tweet?text={{ article.title | urlencode }}&url={{ article.url | urlencode }}" target="_blank" class="share-btn twitter"><i class="fab fa-twitter"></i> Twitter/X</a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ article.url | urlencode }}" target="_blank" class="share-btn facebook"><i class="fab fa-facebook"></i> Facebook</a>
+        <a href="https://t.me/share/url?url={{ article.url | urlencode }}&text={{ article.title | urlencode }}" target="_blank" class="share-btn telegram"><i class="fab fa-telegram"></i> Telegram</a>
+        <a href="https://wa.me/?text={{ article.title | urlencode }}%20{{ article.url | urlencode }}" target="_blank" class="share-btn whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+        <a href="https://www.reddit.com/submit?url={{ article.url | urlencode }}&title={{ article.title | urlencode }}" target="_blank" class="share-btn reddit"><i class="fab fa-reddit-alien"></i> Reddit</a>
+        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ article.url | urlencode }}" target="_blank" class="share-btn linkedin"><i class="fab fa-linkedin"></i> LinkedIn</a>
+        <button class="share-btn copy-link" id="copyLinkBtn" onclick="copyArticleLink()"><i class="fas fa-link"></i> <span>Copy Link</span></button>
+        <button class="share-btn" id="audioSummaryBtn" onclick="toggleAudioSummary()" title="Listen to article summary">
+            <i class="fas fa-headphones"></i> <span id="audioLabel">Listen</span>
+        </button>
+    </div>
+
+    <!-- ==========================================
+         V5: Comments Section
+         ========================================== -->
+    <div class="comments-section article-section-animate" id="commentsSection">
+        <div class="comments-header">
+            <h2><i class="fas fa-comments" style="color: var(--accent-cyan);"></i> Comments <span class="comment-count-badge" id="commentCountBadge">0</span></h2>
+        </div>
+
+        <!-- Comment Form -->
+        <div class="comment-form" id="commentForm">
+            <div class="comment-form-row">
+                <input type="text" id="commentAuthor" placeholder="Your name" maxlength="100" required>
+                <input type="email" id="commentEmail" placeholder="Email (optional)" maxlength="200">
+            </div>
+            <textarea id="commentContent" placeholder="Share your thoughts on this article..." maxlength="2000" rows="3" required></textarea>
+            <div class="comment-form-footer">
+                <span class="char-count" id="charCount">0 / 2000</span>
+                <button class="btn btn-primary" id="submitCommentBtn" onclick="submitComment()">
+                    <i class="fas fa-paper-plane"></i> Post Comment
+                </button>
+            </div>
+        </div>
+
+        <!-- Comments List -->
+        <div class="comments-list" id="commentsList">
+            <div class="comments-loading" id="commentsLoading">
+                <div class="skeleton" style="height:60px; margin-bottom:12px;"></div>
+                <div class="skeleton" style="height:60px; margin-bottom:12px;"></div>
+                <div class="skeleton" style="height:60px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Articles with images -->
+    {% if related %}
+    <div class="related-section article-section-animate">
+        <h2><i class="fas fa-fire" style="color: var(--accent-cyan);"></i> Related News</h2>
+        <div class="related-grid">
+            {% for r in related %}
+            <div class="related-card" style="animation: fadeInUp 0.5s ease forwards; animation-delay: {{ loop.index0 * 0.1 }}s; opacity: 0;">
+                {% if r.image_url %}
+                <img src="{{ r.image_url }}" alt="" class="related-card-img" loading="lazy" onerror="this.outerHTML='<div class=\'related-card-img-placeholder\'><i class=\'fas fa-newspaper\'></i></div>'">
+                {% else %}
+                <div class="related-card-img-placeholder"><i class="fas fa-newspaper"></i></div>
+                {% endif %}
+                <div class="related-card-body">
+                    <div class="rc-meta">
+                        <span class="badge badge-cyan" style="font-size: 0.7rem;">{{ r.source or 'Unknown' }}</span>
+                        <span>{{ r.time_ago or '' }}</span>
+                    </div>
+                    <div class="rc-title"><a href="/news/{{ r.id }}">{{ r.title }}</a></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Enhanced Source CTA -->
+    <a href="{{ article.url }}" target="_blank" class="source-link article-section-animate">
+        <i class="fas fa-external-link-alt"></i> Read Full Article on {{ article.source or 'Source' }}
+    </a>
+</div>
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": {{ article.title | tojson }},
+    {% if article.summary %}"description": {{ article.summary[:300] | tojson }},{% endif %}
+    {% if article.image_url %}"image": "{{ article.image_url }}",{% endif %}
+    {% if article.published_at %}"datePublished": "{{ article.published_at[:19] if article.published_at is string else '' }}",{% endif %}
+    "author": { "@type": "Organization", "name": "{{ article.source or 'CryptositNews' }}" },
+    "publisher": { "@type": "Organization", "name": "CryptositNews", "url": "https://cryptositnews.com" }
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const ARTICLE_ID = '{{ article.id }}';
+    const ARTICLE_URL = '{{ article.url }}';
+    const STORAGE_KEY = 'cryptosinews_bookmarks';
+    const REACTIONS_KEY = 'cryptosinews_reactions';
+
+    // ==========================================
+    // Article Rating (5 Stars)
+    // ==========================================
+    function loadRating() {
+        fetch('/api/rating/' + ARTICLE_ID)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    updateRatingUI(data.data.avg || 0, data.data.count || 0, data.user_rating);
+                }
+            });
+    }
+    function updateRatingUI(avg, count, userRating) {
+        const stars = document.querySelectorAll('.rating-star');
+        stars.forEach(star => {
+            const val = parseInt(star.dataset.value);
+            star.classList.toggle('active', val <= (userRating || 0));
+        });
+        const ratingText = document.getElementById('ratingText');
+        const ratingAvg = document.getElementById('ratingAvg');
+        if (userRating) {
+            ratingText.textContent = 'Your rating: ' + userRating + '/5';
+        } else if (count > 0) {
+            ratingText.textContent = count + ' rating' + (count !== 1 ? 's' : '');
+        } else {
+            ratingText.textContent = 'Be the first to rate';
+        }
+        if (count > 0) {
+            ratingAvg.textContent = avg.toFixed(1) + ' / 5';
+        }
+    }
+    window.rateArticle = function(value) {
+        fetch('/api/rate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({article_id: ARTICLE_ID, rating: value})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                updateRatingUI(data.rating.avg || value, data.rating.count || 1, value);
+            }
+        });
+    };
+    // Load rating on page load
+    loadRating();
+
+    // ==========================================
+    // Bookmark
+    // ==========================================
+    function getBookmarks() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+        catch { return []; }
+    }
+    function saveBookmarks(b) { localStorage.setItem(STORAGE_KEY, JSON.stringify(b)); }
+
+    function initBookmark() {
+        const btn = document.getElementById('bookmarkArticleBtn');
+        if (!btn) return;
+        if (getBookmarks().includes(ARTICLE_ID)) {
+            btn.classList.add('bookmarked');
+            btn.innerHTML = '<i class="fas fa-heart"></i>';
+        }
+    }
+
+    window.toggleArticleBookmark = function() {
+        const btn = document.getElementById('bookmarkArticleBtn');
+        const bookmarks = getBookmarks();
+        const idx = bookmarks.indexOf(ARTICLE_ID);
+        if (idx > -1) {
+            bookmarks.splice(idx, 1);
+            btn.classList.remove('bookmarked');
+            btn.innerHTML = '<i class="far fa-heart"></i>';
+        } else {
+            bookmarks.push(ARTICLE_ID);
+            btn.classList.add('bookmarked');
+            btn.innerHTML = '<i class="fas fa-heart"></i>';
+            btn.classList.add('pop');
+            setTimeout(() => btn.classList.remove('pop'), 350);
+        }
+        saveBookmarks(bookmarks);
+    };
+
+    // ==========================================
+    // Reactions
+    // ==========================================
+    function getReactions() {
+        try {
+            const all = JSON.parse(localStorage.getItem(REACTIONS_KEY) || '{}');
+            return all[ARTICLE_ID] || { bullish: 0, bearish: 0, interesting: 0, userVote: null };
+        } catch { return { bullish: 0, bearish: 0, interesting: 0, userVote: null }; }
+    }
+
+    function saveReactions(data) {
+        try {
+            const all = JSON.parse(localStorage.getItem(REACTIONS_KEY) || '{}');
+            all[ARTICLE_ID] = data;
+            localStorage.setItem(REACTIONS_KEY, JSON.stringify(all));
+        } catch {}
+    }
+
+    function updateReactionUI() {
+        const data = getReactions();
+        ['bullish', 'bearish', 'interesting'].forEach(type => {
+            const countEl = document.getElementById('count-' + type);
+            if (countEl) countEl.textContent = data[type] || 0;
+            const btn = document.querySelector('.reaction-btn.' + type);
+            if (btn) {
+                if (data.userVote === type) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+        });
+    }
+
+    window.toggleReaction = function(btn, type) {
+        const data = getReactions();
+        if (data.userVote === type) {
+            // Remove vote
+            data[type] = Math.max(0, (data[type] || 0) - 1);
+            data.userVote = null;
+        } else {
+            // Remove previous vote if any
+            if (data.userVote) {
+                data[data.userVote] = Math.max(0, (data[data.userVote] || 0) - 1);
+            }
+            data[type] = (data[type] || 0) + 1;
+            data.userVote = type;
+        }
+        saveReactions(data);
+        updateReactionUI();
+        btn.classList.add('pop');
+        setTimeout(() => btn.classList.remove('pop'), 300);
+    };
+
+    // ==========================================
+    // Copy Link
+    // ==========================================
+    window.copyArticleLink = function() {
+        const btn = document.getElementById('copyLinkBtn');
+        navigator.clipboard.writeText(ARTICLE_URL).then(() => {
+            btn.classList.add('copied');
+            btn.querySelector('span').textContent = 'Copied!';
+            btn.querySelector('i').className = 'fas fa-check';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.querySelector('span').textContent = 'Copy Link';
+                btn.querySelector('i').className = 'fas fa-link';
+            }, 2000);
+        });
+    };
+
+    // ==========================================
+    // Scroll-triggered Animations
+    // ==========================================
+    function initScrollAnimations() {
+        const sections = document.querySelectorAll('.article-section-animate');
+        if (!sections.length) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    // Stagger the animation slightly for each section
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, i * 80);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        sections.forEach(section => observer.observe(section));
+    }
+
+    // ==========================================
+    // Audio Summary (Web Speech API)
+    // ==========================================
+    let audioUtterance = null;
+    let audioPlaying = false;
+
+    window.toggleAudioSummary = function() {
+        const btn = document.getElementById('audioSummaryBtn');
+        const label = document.getElementById('audioLabel');
+
+        if (!('speechSynthesis' in window)) {
+            label.textContent = 'Not Supported';
+            return;
+        }
+
+        if (audioPlaying) {
+            window.speechSynthesis.cancel();
+            audioPlaying = false;
+            btn.classList.remove('audio-playing');
+            label.textContent = 'Listen';
+            btn.querySelector('i').className = 'fas fa-headphones';
+            return;
+        }
+
+        // Build text to speak
+        let text = {{ article.title | tojson }} + '. ';
+        {% if article.summary %}
+            text += 'Summary: ' + {{ article.summary | tojson }} + '. ';
+        {% endif %}
+        {% if article.ai_insights %}
+            text += 'Analysis: ' + {{ article.ai_insights | tojson }};
+        {% else %}
+            {% if article.content %}
+                text += {{ article.content[:1500] | tojson }};
+            {% endif %}
+        {% endif %}
+
+        audioUtterance = new SpeechSynthesisUtterance(text);
+        audioUtterance.rate = 0.95;
+        audioUtterance.pitch = 1;
+        audioUtterance.lang = 'en-US';
+
+        // Try to use a good voice
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google'))
+                       || voices.find(v => v.lang.startsWith('en'));
+        if (preferred) audioUtterance.voice = preferred;
+
+        audioUtterance.onend = function() {
+            audioPlaying = false;
+            btn.classList.remove('audio-playing');
+            label.textContent = 'Listen';
+            btn.querySelector('i').className = 'fas fa-headphones';
+        };
+
+        window.speechSynthesis.speak(audioUtterance);
+        audioPlaying = true;
+        btn.classList.add('audio-playing');
+        label.textContent = 'Stop';
+        btn.querySelector('i').className = 'fas fa-stop';
+    };
+
+    // ==========================================
+    // Comments System
+    // ==========================================
+    const COMMENTS_API = '/api/comments/' + ARTICLE_ID;
+
+    function loadComments() {
+        fetch(COMMENTS_API)
+            .then(r => r.json())
+            .then(data => {
+                const loading = document.getElementById('commentsLoading');
+                const list = document.getElementById('commentsList');
+                const badge = document.getElementById('commentCountBadge');
+                if (loading) loading.style.display = 'none';
+                if (badge) badge.textContent = data.total || 0;
+                if (data.success && data.data && data.data.length > 0) {
+                    list.innerHTML = data.data.map(renderComment).join('');
+                } else {
+                    list.innerHTML = '<div class="comments-empty"><i class="far fa-comment-dots"></i><p>No comments yet. Be the first to share your thoughts!</p></div>';
+                }
+            })
+            .catch(() => {
+                document.getElementById('commentsLoading').style.display = 'none';
+            });
+    }
+
+    function renderComment(c) {
+        const initial = (c.author_name || 'A').charAt(0).toUpperCase();
+        const timeAgo = c.time_ago || c.formatted_date || '';
+        return `
+            <div class="comment-item">
+                <div class="comment-item-header">
+                    <div class="comment-avatar">${initial}</div>
+                    <span class="comment-author">${escapeHTML(c.author_name || 'Anonymous')}</span>
+                    <span class="comment-date">${escapeHTML(timeAgo)}</span>
+                </div>
+                <div class="comment-text">${escapeHTML(c.content || '')}</div>
+                <div class="comment-actions">
+                    <button class="comment-vote-btn" onclick="voteComment(${c.id}, 'up', this)">
+                        <i class="fas fa-thumbs-up"></i> <span>${c.upvotes || 0}</span>
+                    </button>
+                    <button class="comment-vote-btn" onclick="voteComment(${c.id}, 'down', this)">
+                        <i class="fas fa-thumbs-down"></i> <span>${c.downvotes || 0}</span>
+                    </button>
+                    <button class="comment-vote-btn" onclick="reportComment(${c.id}, this)" title="Report" style="margin-left:auto;">
+                        <i class="fas fa-flag"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    window.submitComment = function() {
+        const name = document.getElementById('commentAuthor').value.trim();
+        const email = document.getElementById('commentEmail').value.trim();
+        const content = document.getElementById('commentContent').value.trim();
+        const btn = document.getElementById('submitCommentBtn');
+
+        if (!name || !content) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+        fetch(COMMENTS_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author_name: name, author_email: email, content: content })
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Comment';
+            if (data.success) {
+                document.getElementById('commentContent').value = '';
+                document.getElementById('charCount').textContent = '0 / 2000';
+                loadComments();
+            } else {
+                alert(data.error || 'Failed to post comment');
+            }
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Comment';
+        });
+    };
+
+    window.voteComment = function(commentId, voteType, btnEl) {
+        fetch('/api/comments/' + commentId + '/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vote: voteType })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const countSpan = btnEl.querySelector('span');
+                if (countSpan) countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                btnEl.classList.add(voteType === 'up' ? 'voted-up' : 'voted-down');
+            }
+        });
+    };
+
+    window.reportComment = function(commentId, btnEl) {
+        if (!confirm('Report this comment as inappropriate?')) return;
+        fetch('/api/comments/' + commentId + '/report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason: 'inappropriate' })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                btnEl.innerHTML = '<i class="fas fa-flag"></i>';
+                btnEl.style.color = 'var(--accent-red)';
+                btnEl.disabled = true;
+            }
+        });
+    };
+
+    // Character count for comment
+    const commentContent = document.getElementById('commentContent');
+    if (commentContent) {
+        commentContent.addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length + ' / 2000';
+        });
+    }
+
+    // ==========================================
+    // Init
+    // ==========================================
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            initBookmark();
+            updateReactionUI();
+            initScrollAnimations();
+            loadComments();
+            // Preload voices for audio
+            if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+        });
+    } else {
+        initBookmark();
+        updateReactionUI();
+        initScrollAnimations();
+        loadComments();
+        if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+    }
+})();
+</script>
+{% endblock %}

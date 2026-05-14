@@ -1,0 +1,703 @@
+{% extends "base.html" %}
+
+{% block title %}Latest Crypto News - CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero {
+        margin-bottom: 1.5rem;
+    }
+    .page-hero h1 { font-size: 1.8rem; font-weight: 900; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 10px; }
+    .page-hero p { color: var(--text-secondary); }
+
+    .filters-wrapper {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1rem 1.2rem; margin-bottom: 1.5rem;
+    }
+    .filters {
+        display: flex; gap: 8px; flex-wrap: wrap;
+        margin-bottom: 0.8rem;
+    }
+    .filter-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 16px; border-radius: 24px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.84rem;
+        cursor: pointer; transition: var(--transition); font-weight: 500;
+        text-decoration: none;
+    }
+    .filter-btn:hover {
+        transform: translateY(-1px);
+    }
+    .filter-btn i { font-size: 0.78rem; }
+    .filters-divider {
+        height: 1px; background: var(--border-glass); margin: 0.5rem 0;
+    }
+    .sources-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 6px; }
+
+    /* Category Color Coding — each active category uses its own color */
+    .filter-btn.cat-btc:hover, .filter-btn.cat-btc.active { background: rgba(251,191,36,0.12); border-color: #fbbf24; color: #fbbf24; }
+    .filter-btn.cat-eth:hover, .filter-btn.cat-eth.active { background: rgba(98,126,234,0.12); border-color: #627eea; color: #627eea; }
+    .filter-btn.cat-defi:hover, .filter-btn.cat-defi.active { background: rgba(52,211,153,0.12); border-color: #34d399; color: #34d399; }
+    .filter-btn.cat-nft:hover, .filter-btn.cat-nft.active { background: rgba(167,139,250,0.12); border-color: #a78bfa; color: #a78bfa; }
+    .filter-btn.cat-reg:hover, .filter-btn.cat-reg.active { background: rgba(248,113,113,0.12); border-color: #f87171; color: #f87171; }
+    .filter-btn.cat-alt:hover, .filter-btn.cat-alt.active { background: rgba(34,211,238,0.12); border-color: #22d3ee; color: #22d3ee; }
+
+    /* Default active for non-specific categories */
+    .filter-btn.active:not(.cat-btc):not(.cat-eth):not(.cat-defi):not(.cat-nft):not(.cat-reg):not(.cat-alt) {
+        background: rgba(34, 211, 238, 0.12);
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+    }
+
+    /* Bookmarked toggle button */
+    .filter-btn.bookmarked-toggle {
+        color: var(--text-muted);
+    }
+    .filter-btn.bookmarked-toggle.active {
+        background: rgba(251, 113, 133, 0.12);
+        border-color: #fb7185;
+        color: #fb7185;
+    }
+    .filter-btn.bookmarked-toggle i { transition: var(--transition); }
+    .filter-btn.bookmarked-toggle.active i { animation: heartPop 0.35s ease; }
+    @keyframes heartPop {
+        0% { transform: scale(1); }
+        40% { transform: scale(1.35); }
+        100% { transform: scale(1); }
+    }
+
+    .telegram-badge-inline {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 10px; border-radius: 20px;
+        font-size: 0.72rem; font-weight: 600;
+        background: rgba(34, 158, 217, 0.12); color: #229ED9;
+    }
+    .filter-btn.telegram-active {
+        background: rgba(34, 158, 217, 0.12);
+        border-color: #229ED9;
+        color: #229ED9;
+    }
+
+    /* Source filter count pill */
+    .source-count {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 20px; height: 18px; padding: 0 5px;
+        border-radius: 10px; font-size: 0.65rem; font-weight: 700;
+        background: var(--bg-glass-hover); color: var(--text-muted);
+        transition: var(--transition);
+    }
+    .filter-btn.active .source-count,
+    .filter-btn.telegram-active .source-count {
+        background: rgba(255,255,255,0.15); color: inherit;
+    }
+
+    /* Results count pill badge */
+    .results-count {
+        color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .results-pill {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 10px; border-radius: 20px;
+        font-size: 0.78rem; font-weight: 700;
+        background: rgba(34, 211, 238, 0.12); color: var(--accent-cyan);
+        transition: var(--transition);
+    }
+    .results-pill.empty { background: rgba(248, 113, 113, 0.12); color: var(--accent-red); }
+
+    /* ============================================
+       DEFAULT: Grid Layout (3-4 columns)
+       ============================================ */
+    .news-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+    .news-list-item {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        cursor: default;
+    }
+    .news-list-item.hidden-item {
+        display: none;
+    }
+    .news-list-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 30px rgba(34, 211, 238, 0.12), 0 12px 40px rgba(0, 0, 0, 0.3);
+        border-color: var(--border-glow);
+    }
+    .news-list-item .article-img-wrapper {
+        order: -1;
+        overflow: hidden;
+        height: 180px;
+        position: relative;
+    }
+    .news-list-item .article-image {
+        width: 100%;
+        height: 100%;
+        min-height: 180px;
+        object-fit: cover;
+        background: var(--gradient-card);
+        transition: transform 0.5s;
+    }
+    .news-list-item:hover .article-image { transform: scale(1.05); }
+    .news-list-item .article-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 1rem 1.1rem 1.1rem;
+    }
+    .news-list-item .article-meta {
+        display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; align-items: center;
+    }
+    .news-list-item .article-title {
+        font-size: 1rem; font-weight: 700; margin-bottom: 5px; line-height: 1.4;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .news-list-item .article-title a { color: var(--text-primary); transition: var(--transition); }
+    .news-list-item .article-title a:hover { color: var(--accent-cyan); }
+    .news-list-item .article-summary {
+        color: var(--text-secondary); font-size: 0.82rem; line-height: 1.55;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        flex: 1;
+    }
+    .news-list-item .article-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);
+        padding-top: 8px;
+        border-top: 1px solid var(--border-glass);
+    }
+
+    /* Bookmark heart button on cards */
+    .bookmark-btn {
+        position: absolute; top: 10px; right: 10px;
+        width: 32px; height: 32px; border-radius: 50%;
+        background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.7); font-size: 0.82rem;
+        cursor: pointer; transition: var(--transition);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 2; opacity: 0;
+    }
+    .news-list-item:hover .bookmark-btn { opacity: 1; }
+    .bookmark-btn.bookmarked { opacity: 1; }
+    .bookmark-btn:hover { background: rgba(251, 113, 133, 0.3); border-color: #fb7185; transform: scale(1.12); }
+    .bookmark-btn.bookmarked {
+        color: #fb7185; opacity: 1;
+        background: rgba(251, 113, 133, 0.2);
+        border-color: rgba(251, 113, 133, 0.3);
+    }
+    .bookmark-btn.bookmarked:hover { background: rgba(251, 113, 133, 0.35); }
+    @keyframes bookmarkPop {
+        0% { transform: scale(1); }
+        40% { transform: scale(1.3); }
+        70% { transform: scale(0.95); }
+        100% { transform: scale(1); }
+    }
+    .bookmark-btn.pop i { animation: bookmarkPop 0.35s ease; }
+
+    .pagination {
+        display: flex; justify-content: center; gap: 8px; margin-top: 2.5rem;
+    }
+    .pagination a, .pagination span {
+        padding: 10px 18px; border-radius: var(--radius-sm);
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-weight: 600; font-size: 0.9rem;
+        transition: var(--transition); position: relative; overflow: hidden;
+    }
+    .pagination a:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); transform: translateY(-2px); }
+    .pagination span.current {
+        background: var(--gradient-primary); color: white; border-color: transparent;
+        box-shadow: 0 4px 12px rgba(34, 211, 238, 0.25);
+    }
+
+    /* Load More Spinner */
+    .pagination a.loading::after {
+        content: '';
+        position: absolute; top: 50%; left: 50%;
+        width: 16px; height: 16px; margin: -8px 0 0 -8px;
+        border: 2px solid transparent;
+        border-top-color: var(--accent-cyan);
+        border-radius: 50%;
+        animation: pageSpinner 0.6s linear infinite;
+    }
+    .pagination a.loading > * { visibility: hidden; }
+    @keyframes pageSpinner {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Enhanced Empty State */
+    .empty-state {
+        text-align: center; padding: 4rem 2rem; color: var(--text-muted);
+        animation: fadeInUp 0.5s ease forwards;
+    }
+    .empty-state-icon {
+        width: 100px; height: 100px; margin: 0 auto 1.5rem;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        font-size: 2.5rem;
+        animation: float 3s ease infinite;
+    }
+    .empty-state h3 { font-size: 1.3rem; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.9rem; max-width: 400px; margin: 0 auto 1.5rem; line-height: 1.6; }
+    .empty-state-chips {
+        display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    }
+    .empty-state-chip {
+        padding: 7px 16px; border-radius: 20px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        font-size: 0.82rem; color: var(--text-secondary); font-weight: 500;
+        text-decoration: none; transition: var(--transition); cursor: pointer;
+    }
+    .empty-state-chip:hover {
+        border-color: var(--accent-cyan); color: var(--accent-cyan);
+        background: rgba(34,211,238,0.06); transform: translateY(-2px);
+    }
+
+    /* Responsive Grid: 4 cols on XL, 3 on LG, 2 on MD, 1 on SM */
+    @media (min-width: 1200px) {
+        .news-list { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 1199px) and (min-width: 992px) {
+        .news-list { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 991px) and (min-width: 600px) {
+        .news-list { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 599px) {
+        .news-list { grid-template-columns: 1fr; }
+        .bookmark-btn { opacity: 1; }
+        .empty-state { padding: 3rem 1rem; }
+    }
+
+    /* ============================================
+       V4: Sort & View Toggle Controls
+       ============================================ */
+    .toolbar-row {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 1rem; flex-wrap: wrap; gap: 0.8rem;
+    }
+    .sort-controls {
+        display: flex; align-items: center; gap: 6px;
+    }
+    .sort-btn {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 7px 14px; border-radius: 20px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.8rem;
+        cursor: pointer; transition: var(--transition); font-weight: 500;
+        text-decoration: none;
+    }
+    .sort-btn:hover { border-color: var(--border-glow); color: var(--text-primary); }
+    .sort-btn.active { background: rgba(34, 211, 238, 0.12); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .sort-btn i { font-size: 0.72rem; }
+    .view-controls {
+        display: flex; align-items: center; gap: 4px;
+        padding: 4px; border-radius: var(--radius-sm);
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+    }
+    .view-btn {
+        width: 34px; height: 34px; border-radius: var(--radius-xs);
+        background: transparent; border: none; color: var(--text-muted);
+        font-size: 0.9rem; cursor: pointer; transition: var(--transition);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .view-btn:hover { color: var(--text-primary); background: var(--bg-glass-hover); }
+    .view-btn.active { background: rgba(34, 211, 238, 0.12); color: var(--accent-cyan); }
+
+    /* ============================================
+       List View Mode (alternative)
+       ============================================ */
+    .news-list.list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .news-list.list-view .news-list-item {
+        display: grid;
+        grid-template-columns: 1fr 240px;
+        gap: 1.25rem;
+        padding: 1.25rem;
+    }
+    .news-list.list-view .news-list-item:hover {
+        transform: translateX(6px);
+        box-shadow: var(--shadow-glow);
+    }
+    .news-list.list-view .news-list-item .article-img-wrapper {
+        order: 0;
+        height: auto;
+        min-height: 140px;
+    }
+    .news-list.list-view .news-list-item .article-image {
+        min-height: 140px;
+        height: 100%;
+    }
+    .news-list.list-view .news-list-item .article-body {
+        padding: 0;
+        justify-content: center;
+    }
+    .news-list.list-view .news-list-item .article-footer {
+        border-top: none;
+        padding-top: 0;
+    }
+    .news-list.list-view .news-list-item .bookmark-btn { opacity: 0; }
+    .news-list.list-view .news-list-item:hover .bookmark-btn { opacity: 1; }
+    @media (max-width: 768px) {
+        .news-list.list-view .news-list-item {
+            grid-template-columns: 1fr;
+        }
+        .news-list.list-view .news-list-item .article-img-wrapper {
+            order: -1;
+            height: 200px;
+            min-height: 200px;
+        }
+        .news-list.list-view .news-list-item .article-body {
+            padding: 1rem 1.1rem 1.1rem;
+        }
+    }
+
+    /* Quick Search Bar */
+    .quick-search-bar {
+        display: flex; gap: 8px; margin-bottom: 1rem;
+    }
+    .quick-search-bar input {
+        flex: 1; padding: 10px 16px 10px 40px;
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); color: var(--text-primary);
+        font-size: 0.9rem; font-family: inherit; outline: none;
+        transition: var(--transition);
+    }
+    .quick-search-bar input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.1); }
+    .quick-search-bar input::placeholder { color: var(--text-muted); }
+    .quick-search-bar .search-icon-wrapper {
+        position: relative; width: 0;
+    }
+    .quick-search-bar .search-icon-wrapper i {
+        position: absolute; left: -34px; top: 50%; transform: translateY(-50%);
+        color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    /* ============================================
+       V5: Mini Social Share Buttons on Cards
+       ============================================ */
+    .news-share-mini {
+        display: flex; gap: 4px; align-items: center;
+    }
+    .share-mini-btn {
+        width: 26px; height: 26px; border-radius: 50%;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-muted); font-size: 0.7rem;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: var(--transition); text-decoration: none;
+        opacity: 0;
+    }
+    .news-list-item:hover .share-mini-btn { opacity: 1; }
+    .share-mini-btn:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); background: rgba(34,211,238,0.1); transform: scale(1.1); }
+    .share-mini-btn.copied { color: var(--accent-green) !important; border-color: var(--accent-green) !important; background: rgba(52,211,153,0.1) !important; }
+
+    @media (max-width: 768px) {
+        .toolbar-row { flex-direction: column; align-items: stretch; }
+        .sort-controls { justify-content: center; flex-wrap: wrap; }
+        .view-controls { align-self: flex-end; }
+        .share-mini-btn { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero animate-in">
+    <h1><i class="fas fa-newspaper" style="color: var(--accent-cyan);"></i> Crypto News</h1>
+    <p>Latest cryptocurrency news from 70+ sources, powered by AI</p>
+</div>
+
+<!-- Filters -->
+<div class="filters-wrapper animate-in" style="animation-delay: 0.05s">
+    <div class="filters">
+        <a href="/news" class="filter-btn {% if not current_category and not telegram_filter %}active{% endif %}">
+            <i class="fas fa-newspaper"></i> All News
+        </a>
+        <a href="/news?telegram=1" class="filter-btn {% if telegram_filter %}telegram-active{% endif %}">
+            <i class="fab fa-telegram"></i> Telegram Posts
+        </a>
+        {% for cat in site_categories[:6] %}
+        <a href="/news?category={{ cat.slug }}" class="filter-btn {% if current_category == cat.slug %}active{% endif %}" style="{% if current_category == cat.slug %}background: {{ cat.color }}18; border-color: {{ cat.color }}; color: {{ cat.color }};{% endif %}">
+            <i class="{{ cat.icon }}"></i> {{ cat.name }}
+        </a>
+        {% endfor %}
+        <!-- Bookmarked Toggle -->
+        <button class="filter-btn bookmarked-toggle" id="bookmarkFilterBtn" onclick="toggleBookmarkFilter()">
+            <i class="far fa-heart"></i> Bookmarked
+        </button>
+    </div>
+
+    {% if sources %}
+    <div class="filters-divider"></div>
+    <div class="sources-label"><i class="fas fa-rss"></i> Sources</div>
+    <div class="filters">
+        {% for src in sources[:12] %}
+        <a href="/news?source={{ src }}" class="filter-btn {% if current_source == src %}active{% endif %}">{{ src }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Results Count with Pill Badge -->
+<div class="results-count">
+    <i class="fas fa-layer-group"></i> Showing
+    <span class="results-pill" id="resultsPill">
+        <strong id="resultsCount">{{ articles|length }}</strong> articles
+    </span>
+    {% if current_category %} in <strong>{{ current_category | title }}</strong>{% endif %}
+    {% if telegram_filter %} from <strong>Telegram</strong>{% endif %}
+</div>
+
+<!-- V4: Toolbar with Sort & View Toggle -->
+<div class="toolbar-row animate-in" style="animation-delay: 0.1s">
+    <div class="sort-controls">
+        <a href="/news?sort=latest{% if current_category %}&category={{ current_category }}{% endif %}{% if current_source %}&source={{ current_source }}{% endif %}{% if telegram_filter %}&telegram=1{% endif %}" class="sort-btn {% if request.args.get('sort', 'latest') == 'latest' %}active{% endif %}">
+            <i class="fas fa-clock"></i> Latest
+        </a>
+        <a href="/news?sort=popular{% if current_category %}&category={{ current_category }}{% endif %}{% if current_source %}&source={{ current_source }}{% endif %}{% if telegram_filter %}&telegram=1{% endif %}" class="sort-btn {% if request.args.get('sort') == 'popular' %}active{% endif %}">
+            <i class="fas fa-fire"></i> Popular
+        </a>
+        <a href="/news?sort=bullish{% if current_category %}&category={{ current_category }}{% endif %}{% if current_source %}&source={{ current_source }}{% endif %}{% if telegram_filter %}&telegram=1{% endif %}" class="sort-btn {% if request.args.get('sort') == 'bullish' %}active{% endif %}">
+            <i class="fas fa-arrow-up"></i> Bullish
+        </a>
+        <a href="/news?sort=bearish{% if current_category %}&category={{ current_category }}{% endif %}{% if current_source %}&source={{ current_source }}{% endif %}{% if telegram_filter %}&telegram=1{% endif %}" class="sort-btn {% if request.args.get('sort') == 'bearish' %}active{% endif %}">
+            <i class="fas fa-arrow-down"></i> Bearish
+        </a>
+    </div>
+    <div class="view-controls">
+        <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List view">
+            <i class="fas fa-list"></i>
+        </button>
+        <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid view">
+            <i class="fas fa-th-large"></i>
+        </button>
+    </div>
+</div>
+
+<!-- News List -->
+<div class="news-list" id="newsList">
+    {% for article in articles %}
+    <div class="news-list-item animate-in" style="animation-delay: {{ loop.index0 * 0.04 }}s" data-id="{{ article.id }}">
+        <div class="article-body">
+            <div class="article-meta">
+                <span class="badge badge-cyan">{{ article.source or 'Unknown' }}</span>
+                {% if article.category %}<span class="badge badge-purple">{{ article.category }}</span>{% endif %}
+                {% if article.sentiment_label %}
+                <span class="badge badge-{{ 'green' if article.sentiment_label in ['bullish', 'very_bullish'] else ('red' if article.sentiment_label in ['bearish', 'very_bearish'] else 'cyan') }}">
+                    {{ article.sentiment_label | replace('_', ' ') | title }}
+                </span>
+                {% endif %}
+                {% if article.is_posted %}
+                <span class="telegram-badge-inline"><i class="fab fa-telegram"></i> Telegram</span>
+                {% endif %}
+            </div>
+            <h2 class="article-title">
+                <a href="/news/{{ article.id }}">{{ article.title }}</a>
+            </h2>
+            <p class="article-summary">{{ article.summary or '' }}</p>
+            <div class="article-footer">
+                <span><i class="far fa-clock"></i> {{ article.time_ago or 'Unknown' }}</span>
+                <div class="news-share-mini">
+                    <a href="https://twitter.com/intent/tweet?text={{ article.title | urlencode }}&url={{ article.url | urlencode }}" target="_blank" class="share-mini-btn" title="Share on Twitter/X"><i class="fab fa-twitter"></i></a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ article.url | urlencode }}" target="_blank" class="share-mini-btn" title="Share on Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="https://t.me/share/url?url={{ article.url | urlencode }}&text={{ article.title | urlencode }}" target="_blank" class="share-mini-btn" title="Share on Telegram"><i class="fab fa-telegram"></i></a>
+                    <a href="https://wa.me/?text={{ article.title | urlencode }}%20{{ article.url | urlencode }}" target="_blank" class="share-mini-btn" title="Share on WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.reddit.com/submit?url={{ article.url | urlencode }}&title={{ article.title | urlencode }}" target="_blank" class="share-mini-btn" title="Share on Reddit"><i class="fab fa-reddit-alien"></i></a>
+                    <a href="javascript:void(0)" onclick="navigator.clipboard.writeText('{{ article.url }}');this.classList.add('copied');setTimeout(()=>this.classList.remove('copied'),1500)" class="share-mini-btn" title="Copy link"><i class="fas fa-link"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="article-img-wrapper">
+            {% if article.image_url %}
+            <img src="{{ article.image_url }}" alt="" class="article-image" loading="lazy" onerror="this.parentElement.parentElement.removeChild(this.parentElement)">
+            {% else %}
+            <div class="article-image" style="display: flex; align-items: center; justify-content: center; background: var(--gradient-card);">
+                <i class="fas fa-newspaper" style="font-size: 2rem; color: var(--accent-cyan); opacity: 0.2;"></i>
+            </div>
+            {% endif %}
+            <button class="bookmark-btn" data-id="{{ article.id }}" onclick="toggleBookmark(this, '{{ article.id }}')">
+                <i class="far fa-heart"></i>
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not articles %}
+<!-- Enhanced Empty State -->
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="fas fa-satellite-dish" style="color: var(--accent-cyan);"></i>
+    </div>
+    <h3>No articles found</h3>
+    <p>We couldn't find any articles matching your current filters. Try a different category or browse all news.</p>
+    <div class="empty-state-chips">
+        <a href="/news" class="empty-state-chip"><i class="fas fa-newspaper"></i> All News</a>
+        <a href="/news?category=bitcoin" class="empty-state-chip"><i class="fab fa-bitcoin"></i> Bitcoin</a>
+        <a href="/news?category=ethereum" class="empty-state-chip"><i class="fab fa-ethereum"></i> Ethereum</a>
+        <a href="/news?category=defi" class="empty-state-chip"><i class="fas fa-coins"></i> DeFi</a>
+        <a href="/news?telegram=1" class="empty-state-chip"><i class="fab fa-telegram"></i> Telegram</a>
+        <a href="/search?q=Bitcoin" class="empty-state-chip"><i class="fas fa-search"></i> Search</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if page > 1 or has_next %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/news?page={{ page - 1 }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_source %}&source={{ current_source }}{% endif %}{% if telegram_filter %}&telegram=1{% endif %}" onclick="addPageSpinner(event)">
+        <i class="fas fa-chevron-left"></i> Previous
+    </a>
+    {% endif %}
+    <span class="current">{{ page }}</span>
+    {% if has_next %}
+    <a href="/news?page={{ page + 1 }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_source %}&source={{ current_source }}{% endif %}{% if telegram_filter %}&telegram=1{% endif %}" onclick="addPageSpinner(event)">
+        Next <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    // V4: View toggle (list/grid)
+    window.setView = function(view) {
+        const list = document.getElementById('newsList');
+        const listBtn = document.getElementById('listViewBtn');
+        const gridBtn = document.getElementById('gridViewBtn');
+        if (!list) return;
+        
+        if (view === 'list') {
+            list.classList.add('list-view');
+            listBtn.classList.add('active');
+            gridBtn.classList.remove('active');
+        } else {
+            list.classList.remove('list-view');
+            gridBtn.classList.add('active');
+            listBtn.classList.remove('active');
+        }
+        localStorage.setItem('cryptosinews_view', view);
+    };
+
+    // Restore saved view preference (default: grid)
+    (function() {
+        const saved = localStorage.getItem('cryptosinews_view');
+        if (saved === 'list') {
+            window.setView('list');
+        } else {
+            window.setView('grid');
+        }
+    })();
+
+    const STORAGE_KEY = 'cryptosinews_bookmarks';
+
+    function getBookmarks() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        } catch { return []; }
+    }
+
+    function saveBookmarks(bookmarks) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
+    }
+
+    function isBookmarked(id) {
+        return getBookmarks().includes(String(id));
+    }
+
+    // Initialize bookmark button states on load
+    function initBookmarks() {
+        const bookmarks = getBookmarks();
+        document.querySelectorAll('.bookmark-btn').forEach(btn => {
+            const id = btn.getAttribute('data-id');
+            if (bookmarks.includes(String(id))) {
+                btn.classList.add('bookmarked');
+                btn.innerHTML = '<i class="fas fa-heart"></i>';
+            }
+        });
+    }
+
+    // Toggle bookmark (global scope for onclick)
+    window.toggleBookmark = function(btn, id) {
+        const bookmarks = getBookmarks();
+        const strId = String(id);
+        const idx = bookmarks.indexOf(strId);
+        if (idx > -1) {
+            bookmarks.splice(idx, 1);
+            btn.classList.remove('bookmarked');
+            btn.innerHTML = '<i class="far fa-heart"></i>';
+        } else {
+            bookmarks.push(strId);
+            btn.classList.add('bookmarked');
+            btn.innerHTML = '<i class="fas fa-heart"></i>';
+            btn.classList.add('pop');
+            setTimeout(() => btn.classList.remove('pop'), 350);
+        }
+        saveBookmarks(bookmarks);
+        updateResultsCount();
+    };
+
+    // Toggle bookmark filter
+    window.toggleBookmarkFilter = function() {
+        const btn = document.getElementById('bookmarkFilterBtn');
+        btn.classList.toggle('active');
+        const isActive = btn.classList.contains('active');
+        const bookmarks = getBookmarks();
+        let visibleCount = 0;
+
+        document.querySelectorAll('.news-list-item').forEach(item => {
+            const id = item.getAttribute('data-id');
+            if (isActive && !bookmarks.includes(String(id))) {
+                item.classList.add('hidden-item');
+            } else {
+                item.classList.remove('hidden-item');
+                visibleCount++;
+            }
+        });
+
+        updateResultsCount();
+    };
+
+    // Update results count pill
+    function updateResultsCount() {
+        const countEl = document.getElementById('resultsCount');
+        const pillEl = document.getElementById('resultsPill');
+        const visibleItems = document.querySelectorAll('.news-list-item:not(.hidden-item)');
+        const count = visibleItems.length;
+        countEl.textContent = count;
+        if (count === 0) {
+            pillEl.classList.add('empty');
+        } else {
+            pillEl.classList.remove('empty');
+        }
+    }
+
+    // Pagination spinner
+    window.addPageSpinner = function(e) {
+        const link = e.currentTarget;
+        link.classList.add('loading');
+        // Navigation will naturally happen, spinner provides visual feedback
+    };
+
+    // Init
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBookmarks);
+    } else {
+        initBookmarks();
+    }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,608 @@
+{% extends "base.html" %}
+
+{% block title %}Market Data - CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero { margin-bottom: 1.5rem; }
+    .page-hero h1 { font-size: 1.8rem; font-weight: 900; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 10px; }
+    .page-hero p { color: var(--text-secondary); }
+
+    /* Global Bar */
+    .global-bar {
+        display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;
+        padding: 1.2rem 1.5rem;
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); margin-bottom: 2rem; font-size: 0.88rem;
+    }
+    .global-bar .gb-item { display: flex; align-items: center; gap: 6px; }
+    .global-bar .gb-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 500; }
+    .global-bar .gb-value { font-weight: 800; }
+
+    /* ============================================
+       v3: Market Overview Cards (Top Gainer/Loser)
+       ============================================ */
+    .market-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .overview-card {
+        padding: 1.2rem 1.5rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: var(--transition);
+    }
+    .overview-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-glow);
+        border-color: var(--border-glow);
+    }
+    .overview-card-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; flex-shrink: 0;
+    }
+    .overview-card-icon.gainer { background: rgba(52, 211, 153, 0.12); color: var(--accent-green); }
+    .overview-card-icon.loser { background: rgba(248, 113, 113, 0.12); color: var(--accent-red); }
+    .overview-card-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .overview-card-name { font-weight: 800; font-size: 1rem; margin-bottom: 2px; }
+    .overview-card-change { font-weight: 700; font-size: 0.85rem; }
+    .overview-card-change.up { color: var(--accent-green); }
+    .overview-card-change.down { color: var(--accent-red); }
+
+    /* ============================================
+       v3: Enhanced Fear & Greed Gauge
+       ============================================ */
+    .fear-greed-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        align-items: center;
+    }
+    .fear-greed-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl); padding: 2rem 2.5rem; text-align: center;
+        transition: var(--transition); position: relative; overflow: hidden;
+    }
+    .fear-greed-card::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, var(--accent-red), var(--accent-yellow), var(--accent-green));
+        background-size: 200% 100%;
+        animation: borderGlow 4s ease infinite;
+    }
+    .fear-greed-card:hover { border-color: var(--border-glow); box-shadow: var(--shadow-glow); }
+    .gauge-container { width: 240px; height: 120px; margin: 0 auto 1rem; position: relative; overflow: hidden; }
+    .gauge-bg {
+        width: 240px; height: 240px; border-radius: 50%;
+        background: conic-gradient(#f87171 0deg, #fbbf24 72deg, #eab308 144deg, #34d399 216deg, #22d3ee 288deg, #22d3ee 360deg);
+        transform: rotate(180deg); position: absolute; top: 0; left: 0;
+    }
+    .gauge-mask {
+        width: 168px; height: 168px; border-radius: 50%; background: var(--bg-card);
+        position: absolute; top: 36px; left: 36px;
+        display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 1;
+    }
+    .gauge-value { font-size: 3rem; font-weight: 900; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+    .gauge-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+    .fear-greed-desc {
+        font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7;
+        padding: 1rem 1.5rem;
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+    }
+    .fear-greed-desc h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.6rem; }
+    .fg-scale { display: flex; align-items: center; gap: 4px; margin-top: 0.8rem; }
+    .fg-scale-dot { width: 12px; height: 12px; border-radius: 3px; }
+    .fg-scale-label { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ============================================
+       v3: Trending Coins (clickable to scroll)
+       ============================================ */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin: 1.5rem 0 1rem; }
+    .section-header h2 { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .trending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.8rem; }
+    .trending-card {
+        display: flex; align-items: center; gap: 10px;
+        padding: 0.8rem 1rem; background: var(--bg-card);
+        border: 1px solid var(--border-glass); border-radius: var(--radius-md);
+        transition: var(--transition); cursor: pointer;
+    }
+    .trending-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); border-color: var(--border-glow); }
+    .trending-card .rank { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: var(--bg-glass); border-radius: 50%; }
+    .trending-card .t-img { width: 30px; height: 30px; border-radius: 50%; }
+    .trending-card .t-info { flex: 1; }
+    .trending-card .t-name { font-weight: 700; font-size: 0.85rem; }
+    .trending-card .t-sym { color: var(--text-muted); font-size: 0.72rem; font-weight: 500; }
+    .trending-card .t-price { text-align: right; }
+    .trending-card .t-price .price { font-weight: 700; font-size: 0.85rem; }
+    .trending-card .t-price .change { font-size: 0.75rem; font-weight: 600; }
+
+    /* ============================================
+       v3: Market Table with Sparklines & Glow Hover
+       ============================================ */
+    .market-table-wrapper {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl); overflow-x: auto;
+    }
+    .market-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    .market-table thead { background: var(--bg-glass); }
+    .market-table th {
+        padding: 14px 16px; text-align: left; font-size: 0.75rem; font-weight: 700;
+        color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border-glass); white-space: nowrap;
+    }
+    .market-table td {
+        padding: 14px 16px; font-size: 0.88rem;
+        border-bottom: 1px solid rgba(255,255,255,0.03); white-space: nowrap;
+    }
+    .market-table tbody tr {
+        transition: var(--transition);
+        position: relative;
+    }
+    .market-table tbody tr:hover {
+        background: rgba(34, 211, 238, 0.05);
+        box-shadow: inset 4px 0 0 var(--accent-cyan), 0 0 30px rgba(34, 211, 238, 0.08);
+    }
+    .coin-info { display: flex; align-items: center; gap: 12px; }
+    .coin-logo { width: 32px; height: 32px; border-radius: 50%; }
+    .coin-rank { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); width: 24px; text-align: center; }
+    .coin-name { font-weight: 700; }
+    .coin-symbol { color: var(--text-muted); font-size: 0.78rem; font-weight: 500; }
+    .price-col { font-weight: 700; }
+
+    .change-cell {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 10px; border-radius: 8px; font-weight: 600; font-size: 0.84rem;
+    }
+    .change-cell.up { color: var(--accent-green); background: rgba(52, 211, 153, 0.08); }
+    .change-cell.down { color: var(--accent-red); background: rgba(248, 113, 113, 0.08); }
+
+    /* ============================================
+       v3: Mini SVG Sparkline
+       ============================================ */
+    .sparkline-cell { display: flex; align-items: center; }
+    .sparkline-svg { display: block; }
+
+    /* ============================================
+       v3: Price Alert Bell
+       ============================================ */
+    .alert-bell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px; height: 20px;
+        margin-left: 6px;
+        color: var(--accent-yellow);
+        font-size: 0.7rem;
+        position: relative;
+    }
+    @keyframes bellPulse {
+        0%, 100% { opacity: 1; transform: rotate(0deg); }
+        15% { transform: rotate(14deg); }
+        30% { transform: rotate(-12deg); }
+        45% { transform: rotate(10deg); }
+        60% { transform: rotate(-8deg); }
+        75% { transform: rotate(0deg); }
+    }
+    .alert-bell i { animation: bellPulse 2s ease infinite; }
+    .alert-bell::after {
+        content: '';
+        position: absolute;
+        top: -2px; right: -2px;
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--accent-yellow);
+        animation: livePulse 1.5s ease infinite;
+    }
+
+    /* ============================================
+       v3: Mobile Card View (replaces table)
+       ============================================ */
+    .mobile-cards { display: none; }
+    .mobile-coin-card {
+        padding: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        margin-bottom: 0.8rem;
+        transition: var(--transition);
+    }
+    .mobile-coin-card:hover { border-color: var(--border-glow); box-shadow: var(--shadow-glow); }
+    .mobile-coin-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.6rem; }
+    .mobile-coin-header .mch-rank { font-size: 0.72rem; font-weight: 800; color: var(--text-muted); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg-glass); border-radius: 50%; }
+    .mobile-coin-header img { width: 28px; height: 28px; border-radius: 50%; }
+    .mobile-coin-header .mch-name { font-weight: 700; font-size: 0.9rem; }
+    .mobile-coin-header .mch-sym { color: var(--text-muted); font-size: 0.75rem; }
+    .mobile-coin-header .mch-price { margin-left: auto; font-weight: 700; font-size: 0.9rem; }
+    .mobile-coin-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; font-size: 0.78rem; }
+    .mobile-coin-stat { display: flex; flex-direction: column; gap: 2px; }
+    .mobile-coin-stat .stat-label { color: var(--text-muted); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    .mobile-coin-stat .stat-value { font-weight: 700; }
+    .mobile-coin-stat .stat-value.up { color: var(--accent-green); }
+    .mobile-coin-stat .stat-value.down { color: var(--accent-red); }
+    .mobile-coin-sparkline { margin-top: 0.6rem; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .market-table-wrapper { display: none; }
+        .mobile-cards { display: block; }
+        .fear-greed-section { grid-template-columns: 1fr; }
+        .gauge-container { width: 200px; height: 100px; margin: 0 auto 1rem; }
+        .gauge-bg { width: 200px; height: 200px; }
+        .gauge-mask { width: 140px; height: 140px; top: 30px; left: 30px; }
+        .gauge-value { font-size: 2.5rem; }
+        .trending-grid { grid-template-columns: 1fr; }
+        .global-bar { gap: 1rem; padding: 1rem; }
+        .market-overview { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-hero animate-in">
+    <h1><i class="fas fa-chart-bar" style="color: var(--accent-cyan);"></i> Market Data</h1>
+    <p>Live cryptocurrency prices from CoinGecko</p>
+</div>
+
+<!-- Global Market Bar -->
+{% if global_data %}
+<div class="global-bar animate-in" style="animation-delay: 0.05s">
+    <div class="gb-item">
+        <span class="gb-label">Market Cap</span>
+        <span class="gb-value">${{ '%.2fT'|format(global_data.total_market_cap_usd / 1e12) if global_data.total_market_cap_usd else 'N/A' }}</span>
+    </div>
+    <div class="gb-item">
+        <span class="gb-label">24h Volume</span>
+        <span class="gb-value">${{ '%.1fB'|format(global_data.total_volume_usd / 1e9) if global_data.total_volume_usd else 'N/A' }}</span>
+    </div>
+    <div class="gb-item">
+        <span class="gb-label">BTC Dom</span>
+        <span class="gb-value">{{ '%.1f%%'|format(global_data.btc_dominance) if global_data.btc_dominance else 'N/A' }}</span>
+    </div>
+    <div class="gb-item">
+        <span class="gb-label">ETH Dom</span>
+        <span class="gb-value">{{ '%.1f%%'|format(global_data.eth_dominance) if global_data.eth_dominance else 'N/A' }}</span>
+    </div>
+    {% if global_data.market_cap_change_24h is not none %}
+    <div class="gb-item">
+        <span class="gb-label">24h</span>
+        <span class="gb-value {{ 'sentiment-bullish' if global_data.market_cap_change_24h >= 0 else 'sentiment-bearish' }}">
+            {{ '+' if global_data.market_cap_change_24h >= 0 else '' }}{{ '%.2f%%'|format(global_data.market_cap_change_24h) }}
+        </span>
+    </div>
+    {% endif %}
+    <div class="gb-item" style="margin-left:auto;">
+        <span class="gb-label">Coins</span>
+        <span class="gb-value">{{ global_data.active_cryptocurrencies or 0 }}</span>
+    </div>
+</div>
+{% endif %}
+
+<!-- v3: Market Overview Cards — Top Gainer & Top Loser -->
+{% if market_data %}
+{% set valid_coins = market_data | rejectattr('change_24h', 'none') | list %}
+{% set top_gainer = valid_coins | sort(attribute='change_24h', reverse=True) | first %}
+{% set top_loser = valid_coins | sort(attribute='change_24h') | first %}
+<div class="market-overview animate-in" style="animation-delay: 0.08s">
+    {% if top_gainer and top_gainer.change_24h is not none %}
+    <div class="overview-card">
+        <div class="overview-card-icon gainer"><i class="fas fa-arrow-trend-up"></i></div>
+        <div>
+            <div class="overview-card-label">Top Gainer</div>
+            <div class="overview-card-name">
+                {% if top_gainer.image %}<img src="{{ top_gainer.image }}" alt="" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:6px;" onerror="this.style.display='none'">{% endif %}
+                {{ top_gainer.name }}
+            </div>
+            <div class="overview-card-change up">+{{ '%.2f'|format(top_gainer.change_24h) }}%</div>
+        </div>
+    </div>
+    {% endif %}
+    {% if top_loser and top_loser.change_24h is not none %}
+    <div class="overview-card">
+        <div class="overview-card-icon loser"><i class="fas fa-arrow-trend-down"></i></div>
+        <div>
+            <div class="overview-card-label">Top Loser</div>
+            <div class="overview-card-name">
+                {% if top_loser.image %}<img src="{{ top_loser.image }}" alt="" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:6px;" onerror="this.style.display='none'">{% endif %}
+                {{ top_loser.name }}
+            </div>
+            <div class="overview-card-change down">{{ '%.2f'|format(top_loser.change_24h) }}%</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- v3: Enhanced Fear & Greed Gauge -->
+{% if fear_greed %}
+<div class="fear-greed-section animate-in" style="animation-delay: 0.1s">
+    <div class="fear-greed-card">
+        <h3 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Fear & Greed Index</h3>
+        <div class="gauge-container">
+            <div class="gauge-bg"></div>
+            <div class="gauge-mask">
+                <div class="gauge-value">{{ fear_greed.value }}</div>
+                <div class="gauge-label">{{ fear_greed.classification or 'Neutral' }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="fear-greed-desc">
+        <h3><i class="fas fa-gauge-high" style="color: var(--accent-cyan); margin-right: 6px;"></i>Market Sentiment</h3>
+        <p>
+            {% if fear_greed.value >= 75 %}
+            Extreme Greed indicates the market is significantly overbought. Prices may be due for a correction as investors exhibit FOMO behavior.
+            {% elif fear_greed.value >= 55 %}
+            Greed suggests investors are optimistic. Markets tend to perform well in this phase but stay alert for shifts.
+            {% elif fear_greed.value >= 45 %}
+            Neutral sentiment means the market is balanced. This can be a good time for strategic positioning.
+            {% elif fear_greed.value >= 25 %}
+            Fear in the market may indicate a buying opportunity for long-term investors willing to hold through volatility.
+            {% else %}
+            Extreme Fear is often seen as a strong buying signal. Historically, the best returns come from buying during these periods.
+            {% endif %}
+        </p>
+        <div class="fg-scale">
+            <span class="fg-scale-dot" style="background:#f87171;"></span>
+            <span class="fg-scale-label">Fear</span>
+            <span class="fg-scale-dot" style="background:#fbbf24;"></span>
+            <span class="fg-scale-label">Neutral</span>
+            <span class="fg-scale-dot" style="background:#34d399;"></span>
+            <span class="fg-scale-label">Greed</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- v3: Trending Coins (clickable to scroll to table) -->
+{% if trending %}
+<div class="section-header animate-in" style="animation-delay: 0.15s">
+    <h2><i class="fas fa-fire" style="color: var(--accent-yellow);"></i> Trending Coins</h2>
+</div>
+<div class="trending-grid animate-in" style="animation-delay: 0.2s">
+    {% for t in trending %}
+    <div class="trending-card" onclick="scrollToCoin('{{ t.symbol | lower }}')" title="Click to find in table">
+        <span class="rank">{{ loop.index }}</span>
+        {% if t.image %}
+        <img src="{{ t.image }}" alt="{{ t.name }}" class="t-img" loading="lazy" onerror="this.style.display='none'">
+        {% endif %}
+        <div class="t-info">
+            <div class="t-name"><i class="fas fa-fire" style="color: var(--accent-yellow); font-size: 0.7rem;"></i> {{ t.name }}</div>
+            <div class="t-sym">{{ t.symbol }} {% if t.market_cap_rank %} #{{ t.market_cap_rank }}{% endif %}</div>
+        </div>
+        <div class="t-price">
+            <div class="price">${{ '%.4f'|format(t.price) if t.price else 'N/A' }}</div>
+            {% if t.change_24h is not none %}
+            <div class="change {{ 'sentiment-bullish' if t.change_24h >= 0 else 'sentiment-bearish' }}">
+                {{ '+' if t.change_24h >= 0 else '' }}{{ '%.2f'|format(t.change_24h) }}%
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Market Table (Desktop) -->
+{% if market_data %}
+<div class="section-header animate-in" style="animation-delay: 0.25s">
+    <h2><i class="fas fa-list-ol" style="color: var(--accent-cyan);"></i> All Markets</h2>
+</div>
+<div class="market-table-wrapper animate-in" style="animation-delay: 0.3s">
+    <table class="market-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Coin</th>
+                <th>Price</th>
+                <th>24h</th>
+                <th>7d</th>
+                <th>7d Trend</th>
+                <th>Market Cap</th>
+                <th>Volume (24h)</th>
+                <th>24h Range</th>
+                <th>Supply</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for coin in market_data %}
+            <tr id="coin-{{ coin.symbol | lower }}">
+                <td>
+                    <span class="coin-rank">{{ coin.rank or loop.index }}</span>
+                    {% if coin.change_24h is not none and (coin.change_24h > 5 or coin.change_24h < -5) %}
+                    <span class="alert-bell" title="{{ '%.1f'|format(coin.change_24h | abs) }}% change alert">
+                        <i class="fas fa-bell"></i>
+                    </span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="coin-info">
+                        {% if coin.image %}
+                        <img src="{{ coin.image }}" alt="{{ coin.symbol }}" class="coin-logo" loading="lazy" onerror="this.style.display='none'">
+                        {% endif %}
+                        <div>
+                            <div class="coin-name">{{ coin.name }}</div>
+                            <div class="coin-symbol">{{ coin.symbol }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="price-col">{{ coin.formatted_price or 'N/A' }}</td>
+                <td>
+                    {% if coin.change_24h is not none %}
+                    <span class="change-cell {{ 'up' if coin.change_24h >= 0 else 'down' }}">
+                        <i class="fas fa-caret-{{ 'up' if coin.change_24h >= 0 else 'down' }}"></i>
+                        {{ '%.2f'|format(coin.change_24h | abs) }}%
+                    </span>
+                    {% else %}N/A{% endif %}
+                </td>
+                <td>
+                    {% if coin.change_7d is not none %}
+                    <span class="change-cell {{ 'up' if coin.change_7d >= 0 else 'down' }}">
+                        <i class="fas fa-caret-{{ 'up' if coin.change_7d >= 0 else 'down' }}"></i>
+                        {{ '%.2f'|format(coin.change_7d | abs) }}%
+                    </span>
+                    {% else %}N/A{% endif %}
+                </td>
+                <td>
+                    <div class="sparkline-cell">
+                        {% if coin.change_7d is not none %}
+                        <svg class="sparkline-svg" width="80" height="30" viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg" data-change="{{ coin.change_7d }}" data-seed="{{ coin.symbol ~ coin.rank }}"></svg>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">--</span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>{{ coin.formatted_market_cap or 'N/A' }}</td>
+                <td>{{ coin.formatted_volume or 'N/A' }}</td>
+                <td>
+                    {% if coin.high_24h %}
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <span style="color: var(--accent-green); font-size: 0.8rem; font-weight:600;">H: ${{ '%.2f'|format(coin.high_24h) }}</span>
+                        <span style="color: var(--accent-red); font-size: 0.8rem; font-weight:600;">L: ${{ '%.2f'|format(coin.low_24h) }}</span>
+                    </div>
+                    {% else %}N/A{% endif %}
+                </td>
+                <td>
+                    {% if coin.circulating_supply %}
+                    {{ '%.0f'|format(coin.circulating_supply) }} {{ coin.symbol }}
+                    {% else %}N/A{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- v3: Mobile Card View -->
+<div class="mobile-cards">
+    {% for coin in market_data %}
+    <div class="mobile-coin-card" id="mcoin-{{ coin.symbol | lower }}">
+        <div class="mobile-coin-header">
+            <span class="mch-rank">{{ coin.rank or loop.index }}</span>
+            {% if coin.image %}<img src="{{ coin.image }}" alt="{{ coin.symbol }}" loading="lazy" onerror="this.style.display='none'">{% endif %}
+            <span class="mch-name">{{ coin.name }}</span>
+            <span class="mch-sym">{{ coin.symbol }}</span>
+            <span class="mch-price">{{ coin.formatted_price or 'N/A' }}</span>
+        </div>
+        <div class="mobile-coin-stats">
+            <div class="mobile-coin-stat">
+                <span class="stat-label">24h</span>
+                <span class="stat-value {{ 'up' if coin.change_24h and coin.change_24h >= 0 else 'down' }}">
+                    {% if coin.change_24h is not none %}{{ ('+' if coin.change_24h >= 0 else '') ~ '%.2f'|format(coin.change_24h) ~ '%' }}{% else %}N/A{% endif %}
+                </span>
+            </div>
+            <div class="mobile-coin-stat">
+                <span class="stat-label">7d</span>
+                <span class="stat-value {{ 'up' if coin.change_7d and coin.change_7d >= 0 else 'down' }}">
+                    {% if coin.change_7d is not none %}{{ ('+' if coin.change_7d >= 0 else '') ~ '%.2f'|format(coin.change_7d) ~ '%' }}{% else %}N/A{% endif %}
+                </span>
+            </div>
+            <div class="mobile-coin-stat">
+                <span class="stat-label">Mkt Cap</span>
+                <span class="stat-value">{{ coin.formatted_market_cap or 'N/A' }}</span>
+            </div>
+        </div>
+        {% if coin.change_7d is not none %}
+        <div class="mobile-coin-sparkline">
+            <svg class="sparkline-svg" width="100%" height="30" viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg" data-change="{{ coin.change_7d }}" data-seed="{{ coin.symbol ~ coin.rank }}"></svg>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div style="text-align: center; padding: 4rem 0; color: var(--text-muted);">
+    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--accent-cyan);"></i>
+    <p>Loading market data from CoinGecko...</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    // ============================================
+    // v3: Generate Sparkline SVGs from change_7d
+    // ============================================
+    function seededRandom(seed) {
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+            const char = seed.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash |= 0;
+        }
+        return function() {
+            hash = (hash * 16807 + 0) % 2147483647;
+            return (hash & 0x7fffffff) / 2147483647;
+        };
+    }
+
+    function generateSparkline(svg, change7d, seed) {
+        const points = 12;
+        const width = 80;
+        const height = 30;
+        const padding = 3;
+        const rng = seededRandom(seed);
+        const isPositive = change7d >= 0;
+        const magnitude = Math.min(Math.abs(change7d) / 30, 1);
+
+        let coords = [];
+        let y = height / 2;
+        for (let i = 0; i < points; i++) {
+            const x = padding + (i / (points - 1)) * (width - 2 * padding);
+            const progress = i / (points - 1);
+            // Trend direction weighted by magnitude, with randomness
+            const trend = (progress - 0.5) * 2 * (isPositive ? -1 : 1);
+            const noise = (rng() - 0.5) * (1 - magnitude * 0.6) * 0.8;
+            y = Math.max(padding + 2, Math.min(height - padding - 2, height / 2 + (trend + noise) * height * 0.4));
+            coords.push(x.toFixed(1) + ',' + y.toFixed(1));
+        }
+
+        const color = isPositive ? '#34d399' : '#f87171';
+        const fillOpacity = isPositive ? '0.06' : '0.06';
+
+        svg.innerHTML =
+            '<defs><linearGradient id="sg-' + seed + '" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="' + color + '" stop-opacity="' + fillOpacity + '"/>' +
+            '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>' +
+            '</linearGradient></defs>' +
+            '<polyline points="' + coords.join(' ') + '" stroke="' + color + '" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
+    }
+
+    document.querySelectorAll('.sparkline-svg[data-change]').forEach(function(svg) {
+        const change = parseFloat(svg.getAttribute('data-change'));
+        const seed = svg.getAttribute('data-seed') || 'default';
+        if (!isNaN(change)) {
+            generateSparkline(svg, change, seed);
+        }
+    });
+
+    // ============================================
+    // v3: Scroll to coin row from trending card
+    // ============================================
+    window.scrollToCoin = function(symbol) {
+        const target = document.getElementById('coin-' + symbol);
+        const mobileTarget = document.getElementById('mcoin-' + symbol);
+        const el = target || mobileTarget;
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.transition = 'background 0.3s ease';
+            el.style.background = 'rgba(34, 211, 238, 0.12)';
+            setTimeout(function() {
+                el.style.background = '';
+            }, 1500);
+        }
+    };
+})();
+</script>
+{% endblock %}

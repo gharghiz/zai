@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}News Archive - CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .archive-hero {
+        text-align: center; padding: 1.5rem 0 1rem;
+    }
+    .archive-hero h1 {
+        font-size: 1.8rem; font-weight: 900; margin-bottom: 0.4rem;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .archive-hero p { color: var(--text-secondary); font-size: 0.95rem; }
+
+    .archive-stats {
+        display: flex; justify-content: center; gap: 2rem; margin: 1.5rem 0;
+        flex-wrap: wrap;
+    }
+    .archive-stat {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); padding: 1rem 2rem;
+        text-align: center; min-width: 150px;
+    }
+    .archive-stat .stat-num {
+        font-size: 1.8rem; font-weight: 800;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .archive-stat .stat-label {
+        color: var(--text-muted); font-size: 0.8rem;
+        text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;
+    }
+
+    .archive-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    /* Sidebar */
+    .archive-sidebar {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.5rem;
+        position: sticky; top: 100px; align-self: start;
+        max-height: calc(100vh - 120px); overflow-y: auto;
+    }
+    .archive-sidebar h3 {
+        font-size: 1rem; font-weight: 700; margin-bottom: 1rem;
+        display: flex; align-items: center; gap: 8px;
+        color: var(--accent-cyan);
+    }
+    .month-list { list-style: none; }
+    .month-list li { margin-bottom: 4px; }
+    .month-link {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 14px; border-radius: var(--radius-sm);
+        color: var(--text-secondary); text-decoration: none;
+        font-size: 0.88rem; font-weight: 500;
+        transition: var(--transition);
+    }
+    .month-link:hover {
+        background: var(--bg-glass-hover);
+        color: var(--text-primary);
+        transform: translateX(4px);
+    }
+    .month-link.active {
+        background: rgba(34, 211, 238, 0.12);
+        border: 1px solid rgba(34, 211, 238, 0.25);
+        color: var(--accent-cyan);
+        font-weight: 600;
+    }
+    .month-count {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 28px; height: 22px; padding: 0 6px;
+        border-radius: 12px; font-size: 0.72rem; font-weight: 700;
+        background: var(--bg-glass); color: var(--text-muted);
+    }
+    .month-link.active .month-count {
+        background: rgba(34, 211, 238, 0.2); color: var(--accent-cyan);
+    }
+    .month-link:hover .month-count { background: var(--bg-glass-hover); }
+
+    .year-divider {
+        font-size: 0.75rem; font-weight: 800;
+        color: var(--text-muted); text-transform: uppercase;
+        letter-spacing: 1.5px; padding: 12px 14px 6px;
+        border-top: 1px solid var(--border-glass);
+        margin-top: 8px;
+    }
+    .year-divider:first-child { border-top: none; margin-top: 0; }
+
+    /* Content */
+    .archive-content { min-height: 400px; }
+
+    .month-header {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.5rem;
+        margin-bottom: 1rem;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .month-header h2 {
+        font-size: 1.3rem; font-weight: 800;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .month-header .month-total {
+        color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    .archive-article {
+        display: grid; grid-template-columns: 1fr 200px; gap: 1.2rem;
+        padding: 1.2rem; background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); margin-bottom: 0.8rem;
+        transition: var(--transition);
+    }
+    .archive-article:hover {
+        transform: translateX(4px);
+        border-color: var(--border-glow);
+        box-shadow: var(--shadow-glow);
+    }
+    .archive-article .article-body { display: flex; flex-direction: column; justify-content: center; }
+    .archive-article .article-meta {
+        display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; align-items: center;
+    }
+    .archive-article .article-title {
+        font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; line-height: 1.4;
+    }
+    .archive-article .article-title a {
+        color: var(--text-primary); text-decoration: none; transition: var(--transition);
+    }
+    .archive-article .article-title a:hover { color: var(--accent-cyan); }
+    .archive-article .article-summary {
+        color: var(--text-secondary); font-size: 0.84rem; line-height: 1.6;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .archive-article .article-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-top: 8px; font-size: 0.78rem; color: var(--text-muted);
+    }
+    .archive-article .article-img-wrapper {
+        overflow: hidden; border-radius: var(--radius-md);
+    }
+    .archive-article .article-image {
+        width: 100%; height: 100%; min-height: 120px; object-fit: cover;
+        border-radius: var(--radius-md); background: var(--gradient-card);
+    }
+
+    /* No month selected state */
+    .archive-welcome {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 3rem; text-align: center;
+    }
+    .archive-welcome-icon {
+        width: 80px; height: 80px; margin: 0 auto 1rem;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        font-size: 2rem;
+    }
+    .archive-welcome h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .archive-welcome p { color: var(--text-secondary); max-width: 400px; margin: 0 auto; line-height: 1.6; }
+
+    /* Pagination */
+    .pagination {
+        display: flex; justify-content: center; gap: 8px; margin-top: 2rem;
+    }
+    .pagination a, .pagination span {
+        padding: 10px 18px; border-radius: var(--radius-sm);
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-weight: 600; font-size: 0.9rem;
+        transition: var(--transition); text-decoration: none;
+    }
+    .pagination a:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); transform: translateY(-2px); }
+    .pagination span.current {
+        background: var(--gradient-primary); color: white; border-color: transparent;
+    }
+
+    .badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 10px; border-radius: 20px;
+        font-size: 0.72rem; font-weight: 600;
+    }
+    .badge-cyan { background: rgba(34,211,238,0.12); color: var(--accent-cyan); }
+    .badge-purple { background: rgba(167,139,250,0.12); color: var(--accent-purple); }
+    .badge-green { background: rgba(52,211,153,0.12); color: var(--accent-green); }
+    .badge-red { background: rgba(248,113,113,0.12); color: var(--accent-red); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .archive-layout { grid-template-columns: 1fr; }
+        .archive-sidebar {
+            position: static; max-height: none;
+            display: flex; flex-wrap: wrap; gap: 4px;
+            padding: 1rem;
+        }
+        .archive-sidebar h3 { width: 100%; }
+        .month-list { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; }
+        .month-list li { margin-bottom: 0; }
+        .year-divider { width: 100%; border-top: none; margin-top: 0; padding: 4px 8px; }
+        .month-link { padding: 6px 12px; font-size: 0.8rem; }
+        .archive-article { grid-template-columns: 1fr; }
+        .archive-article .article-img-wrapper { max-height: 180px; }
+    }
+    @media (max-width: 600px) {
+        .archive-hero h1 { font-size: 1.4rem; }
+        .archive-stats { gap: 0.8rem; }
+        .archive-stat { min-width: 120px; padding: 0.8rem 1rem; }
+        .archive-stat .stat-num { font-size: 1.4rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Archive Hero -->
+<div class="archive-hero animate-in">
+    <h1><i class="fas fa-archive" style="color: var(--accent-cyan);"></i> News Archive</h1>
+    <p>Browse all crypto news articles stored on our platform — nothing gets deleted</p>
+</div>
+
+<!-- Stats -->
+<div class="archive-stats animate-in" style="animation-delay: 0.05s">
+    <div class="archive-stat">
+        <div class="stat-num">{{ total_articles or 0 }}</div>
+        <div class="stat-label">Total Articles</div>
+    </div>
+    <div class="archive-stat">
+        <div class="stat-num">{{ archive_months|length }}</div>
+        <div class="stat-label">Active Months</div>
+    </div>
+</div>
+
+<!-- Archive Layout -->
+<div class="archive-layout animate-in" style="animation-delay: 0.1s">
+    <!-- Sidebar: Month List -->
+    <aside class="archive-sidebar">
+        <h3><i class="fas fa-calendar-alt"></i> Browse by Month</h3>
+        <ul class="month-list">
+            {% set current_year = none %}
+            {% for m in archive_months %}
+                {% set month_str = m[0] %}
+                {% set count = m[1] %}
+                {% set y = month_str[:4] %}
+                {% set mo = month_str[5:7] | int %}
+                {% set month_names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] %}
+                {% if y != current_year %}
+                    {% set current_year = y %}
+                    <div class="year-divider">{{ y }}</div>
+                {% endif %}
+                <li>
+                    <a href="/archive?year={{ y }}&month={{ mo }}"
+                       class="month-link {% if year == y | int and month == mo %}active{% endif %}">
+                        <span>{{ month_names[mo] }} {{ y }}</span>
+                        <span class="month-count">{{ count }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </aside>
+
+    <!-- Content -->
+    <div class="archive-content">
+        {% if selected_month_label %}
+        <!-- Month Header -->
+        <div class="month-header">
+            <h2><i class="fas fa-calendar-check" style="color: var(--accent-cyan);"></i> {{ selected_month_label }}</h2>
+            <span class="month-total">{{ month_total }} articles</span>
+        </div>
+
+        <!-- Articles List -->
+        {% for article in selected_articles %}
+        <div class="archive-article animate-in" style="animation-delay: {{ loop.index0 * 0.03 }}s">
+            <div class="article-body">
+                <div class="article-meta">
+                    <span class="badge badge-cyan">{{ article.source or 'Unknown' }}</span>
+                    {% if article.category %}<span class="badge badge-purple">{{ article.category }}</span>{% endif %}
+                    {% if article.sentiment_label %}
+                    <span class="badge badge-{{ 'green' if article.sentiment_label in ['bullish', 'very_bullish'] else ('red' if article.sentiment_label in ['bearish', 'very_bearish'] else 'cyan') }}">
+                        {{ article.sentiment_label | replace('_', ' ') | title }}
+                    </span>
+                    {% endif %}
+                </div>
+                <h3 class="article-title">
+                    <a href="/news/{{ article.id }}">{{ article.title }}</a>
+                </h3>
+                <p class="article-summary">{{ article.summary or '' }}</p>
+                <div class="article-footer">
+                    <span><i class="far fa-clock"></i> {{ article.time_ago or 'Unknown' }}</span>
+                    <span><i class="far fa-eye"></i> {{ article.views or 0 }} views</span>
+                </div>
+            </div>
+            <div class="article-img-wrapper">
+                {% if article.image_url %}
+                <img src="{{ article.image_url }}" alt="" class="article-image" loading="lazy"
+                     onerror="this.parentElement.parentElement.removeChild(this.parentElement)">
+                {% else %}
+                <div class="article-image" style="display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-newspaper" style="font-size: 2rem; color: var(--accent-cyan); opacity: 0.15;"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not selected_articles %}
+        <div class="archive-welcome">
+            <div class="archive-welcome-icon">
+                <i class="fas fa-inbox" style="color: var(--accent-cyan);"></i>
+            </div>
+            <h3>No articles this month</h3>
+            <p>There are no articles stored for this period. Try selecting a different month from the sidebar.</p>
+        </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        {% if page > 1 or has_next %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="/archive?year={{ year }}&month={{ month }}&page={{ page - 1 }}">
+                <i class="fas fa-chevron-left"></i> Previous
+            </a>
+            {% endif %}
+            <span class="current">{{ page }}</span>
+            {% if has_next %}
+            <a href="/archive?year={{ year }}&month={{ month }}&page={{ page + 1 }}">
+                Next <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Welcome State: No month selected -->
+        <div class="archive-welcome">
+            <div class="archive-welcome-icon">
+                <i class="fas fa-folder-open" style="color: var(--accent-cyan);"></i>
+            </div>
+            <h3>Select a Month to Browse</h3>
+            <p>Choose any month from the sidebar to view all articles published during that period. All news articles are permanently stored and never deleted.</p>
+            <div style="margin-top: 1.5rem;">
+                <a href="/news" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: var(--radius-sm); background: var(--gradient-primary); color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                    <i class="fas fa-newspaper"></i> View Latest News
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

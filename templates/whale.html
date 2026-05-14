@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Whale Alerts - Large Crypto Transactions | CryptositNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .whale-hero { margin-bottom: 1.5rem; }
+    .whale-hero h1 { font-size: 1.8rem; font-weight: 900; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 10px; }
+    .whale-hero h1 i { color: var(--accent-blue); }
+    .whale-hero p { color: var(--text-secondary); }
+
+    .whale-stats {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .whale-stat-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.2rem; text-align: center;
+        transition: var(--transition);
+    }
+    .whale-stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); border-color: var(--border-glow); }
+    .whale-stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .whale-stat-value { font-size: 1.5rem; font-weight: 900; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .whale-stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.3rem; }
+
+    .whale-filters {
+        display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;
+        padding: 1rem 1.2rem; background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+    }
+    .whale-filter-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 16px; border-radius: 24px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.84rem; font-weight: 500;
+        cursor: pointer; transition: var(--transition); text-decoration: none;
+    }
+    .whale-filter-btn:hover { border-color: var(--border-glow); color: var(--text-primary); transform: translateY(-1px); }
+    .whale-filter-btn.active { background: rgba(34, 211, 238, 0.12); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .whale-filter-btn i { font-size: 0.78rem; }
+
+    .whale-table-wrapper {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl); overflow: hidden;
+    }
+    .whale-table { width: 100%; border-collapse: collapse; }
+    .whale-table thead { background: var(--bg-glass); }
+    .whale-table th {
+        padding: 12px 16px; font-size: 0.75rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+        text-align: left; border-bottom: 1px solid var(--border-glass);
+    }
+    .whale-table td {
+        padding: 14px 16px; font-size: 0.85rem; color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-glass); vertical-align: middle;
+    }
+    .whale-table tr:last-child td { border-bottom: none; }
+    .whale-table tbody tr { transition: var(--transition); }
+    .whale-table tbody tr:hover { background: var(--bg-glass-hover); }
+
+    .whale-type {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+    }
+    .whale-type.transfer { background: rgba(59, 130, 246, 0.12); color: var(--accent-blue); }
+
+    .whale-symbol {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-weight: 700; color: var(--text-primary);
+    }
+    .whale-symbol .symbol-icon {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: var(--bg-glass); display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem; font-weight: 800;
+    }
+    .whale-amount { font-weight: 800; color: var(--text-primary); font-size: 0.95rem; }
+    .whale-usd { color: var(--accent-green); font-weight: 700; }
+
+    .whale-address {
+        font-family: 'Courier New', monospace; font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+    .whale-address .owner-type {
+        display: block; font-family: 'Inter', sans-serif;
+        font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.5px; margin-top: 2px;
+    }
+    .whale-address .owner-type.exchange { color: var(--accent-yellow); }
+    .whale-address .owner-type.wallet { color: var(--accent-purple); }
+
+    .whale-arrow { color: var(--accent-cyan); font-size: 1.2rem; text-align: center; }
+    .whale-time { color: var(--text-muted); font-size: 0.78rem; white-space: nowrap; }
+    .whale-chain {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+        background: var(--bg-glass); color: var(--text-muted);
+    }
+
+    .whale-cta {
+        text-align: center; margin-top: 2rem; padding: 2rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(167, 139, 250, 0.06));
+        border: 1px solid var(--border-glass); border-radius: var(--radius-xl);
+    }
+    .whale-cta h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .whale-cta p { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1rem; }
+    .whale-cta code { background: var(--bg-glass); padding: 2px 8px; border-radius: 4px; font-size: 0.82rem; color: var(--accent-cyan); }
+
+    .whale-live-indicator {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 12px; border-radius: 20px;
+        background: rgba(52, 211, 153, 0.08); border: 1px solid rgba(52, 211, 153, 0.15);
+        font-size: 0.72rem; font-weight: 600; color: var(--accent-green);
+    }
+    .whale-live-indicator .live-dot-sm {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--accent-green); animation: livePulse 2s ease infinite;
+    }
+
+    @media (max-width: 768px) {
+        .whale-table { font-size: 0.8rem; }
+        .whale-table th, .whale-table td { padding: 10px 8px; }
+        .whale-stats { grid-template-columns: repeat(2, 1fr); }
+        .whale-hero h1 { font-size: 1.4rem; }
+        .hide-mobile { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="whale-hero animate-in">
+    <h1><i class="fas fa-water"></i> Whale Alerts</h1>
+    <p>Track large cryptocurrency transactions in real-time</p>
+</div>
+
+{% if stats %}
+<div class="whale-stats animate-in" style="animation-delay: 0.05s">
+    <div class="whale-stat-card">
+        <div class="whale-stat-icon">💰</div>
+        <div class="whale-stat-value">${{ '%.0f' | format(stats.total_volume_24h) if stats.total_volume_24h > 1000000 else ('%.0f' | format(stats.total_volume_24h)) }}</div>
+        <div class="whale-stat-label">24h Volume Moved</div>
+    </div>
+    <div class="whale-stat-card">
+        <div class="whale-stat-icon">🐋</div>
+        <div class="whale-stat-value">{{ stats.total_transactions }}</div>
+        <div class="whale-stat-label">Whale Transactions</div>
+    </div>
+    <div class="whale-stat-card">
+        <div class="whale-stat-icon">⛓️</div>
+        <div class="whale-stat-value">{{ stats.top_blockchain | title }}</div>
+        <div class="whale-stat-label">Top Blockchain</div>
+    </div>
+    <div class="whale-stat-card">
+        <div class="whale-stat-icon">📊</div>
+        <div class="whale-stat-value">${{ '%.0f' | format(stats.avg_transaction_usd) }}</div>
+        <div class="whale-stat-label">Avg Transaction</div>
+    </div>
+</div>
+{% endif %}
+
+<div class="whale-filters animate-in" style="animation-delay: 0.1s">
+    <span class="whale-live-indicator"><span class="live-dot-sm"></span> Live</span>
+    <a href="/whale-alerts" class="whale-filter-btn active"><i class="fas fa-globe"></i> All Chains</a>
+    <a href="/whale-alerts?blockchain=bitcoin" class="whale-filter-btn"><i class="fab fa-bitcoin"></i> Bitcoin</a>
+    <a href="/whale-alerts?blockchain=ethereum" class="whale-filter-btn"><i class="fab fa-ethereum"></i> Ethereum</a>
+    <a href="/whale-alerts?blockchain=tron" class="whale-filter-btn"><i class="fas fa-cube"></i> Tron</a>
+    <a href="/whale-alerts?blockchain=solana" class="whale-filter-btn"><i class="fas fa-sun"></i> Solana</a>
+</div>
+
+<div class="whale-table-wrapper animate-in" style="animation-delay: 0.15s">
+    <table class="whale-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Blockchain</th>
+                <th>Symbol</th>
+                <th>Amount</th>
+                <th>Value (USD)</th>
+                <th class="hide-mobile">From</th>
+                <th></th>
+                <th class="hide-mobile">To</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in transactions %}
+            <tr style="animation: fadeInUp 0.4s ease forwards; animation-delay: {{ loop.index0 * 0.03 }}s; opacity: 0;">
+                <td><span class="whale-type transfer"><i class="fas fa-exchange-alt"></i> {{ tx.tx_type }}</span></td>
+                <td><span class="whale-chain"><i class="fas fa-link"></i> {{ tx.blockchain }}</span></td>
+                <td>
+                    <span class="whale-symbol">
+                        <span class="symbol-icon">{{ tx.symbol[:2] if tx.symbol else '??' }}</span>
+                        {{ tx.symbol or 'Unknown' }}
+                    </span>
+                </td>
+                <td class="whale-amount">{{ '{:,.4f}'.format(tx.amount) if tx.amount >= 1 else '{:,.6f}'.format(tx.amount) }}</td>
+                <td class="whale-usd">${{ '{:,.0f}'.format(tx.amount_usd) if tx.amount_usd >= 1e6 else ('{:,.0f}'.format(tx.amount_usd)) }}</td>
+                <td class="hide-mobile">
+                    <span class="whale-address">
+                        {{ tx.from_owner }}
+                        <span class="owner-type {{ tx.from_owner_type }}">{{ tx.from_owner_type }}</span>
+                    </span>
+                </td>
+                <td class="whale-arrow"><i class="fas fa-long-arrow-alt-right"></i></td>
+                <td class="hide-mobile">
+                    <span class="whale-address">
+                        {{ tx.to_owner }}
+                        <span class="owner-type {{ tx.to_owner_type }}">{{ tx.to_owner_type }}</span>
+                    </span>
+                </td>
+                <td class="whale-time">{{ tx.timestamp[:16] if tx.timestamp else '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not transactions %}
+    <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+        <i class="fas fa-water" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.3;"></i>
+        <p>No whale transactions found. Data refreshes every 5 minutes.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="whale-cta">
+    <h3><i class="fas fa-key"></i> Want Real-Time Whale Alerts?</h3>
+    <p>Set your <code>WHALE_ALERT_API_KEY</code> environment variable to get live data from Whale Alert API</p>
+    <a href="https://whale-alert.io/" target="_blank" class="btn btn-primary" style="display: inline-flex;">
+        <i class="fas fa-external-link-alt"></i> Get Free API Key
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh whale data every 5 minutes
+setTimeout(function() {
+    fetch('/api/whale-alerts')
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) console.log('Whale data refreshed:', data.data.length, 'transactions');
+        })
+        .catch(() => {});
+}, 300000);
+</script>
+{% endblock %}

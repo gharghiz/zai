@@ -1,0 +1,1684 @@
+{% extends "base.html" %}
+
+{% block title %}Crypto Academy - Free Cryptocurrency Education | CryptositNews{% endblock %}
+{% block og_title %}Crypto Academy - Free Cryptocurrency Education | CryptositNews{% endblock %}
+{% block og_desc %}Learn cryptocurrency from scratch with 50+ free lessons. Bitcoin basics, DeFi, trading strategies, security best practices, and more.{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============ HERO ============ */
+    .academy-hero {
+        text-align: center;
+        padding: 2.5rem 0 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    .academy-hero-icon {
+        width: 72px; height: 72px;
+        margin: 0 auto 1.2rem;
+        border-radius: 20px;
+        background: var(--gradient-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; color: white;
+        box-shadow: 0 8px 32px rgba(34, 211, 238, 0.3);
+        animation: float 3s ease infinite;
+    }
+    .academy-hero h1 {
+        font-size: 2.6rem;
+        font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.8rem;
+        letter-spacing: -1px;
+    }
+    .academy-hero p {
+        color: var(--text-secondary);
+        font-size: 1.08rem;
+        max-width: 680px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+    .academy-hero .hero-badges {
+        display: flex; justify-content: center; gap: 10px;
+        margin-top: 1.2rem; flex-wrap: wrap;
+    }
+    .academy-hero .hero-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 16px; border-radius: 24px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);
+    }
+    .academy-hero .hero-badge i { color: var(--accent-cyan); font-size: 0.75rem; }
+
+    /* ============ STATS ROW ============ */
+    .academy-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+    .academy-stat {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 1.4rem 1rem;
+        text-align: center;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .academy-stat:hover {
+        transform: translateY(-2px);
+        border-color: var(--border-glow);
+        box-shadow: var(--shadow-glow);
+    }
+    .academy-stat::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: var(--stat-accent, var(--gradient-primary));
+    }
+    .academy-stat .stat-icon {
+        width: 40px; height: 40px;
+        margin: 0 auto 0.7rem;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+    }
+    .academy-stat .stat-value {
+        font-size: 1.7rem;
+        font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .academy-stat .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+    }
+
+    /* ============ CATEGORY FILTER TABS ============ */
+    .academy-filters {
+        margin-bottom: 2rem;
+    }
+    .academy-filters-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .academy-filters-title i { font-size: 0.7rem; }
+    .academy-filter-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .academy-tab {
+        padding: 9px 22px;
+        border-radius: 24px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        color: var(--text-secondary);
+        font-size: 0.84rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        white-space: nowrap;
+        font-family: inherit;
+    }
+    .academy-tab:hover {
+        background: var(--bg-glass-hover);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+    }
+    .academy-tab.active {
+        color: white;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+        box-shadow: 0 4px 16px rgba(34, 211, 238, 0.3);
+    }
+    .academy-tab .tab-count {
+        font-size: 0.68rem;
+        padding: 1px 7px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.15);
+        font-weight: 700;
+    }
+    .academy-tab:not(.active) .tab-count {
+        background: var(--bg-glass-hover);
+        color: var(--text-muted);
+    }
+
+    /* ============ LESSON GRID ============ */
+    .lesson-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 1.2rem;
+        margin-bottom: 3rem;
+    }
+
+    /* ============ LESSON CARD ============ */
+    .lesson-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .lesson-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--border-glow);
+        box-shadow: 0 0 30px rgba(34, 211, 238, 0.12);
+    }
+    .lesson-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: var(--card-accent, var(--gradient-primary));
+    }
+    .lesson-card-inner {
+        padding: 1.5rem;
+    }
+
+    /* Card Header */
+    .lesson-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 0.8rem;
+    }
+    .lesson-card-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.4;
+        flex: 1;
+    }
+    .lesson-expand-icon {
+        width: 28px; height: 28px;
+        border-radius: 8px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        transition: var(--transition);
+        flex-shrink: 0;
+    }
+    .lesson-card.expanded .lesson-expand-icon {
+        background: rgba(34, 211, 238, 0.15);
+        color: var(--accent-cyan);
+        border-color: rgba(34, 211, 238, 0.3);
+        transform: rotate(180deg);
+    }
+
+    /* Badges Row */
+    .lesson-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 0.9rem;
+    }
+
+    /* Difficulty Badge */
+    .diff-badge {
+        padding: 3px 12px; border-radius: 12px;
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .diff-badge.beginner {
+        background: rgba(52, 211, 153, 0.12); color: var(--accent-green);
+        border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+    .diff-badge.intermediate {
+        background: rgba(251, 191, 36, 0.12); color: var(--accent-yellow);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+    }
+    .diff-badge.advanced {
+        background: rgba(248, 113, 113, 0.12); color: var(--accent-red);
+        border: 1px solid rgba(248, 113, 113, 0.2);
+    }
+
+    /* Category Tag */
+    .cat-tag {
+        padding: 3px 12px; border-radius: 12px;
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    /* Card Description */
+    .lesson-desc {
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        line-height: 1.65;
+        margin-bottom: 0.9rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Card Meta */
+    .lesson-meta {
+        display: flex; flex-wrap: wrap; gap: 14px;
+    }
+    .lesson-meta-item {
+        display: flex; align-items: center; gap: 5px;
+        font-size: 0.78rem; color: var(--text-muted); font-weight: 500;
+    }
+    .lesson-meta-item i { font-size: 0.72rem; color: var(--accent-cyan); }
+    .lesson-meta-item .value { color: var(--text-secondary); font-weight: 600; }
+
+    /* Topics List */
+    .lesson-topics {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin-top: 0.8rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid var(--border-glass);
+    }
+    .lesson-topic-tag {
+        padding: 3px 10px; border-radius: 6px;
+        font-size: 0.7rem; font-weight: 600;
+        background: var(--bg-glass);
+        color: var(--text-muted);
+        border: 1px solid var(--border-glass);
+    }
+
+    /* Expandable Content */
+    .lesson-expandable {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.3s ease;
+        opacity: 0;
+    }
+    .lesson-card.expanded .lesson-expandable {
+        max-height: 2000px;
+        opacity: 1;
+    }
+    .lesson-content {
+        padding: 1.2rem 1.5rem 1.5rem;
+        border-top: 1px solid var(--border-glass);
+    }
+    .lesson-content h4 {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--accent-cyan);
+        margin-bottom: 0.8rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .lesson-content h4 i { font-size: 0.8rem; }
+    .lesson-content p {
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        line-height: 1.75;
+        margin-bottom: 1rem;
+    }
+    .lesson-content ul {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+    .lesson-content ul li {
+        color: var(--text-secondary);
+        font-size: 0.86rem;
+        line-height: 1.7;
+        padding: 5px 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .lesson-content ul li::before {
+        content: '\f105';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 0.75rem;
+        color: var(--accent-cyan);
+        flex-shrink: 0;
+        margin-top: 3px;
+    }
+    .lesson-content .content-tip {
+        background: rgba(34, 211, 238, 0.06);
+        border: 1px solid rgba(34, 211, 238, 0.15);
+        border-radius: var(--radius-sm);
+        padding: 0.9rem 1.1rem;
+        margin-top: 0.5rem;
+    }
+    .lesson-content .content-tip strong {
+        color: var(--accent-cyan);
+        font-size: 0.82rem;
+        font-weight: 700;
+        display: flex; align-items: center; gap: 6px;
+        margin-bottom: 0.4rem;
+    }
+    .lesson-content .content-tip p {
+        font-size: 0.82rem;
+        margin-bottom: 0;
+        color: var(--text-secondary);
+    }
+
+    /* ============ GLOSSARY SECTION ============ */
+    .glossary-section {
+        margin-bottom: 3rem;
+    }
+    .glossary-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 1.2rem;
+        flex-wrap: wrap;
+    }
+    .glossary-title {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        display: flex; align-items: center; gap: 10px;
+    }
+    .glossary-title i {
+        color: var(--accent-purple);
+        font-size: 1.2rem;
+    }
+    .glossary-search {
+        position: relative;
+        width: 300px;
+    }
+    .glossary-search input {
+        width: 100%;
+        padding: 10px 14px 10px 40px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.88rem;
+        font-family: inherit;
+        outline: none;
+        transition: var(--transition);
+    }
+    .glossary-search input::placeholder { color: var(--text-muted); }
+    .glossary-search input:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
+        background: var(--bg-glass-hover);
+    }
+    .glossary-search i {
+        position: absolute;
+        left: 14px; top: 50%; transform: translateY(-50%);
+        color: var(--text-muted); font-size: 0.85rem;
+    }
+    .glossary-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+    }
+    .glossary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1px;
+    }
+    .glossary-item {
+        display: flex;
+        gap: 12px;
+        padding: 1rem;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+    }
+    .glossary-item:hover {
+        background: var(--bg-glass-hover);
+    }
+    .glossary-item-term {
+        font-weight: 800;
+        color: var(--accent-cyan);
+        font-size: 0.88rem;
+        min-width: 120px;
+        flex-shrink: 0;
+        padding-top: 1px;
+    }
+    .glossary-item-def {
+        color: var(--text-secondary);
+        font-size: 0.84rem;
+        line-height: 1.6;
+    }
+    .glossary-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .glossary-empty i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+        opacity: 0.3;
+    }
+
+    /* ============ CTA SECTION ============ */
+    .academy-cta {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: 3rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    .academy-cta::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+        background-size: 300% 100%;
+        animation: borderGlow 6s ease infinite;
+    }
+    .academy-cta::after {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%;
+        width: 200%; height: 200%;
+        background: radial-gradient(ellipse at center, rgba(34, 211, 238, 0.04) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .academy-cta-icon {
+        width: 64px; height: 64px;
+        margin: 0 auto 1.2rem;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #229ED9, #22d3ee);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.6rem; color: white;
+        box-shadow: 0 8px 24px rgba(34, 158, 217, 0.3);
+    }
+    .academy-cta h2 {
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        margin-bottom: 0.6rem;
+    }
+    .academy-cta p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        max-width: 550px;
+        margin: 0 auto 1.5rem;
+        line-height: 1.7;
+    }
+    .cta-btn {
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 14px 32px; border-radius: var(--radius-md);
+        font-weight: 700; font-size: 1rem;
+        border: none; cursor: pointer; transition: var(--transition);
+        background: linear-gradient(135deg, #229ED9, #22d3ee);
+        color: white;
+        box-shadow: 0 6px 24px rgba(34, 158, 217, 0.3);
+        text-decoration: none;
+        position: relative;
+        z-index: 1;
+    }
+    .cta-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 32px rgba(34, 158, 217, 0.4);
+    }
+
+    /* ============ CATEGORY COLORS ============ */
+    .cat-bitcoin { background: rgba(247, 147, 26, 0.12); color: #f7931a; border: 1px solid rgba(247, 147, 26, 0.2); }
+    .cat-ethereum { background: rgba(98, 126, 234, 0.12); color: #627eea; border: 1px solid rgba(98, 126, 234, 0.2); }
+    .cat-trading { background: rgba(52, 211, 153, 0.12); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.2); }
+    .cat-security { background: rgba(248, 113, 113, 0.12); color: var(--accent-red); border: 1px solid rgba(248, 113, 113, 0.2); }
+    .cat-nft { background: rgba(167, 139, 250, 0.12); color: var(--accent-purple); border: 1px solid rgba(167, 139, 250, 0.2); }
+    .cat-mining { background: rgba(251, 146, 60, 0.12); color: var(--accent-orange); border: 1px solid rgba(251, 146, 60, 0.2); }
+    .cat-regulation { background: rgba(59, 130, 246, 0.12); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.2); }
+
+    .accent-bitcoin { background: linear-gradient(135deg, #f7931a, #e8a530); }
+    .accent-ethereum { background: linear-gradient(135deg, #627eea, #8b9cf7); }
+    .accent-trading { background: linear-gradient(135deg, #34d399, #059669); }
+    .accent-security { background: linear-gradient(135deg, #f87171, #dc2626); }
+    .accent-nft { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+    .accent-mining { background: linear-gradient(135deg, #fb923c, #ea580c); }
+    .accent-regulation { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+
+    /* ============ EMPTY STATE ============ */
+    .lesson-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+    }
+    .lesson-empty i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+    .lesson-empty p {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    /* ============ SECTION DIVIDER ============ */
+    .section-divider {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 3rem 0 2rem;
+    }
+    .section-divider::before,
+    .section-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-glass), transparent);
+    }
+    .section-divider-icon {
+        width: 40px; height: 40px;
+        border-radius: 12px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--accent-cyan);
+        font-size: 0.9rem;
+    }
+
+    /* ============ RTL ADJUSTMENTS ============ */
+    [dir="rtl"] .glossary-item { flex-direction: row-reverse; }
+    [dir="rtl"] .glossary-item-term { text-align: right; }
+    [dir="rtl"] .glossary-search i { left: auto; right: 14px; }
+    [dir="rtl"] .glossary-search input { padding-left: 14px; padding-right: 40px; }
+    [dir="rtl"] .lesson-meta { flex-direction: row-reverse; }
+    [dir="rtl"] .lesson-card-header { flex-direction: row-reverse; }
+    [dir="rtl"] .lesson-content ul li { flex-direction: row-reverse; }
+    [dir="rtl"] .lesson-content ul li::before { content: '\f104'; }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 1024px) {
+        .academy-stats { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 768px) {
+        .academy-hero h1 { font-size: 1.7rem; }
+        .academy-hero p { font-size: 0.92rem; }
+        .academy-stats { grid-template-columns: repeat(2, 1fr); }
+        .lesson-grid { grid-template-columns: 1fr; }
+        .glossary-grid { grid-template-columns: 1fr; }
+        .glossary-header { flex-direction: column; align-items: flex-start; }
+        .glossary-search { width: 100%; }
+        .academy-filter-tabs { gap: 6px; }
+        .academy-tab { padding: 7px 14px; font-size: 0.78rem; }
+        .academy-cta { padding: 2rem 1.5rem; }
+        .academy-cta h2 { font-size: 1.3rem; }
+    }
+    @media (max-width: 480px) {
+        .academy-stats { grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+        .academy-stat { padding: 1rem 0.7rem; }
+        .academy-stat .stat-value { font-size: 1.4rem; }
+        .glossary-item { flex-direction: column; gap: 4px; }
+        .glossary-item-term { min-width: unset; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+
+    <!-- ========== HERO SECTION ========== -->
+    <div class="academy-hero">
+        <div class="academy-hero-icon">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+        <h1>Crypto Academy</h1>
+        <p>Your free, comprehensive educational hub to master cryptocurrency. From Bitcoin basics to advanced DeFi strategies, learn at your own pace with expertly crafted lessons.</p>
+        <div class="hero-badges">
+            <span class="hero-badge"><i class="fas fa-infinity"></i> 100% Free</span>
+            <span class="hero-badge"><i class="fas fa-clock"></i> Learn at Your Pace</span>
+            <span class="hero-badge"><i class="fas fa-signal"></i> All Skill Levels</span>
+            <span class="hero-badge"><i class="fas fa-certificate"></i> No Sign-up Required</span>
+        </div>
+    </div>
+
+    <!-- ========== STATS ROW ========== -->
+    <div class="academy-stats">
+        <div class="academy-stat animate-in" data-delay="1" style="--stat-accent: var(--accent-cyan);">
+            <div class="stat-icon" style="background: rgba(34, 211, 238, 0.1); color: var(--accent-cyan);">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="stat-value">50+</div>
+            <div class="stat-label">Total Lessons</div>
+        </div>
+        <div class="academy-stat animate-in" data-delay="2" style="--stat-accent: var(--accent-purple);">
+            <div class="stat-icon" style="background: rgba(167, 139, 250, 0.1); color: var(--accent-purple);">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="stat-value">8</div>
+            <div class="stat-label">Categories</div>
+        </div>
+        <div class="academy-stat animate-in" data-delay="3" style="--stat-accent: var(--accent-green);">
+            <div class="stat-icon" style="background: rgba(52, 211, 153, 0.1); color: var(--accent-green);">
+                <i class="fas fa-signal"></i>
+            </div>
+            <div class="stat-value">3</div>
+            <div class="stat-label">Difficulty Levels</div>
+        </div>
+        <div class="academy-stat animate-in" data-delay="4" style="--stat-accent: var(--accent-orange);">
+            <div class="stat-icon" style="background: rgba(251, 146, 60, 0.1); color: var(--accent-orange);">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-value">8+</div>
+            <div class="stat-label">Hours of Content</div>
+        </div>
+    </div>
+
+    <!-- ========== CATEGORY FILTER TABS ========== -->
+    <div class="academy-filters">
+        <div class="academy-filters-title"><i class="fas fa-filter"></i> Filter by Category</div>
+        <div class="academy-filter-tabs" id="academyFilters">
+            <button class="academy-tab active" data-category="all" onclick="filterLessons('all', this)">
+                <i class="fas fa-th-large"></i> All
+                <span class="tab-count">16</span>
+            </button>
+            <button class="academy-tab" data-category="bitcoin" onclick="filterLessons('bitcoin', this)">
+                <i class="fab fa-bitcoin"></i> Bitcoin Basics
+                <span class="tab-count">4</span>
+            </button>
+            <button class="academy-tab" data-category="ethereum" onclick="filterLessons('ethereum', this)">
+                <i class="fab fa-ethereum"></i> Ethereum & DeFi
+                <span class="tab-count">3</span>
+            </button>
+            <button class="academy-tab" data-category="trading" onclick="filterLessons('trading', this)">
+                <i class="fas fa-chart-line"></i> Trading
+                <span class="tab-count">3</span>
+            </button>
+            <button class="academy-tab" data-category="security" onclick="filterLessons('security', this)">
+                <i class="fas fa-shield-halved"></i> Security
+                <span class="tab-count">3</span>
+            </button>
+            <button class="academy-tab" data-category="nft" onclick="filterLessons('nft', this)">
+                <i class="fas fa-palette"></i> NFT & Web3
+                <span class="tab-count">2</span>
+            </button>
+            <button class="academy-tab" data-category="mining" onclick="filterLessons('mining', this)">
+                <i class="fas fa-microchip"></i> Mining
+                <span class="tab-count">1</span>
+            </button>
+            <button class="academy-tab" data-category="regulation" onclick="filterLessons('regulation', this)">
+                <i class="fas fa-gavel"></i> Regulation
+                <span class="tab-count">1</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== LESSON CARDS GRID ========== -->
+    <div class="lesson-grid" id="lessonGrid">
+
+        <!-- ============================== -->
+        <!-- LESSON 1: What is Bitcoin?     -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="1" data-category="bitcoin" style="--card-accent: linear-gradient(135deg, #f7931a, #e8a530);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">What is Bitcoin?</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge beginner"><i class="fas fa-seedling"></i> Beginner</span>
+                    <span class="cat-tag cat-bitcoin"><i class="fab fa-bitcoin"></i> Bitcoin Basics</span>
+                </div>
+                <div class="lesson-desc">Discover the fundamentals of Bitcoin, the world's first decentralized digital currency. Learn about its creation, the blockchain technology behind it, and why it matters for the future of finance.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">5 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">4</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">BTC Fundamentals</span>
+                    <span class="lesson-topic-tag">Blockchain Basics</span>
+                    <span class="lesson-topic-tag">Satoshi Nakamoto</span>
+                    <span class="lesson-topic-tag">Transactions</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Bitcoin is a decentralized digital currency created in January 2009 by an anonymous person or group known as Satoshi Nakamoto. Unlike traditional currencies issued by governments (fiat money), Bitcoin operates without a central authority, relying instead on a peer-to-peer network of computers to validate and record transactions.</p>
+                    <ul>
+                        <li><strong>BTC Fundamentals:</strong> Bitcoin (BTC) is digital money that exists only on the internet. It uses cryptography to secure transactions and control the creation of new units. There will never be more than 21 million bitcoins, making it a deflationary asset by design.</li>
+                        <li><strong>Blockchain Basics:</strong> All Bitcoin transactions are recorded on a public ledger called the blockchain. This is a chain of blocks, each containing a batch of verified transactions. Once a block is added to the chain, it cannot be altered, ensuring the integrity of the entire transaction history.</li>
+                        <li><strong>Satoshi Nakamoto:</strong> The true identity of Bitcoin's creator remains one of the greatest mysteries in technology. Satoshi published the Bitcoin whitepaper in October 2008 and mined the first block (genesis block) in January 2009. They disappeared from public communication around 2011, leaving behind a working system and a vision for decentralized money.</li>
+                        <li><strong>How Transactions Work:</strong> When you send Bitcoin, the transaction is broadcast to the network. Miners verify the transaction by solving complex mathematical puzzles, and once confirmed, the transaction is permanently recorded on the blockchain. This process typically takes about 10 minutes per confirmation.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Bitcoin introduced the concept of trustless, decentralized digital money. You don't need a bank to send or receive it — only an internet connection and a wallet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 2: How to Store Bitcoin -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="2" data-category="bitcoin" style="--card-accent: linear-gradient(135deg, #f7931a, #e8a530);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">How to Store Bitcoin Safely</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge beginner"><i class="fas fa-seedling"></i> Beginner</span>
+                    <span class="cat-tag cat-bitcoin"><i class="fab fa-bitcoin"></i> Bitcoin Basics</span>
+                </div>
+                <div class="lesson-desc">Securing your Bitcoin is just as important as buying it. This lesson covers the different types of wallets available, from convenient mobile apps to ultra-secure cold storage solutions.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">7 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">5</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Hot Wallets</span>
+                    <span class="lesson-topic-tag">Cold Wallets</span>
+                    <span class="lesson-topic-tag">Hardware Wallets</span>
+                    <span class="lesson-topic-tag">Paper Wallets</span>
+                    <span class="lesson-topic-tag">Seed Phrases</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Storing Bitcoin securely is one of the most critical skills every crypto user must learn. Unlike a bank account, if you lose access to your Bitcoin wallet and your backup, your funds are gone forever — there is no customer service to call.</p>
+                    <ul>
+                        <li><strong>Hot Wallets:</strong> These are software wallets connected to the internet. They include mobile apps (like Trust Wallet, Exodus), desktop applications, and web-based wallets. Hot wallets are convenient for daily use and small amounts, but they are more vulnerable to hacking and malware because they are always online.</li>
+                        <li><strong>Cold Wallets:</strong> Cold storage refers to keeping your private keys completely offline. This dramatically reduces the attack surface for hackers. Cold wallets include hardware wallets, paper wallets, and even air-gapped computers. They are recommended for storing large amounts of cryptocurrency long-term.</li>
+                        <li><strong>Hardware Wallets:</strong> Physical devices like Ledger Nano, Trezor, and ColdCard are purpose-built to store private keys securely. They generate and sign transactions offline, meaning your keys never touch an internet-connected device. Even if you plug them into a compromised computer, your keys remain safe.</li>
+                        <li><strong>Paper Wallets:</strong> A paper wallet is simply a printed document containing your public and private keys as QR codes. While completely offline, paper wallets can degrade over time, be lost, or be damaged by fire and water. They are generally considered less user-friendly than hardware wallets.</li>
+                        <li><strong>Seed Phrases:</strong> A seed phrase (also called a recovery phrase) is a list of 12 or 24 words that can restore your wallet and all its funds. This is the single most important piece of information about your crypto holdings. Never store it digitally, never share it with anyone, and keep multiple physical copies in separate secure locations.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Follow the rule of "not your keys, not your coins." For long-term holdings, always use a hardware wallet and keep your seed phrase backed up in multiple secure, offline locations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 3: Bitcoin Mining        -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="3" data-category="bitcoin" style="--card-accent: linear-gradient(135deg, #f7931a, #e8a530);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Bitcoin Mining Explained</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge intermediate"><i class="fas fa-fire"></i> Intermediate</span>
+                    <span class="cat-tag cat-bitcoin"><i class="fab fa-bitcoin"></i> Bitcoin Basics</span>
+                </div>
+                <div class="lesson-desc">Understand how new bitcoins are created and how transactions are verified through the mining process. Learn about Proof of Work, mining difficulty adjustments, and the economics behind mining operations.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">10 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">5</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Proof of Work</span>
+                    <span class="lesson-topic-tag">Mining Difficulty</span>
+                    <span class="lesson-topic-tag">Halving</span>
+                    <span class="lesson-topic-tag">Mining Pools</span>
+                    <span class="lesson-topic-tag">Hashrate</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Bitcoin mining is the process by which new bitcoins are entered into circulation and transactions are verified on the blockchain. Miners use powerful computers to solve complex cryptographic puzzles, competing to add the next block to the chain.</p>
+                    <ul>
+                        <li><strong>Proof of Work (PoW):</strong> Bitcoin uses the Proof of Work consensus mechanism. Miners must expend computational energy to solve the SHA-256 hash puzzle. The first miner to find a valid solution gets to add the block and receive the block reward (currently 3.125 BTC as of the 2024 halving). This energy-intensive process is what secures the network against attacks.</li>
+                        <li><strong>Mining Difficulty:</strong> The Bitcoin network automatically adjusts the mining difficulty every 2,016 blocks (approximately every two weeks). If miners are finding blocks too quickly, difficulty increases. If they're too slow, it decreases. This self-regulating mechanism ensures that new blocks are consistently found every 10 minutes on average.</li>
+                        <li><strong>Halving Events:</strong> Approximately every four years (every 210,000 blocks), the block reward is cut in half. This is called the "halving." The reward started at 50 BTC in 2009 and has been reduced to 3.125 BTC after the April 2024 halving. Halvings reduce the rate of new supply, historically leading to increased scarcity and price appreciation over time.</li>
+                        <li><strong>Mining Pools:</strong> Because solving a block individually has extremely low odds, miners combine their computing power in mining pools. When the pool finds a block, the reward is distributed among participants based on their contributed hashrate. Popular pools include Foundry USA, AntPool, F2Pool, and ViaBTC.</li>
+                        <li><strong>Hashrate:</strong> Hashrate measures the computational power being used to mine and process transactions on the Bitcoin network. It is typically measured in terahashes per second (TH/s) or exahashes per second (EH/s). The total network hashrate reflects the overall security of the network — the higher the hashrate, the more expensive it is to attempt a 51% attack.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Bitcoin mining is the backbone of network security. The combination of Proof of Work, difficulty adjustments, and halvings creates a self-sustaining economic system that has operated without interruption since 2009.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 4: Bitcoin Halving       -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="4" data-category="bitcoin" style="--card-accent: linear-gradient(135deg, #f7931a, #e8a530);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Bitcoin Halving Cycles</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge intermediate"><i class="fas fa-fire"></i> Intermediate</span>
+                    <span class="cat-tag cat-bitcoin"><i class="fab fa-bitcoin"></i> Bitcoin Basics</span>
+                </div>
+                <div class="lesson-desc">Explore the cyclical nature of Bitcoin halving events and their historical impact on price. Understand the supply schedule and why many analysts watch halvings as key market milestones.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">8 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">4</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">What is Halving</span>
+                    <span class="lesson-topic-tag">Historical Impact</span>
+                    <span class="lesson-topic-tag">Supply Schedule</span>
+                    <span class="lesson-topic-tag">Price Implications</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>The Bitcoin halving is one of the most anticipated events in the cryptocurrency calendar. Built into Bitcoin's code by Satoshi Nakamoto, halvings ensure that the total supply of Bitcoin grows at a predictable, decreasing rate until the final bitcoin is mined around the year 2140.</p>
+                    <ul>
+                        <li><strong>What is Halving:</strong> A halving is a pre-programmed event that reduces the block reward miners receive by 50%. Starting at 50 BTC per block in 2009, the reward has gone through four halvings: to 25 BTC (2012), 12.5 BTC (2016), 6.25 BTC (2020), and 3.125 BTC (April 2024). The next halving is expected in 2028, reducing the reward to 1.5625 BTC.</li>
+                        <li><strong>Historical Impact:</strong> Each past halving has been followed by significant bull markets, though with varying timelines. After the 2012 halving, Bitcoin rose from ~$12 to over $1,100 within a year. After 2016, it climbed from ~$650 to nearly $20,000 by late 2017. The 2020 halving preceded Bitcoin's surge to $69,000 in November 2021. While past performance doesn't guarantee future results, the pattern of supply shock followed by price appreciation has been remarkably consistent.</li>
+                        <li><strong>Supply Schedule:</strong> Bitcoin's supply follows a strict mathematical schedule. Approximately every 10 minutes, a new block is mined. Every 210,000 blocks (~4 years), the reward halves. The total supply is capped at exactly 20,999,999.9769 BTC. Over 19.5 million bitcoins have already been mined, leaving roughly 1.5 million yet to be released over the next century.</li>
+                        <li><strong>Price Implications:</strong> Halvings create a supply shock because they instantly reduce the daily rate of new Bitcoin entering the market by half. If demand remains constant or increases, the reduced supply tends to push prices higher. However, the effect isn't always immediate — prices often rally 6-18 months after a halving as the reduced supply works through the market. Institutional adoption, macroeconomic conditions, and regulatory developments also play significant roles in post-halving price action.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Bitcoin halvings are a fundamental feature of its economic design, enforcing digital scarcity. While they've historically preceded major price rallies, always consider broader market conditions when evaluating price potential.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 5: Ethereum Smart Contracts -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="1" data-category="ethereum" style="--card-accent: linear-gradient(135deg, #627eea, #8b9cf7);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Ethereum Smart Contracts</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge beginner"><i class="fas fa-seedling"></i> Beginner</span>
+                    <span class="cat-tag cat-ethereum"><i class="fab fa-ethereum"></i> Ethereum & DeFi</span>
+                </div>
+                <div class="lesson-desc">Smart contracts are self-executing programs that live on the blockchain. Learn how they work, the basics of Solidity programming, and how the Ethereum Virtual Machine (EVM) powers decentralized applications.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">6 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">4</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Smart Contracts</span>
+                    <span class="lesson-topic-tag">Solidity Basics</span>
+                    <span class="lesson-topic-tag">EVM</span>
+                    <span class="lesson-topic-tag">Gas Fees</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Smart contracts are the building blocks of the Ethereum ecosystem. Proposed by computer scientist Nick Szabo in the 1990s and implemented on Ethereum by Vitalik Buterin in 2015, smart contracts enable trustless, automated agreements that execute exactly as coded.</p>
+                    <ul>
+                        <li><strong>What Are Smart Contracts:</strong> A smart contract is a self-executing program stored on the blockchain. It contains the terms of an agreement between parties and automatically executes when predetermined conditions are met. There's no need for intermediaries like lawyers, banks, or escrow services. Once deployed, a smart contract cannot be altered (immutable), providing trust and transparency.</li>
+                        <li><strong>Solidity Basics:</strong> Solidity is the primary programming language for writing smart contracts on Ethereum and other EVM-compatible chains. It is a high-level, object-oriented language influenced by JavaScript, C++, and Python. Smart contracts in Solidity can define variables, functions, events, and modifiers. A simple contract might store a value, allow the owner to update it, and emit events when changes occur.</li>
+                        <li><strong>Ethereum Virtual Machine (EVM):</strong> The EVM is the runtime environment that executes smart contract code. It is a decentralized, Turing-complete virtual machine that runs on every Ethereum node. When you interact with a smart contract, the EVM processes your transaction in a sandboxed environment, ensuring that the code runs exactly the same way on every node. The EVM's design is what makes Ethereum a "world computer."</li>
+                        <li><strong>Gas Fees:</strong> Every operation on Ethereum requires computational resources, measured in "gas." Users pay gas fees (denominated in gwei, a tiny fraction of ETH) to compensate miners/validators for processing their transactions. Simple transfers cost ~21,000 gas, while complex smart contract interactions can cost much more. Gas prices fluctuate based on network congestion — they spike during high-demand periods and drop during quiet times.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Smart contracts eliminate the need for trusted intermediaries by encoding agreements directly onto the blockchain. This enables everything from decentralized exchanges to automated lending protocols.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 6: DeFi                  -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="2" data-category="ethereum" style="--card-accent: linear-gradient(135deg, #627eea, #8b9cf7);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">DeFi: Decentralized Finance</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge intermediate"><i class="fas fa-fire"></i> Intermediate</span>
+                    <span class="cat-tag cat-ethereum"><i class="fab fa-ethereum"></i> Ethereum & DeFi</span>
+                </div>
+                <div class="lesson-desc">Dive into the world of Decentralized Finance — an ecosystem of financial applications built on blockchain technology that operates without traditional banks or intermediaries.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">12 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">5</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">DEX</span>
+                    <span class="lesson-topic-tag">Lending</span>
+                    <span class="lesson-topic-tag">Yield Farming</span>
+                    <span class="lesson-topic-tag">Liquidity Pools</span>
+                    <span class="lesson-topic-tag">Impermanent Loss</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Decentralized Finance (DeFi) refers to financial services built on blockchain networks, primarily Ethereum, that operate without centralized intermediaries like banks, brokerages, or exchanges. DeFi protocols use smart contracts to automate financial transactions, from lending and borrowing to trading and insurance.</p>
+                    <ul>
+                        <li><strong>Decentralized Exchanges (DEX):</strong> DEXs like Uniswap, SushiSwap, and Curve allow users to trade cryptocurrencies directly with each other without a central authority. They use automated market makers (AMMs) instead of traditional order books, enabling anyone to swap tokens permissionlessly. Liquidity is provided by users who deposit token pairs into liquidity pools and earn trading fees in return.</li>
+                        <li><strong>Lending Protocols:</strong> Platforms like Aave, Compound, and MakerDAO let users lend their crypto to earn interest or borrow crypto by putting up collateral. Interest rates are determined algorithmically based on supply and demand. Unlike traditional banks, there's no credit check — your collateral is your credit score. Overcollateralization is typically required (e.g., you might need to deposit $150 worth of ETH to borrow $100 worth of USDC).</li>
+                        <li><strong>Yield Farming:</strong> Yield farming (also called liquidity mining) is the practice of staking or lending crypto assets to generate returns. Users move their funds between different DeFi protocols to maximize their yield, often measured in annual percentage yield (APY). While yields can be attractive (sometimes exceeding 100% APY), they carry risks including smart contract bugs, rug pulls, and impermanent loss.</li>
+                        <li><strong>Liquidity Pools:</strong> Liquidity pools are collections of tokens locked in smart contracts that power DEXs. When you provide liquidity, you deposit an equal value of two tokens (e.g., ETH and USDC). Other users can then trade between these tokens using your liquidity. In exchange, you earn a share of the trading fees generated by the pool.</li>
+                        <li><strong>Impermanent Loss:</strong> Impermanent loss occurs when the price ratio of your deposited tokens changes after you provide liquidity. The greater the price divergence between your paired tokens, the more impermanent loss you experience. If you withdraw while the prices have diverged significantly, the loss becomes permanent. This is the key risk that liquidity providers must understand before depositing funds.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>DeFi offers permissionless access to financial services 24/7, but it also carries significant risks. Always research protocols thoroughly, understand smart contract risks, and never invest more than you can afford to lose.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 7: Layer 2 Scaling       -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="3" data-category="ethereum" style="--card-accent: linear-gradient(135deg, #627eea, #8b9cf7);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Layer 2 Scaling Solutions</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge advanced"><i class="fas fa-rocket"></i> Advanced</span>
+                    <span class="cat-tag cat-ethereum"><i class="fab fa-ethereum"></i> Ethereum & DeFi</span>
+                </div>
+                <div class="lesson-desc">Ethereum's scalability challenge has led to innovative Layer 2 solutions. Learn about rollups, sidechains, and the key differences between ZK and Optimistic approaches to scaling.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">15 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">6</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Rollups</span>
+                    <span class="lesson-topic-tag">Sidechains</span>
+                    <span class="lesson-topic-tag">ZK vs Optimistic</span>
+                    <span class="lesson-topic-tag">Polygon</span>
+                    <span class="lesson-topic-tag">Arbitrum</span>
+                    <span class="lesson-topic-tag">zkSync</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>As Ethereum's popularity grew, its limitations became apparent — the network can process only about 15-30 transactions per second, and gas fees can become prohibitively expensive during peak times. Layer 2 solutions were developed to address these issues while maintaining Ethereum's security.</p>
+                    <ul>
+                        <li><strong>Rollups:</strong> Rollups are Layer 2 solutions that execute transactions off-chain but post transaction data back to the Ethereum mainnet for security. By batching hundreds of transactions together and submitting a single proof to Layer 1, rollups can dramatically increase throughput while reducing costs by 10-100x. There are two main types: Optimistic Rollups and Zero-Knowledge (ZK) Rollups.</li>
+                        <li><strong>Sidechains:</strong> Sidechains are independent blockchains that run parallel to Ethereum and have their own consensus mechanism. They connect to Ethereum via bridges that allow assets to move between chains. Polygon (formerly Matic) is the most well-known sidechain. While sidechains offer high throughput and low fees, they don't inherit Ethereum's base-layer security.</li>
+                        <li><strong>ZK Rollups vs Optimistic Rollups:</strong> ZK Rollups use zero-knowledge proofs (specifically zk-SNARKs or zk-STARKs) to validate transactions off-chain and submit cryptographic proofs to Layer 1. They offer fast finality (proofs are verified quickly) but the math is complex. Optimistic Rollups assume transactions are valid by default and only run fraud proofs if a transaction is challenged. They're simpler to implement but have a challenge period (typically 7 days) for withdrawals, making finality slower.</li>
+                        <li><strong>Polygon:</strong> Polygon is a multi-chain scaling solution that started as a sidechain (Polygon PoS) and has expanded to include ZK-based solutions (Polygon zkEVM, Polygon Miden). The Polygon PoS network processes thousands of transactions per second with fees under a penny, making it popular for DeFi, gaming, and NFT applications.</li>
+                        <li><strong>Arbitrum:</strong> Arbitrum is the leading Optimistic Rollup solution by total value locked (TVL). Developed by Offchain Labs, Arbitrum offers full EVM compatibility, meaning developers can deploy their Ethereum contracts on Arbitrum with minimal modifications. It supports popular DeFi protocols including GMX, Pendle, and Radiant Capital.</li>
+                        <li><strong>zkSync:</strong> Developed by Matter Labs, zkSync is a ZK Rollup that aims to provide Ethereum-level security with Visa-level throughput. zkSync Era (its EVM-compatible version) supports smart contracts and offers lower fees than Ethereum mainnet. Its ZK technology provides near-instant finality without the long challenge periods required by Optimistic Rollups.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Layer 2 solutions are essential for Ethereum's mass adoption. They provide the scalability needed for everyday transactions while maintaining the security guarantees of the Ethereum mainnet. Each approach has different trade-offs between speed, cost, and security.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 8: Technical Analysis    -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="1" data-category="trading" style="--card-accent: linear-gradient(135deg, #34d399, #059669);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Technical Analysis Basics</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge intermediate"><i class="fas fa-fire"></i> Intermediate</span>
+                    <span class="cat-tag cat-trading"><i class="fas fa-chart-line"></i> Trading</span>
+                </div>
+                <div class="lesson-desc">Learn the essential tools and techniques of technical analysis used by crypto traders. Master candlestick patterns, key indicators, and how to identify trends and potential reversal points.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">10 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">5</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Candlestick Charts</span>
+                    <span class="lesson-topic-tag">Support/Resistance</span>
+                    <span class="lesson-topic-tag">RSI</span>
+                    <span class="lesson-topic-tag">MACD</span>
+                    <span class="lesson-topic-tag">Volume Analysis</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Technical analysis (TA) is the study of historical price data and chart patterns to predict future price movements. While not infallible, TA provides traders with a framework for making informed decisions based on market data rather than emotions.</p>
+                    <ul>
+                        <li><strong>Candlestick Charts:</strong> Candlesticks are the most popular charting format in crypto. Each candle shows four data points: the opening price, closing price, highest price, and lowest price during a given time period. A green (or white) candle indicates the closing price was higher than the opening (bullish), while a red (or black) candle means it closed lower (bearish). Key patterns to learn include doji, hammer, engulfing, and morning/evening star formations.</li>
+                        <li><strong>Support and Resistance:</strong> Support is a price level where buying pressure historically prevents further decline. Resistance is where selling pressure prevents further ascent. These levels form because of market psychology — traders remember where prices previously reversed and place orders accordingly. Identifying key support and resistance levels helps traders determine entry, exit, and stop-loss points.</li>
+                        <li><strong>RSI (Relative Strength Index):</strong> The RSI is a momentum oscillator that measures the speed and magnitude of price changes on a scale of 0 to 100. Traditionally, RSI values above 70 indicate overbought conditions (potential sell signal), while values below 30 indicate oversold conditions (potential buy signal). In strong trends, the RSI can remain in overbought or oversold territory for extended periods, so it should be used alongside other indicators.</li>
+                        <li><strong>MACD (Moving Average Convergence Divergence):</strong> The MACD is a trend-following momentum indicator that shows the relationship between two moving averages of a security's price. It consists of the MACD line (12-period EMA minus 26-period EMA), a signal line (9-period EMA of the MACD), and a histogram. Crossovers between the MACD line and signal line can signal trend changes. The histogram shows the distance between the two lines and helps gauge momentum strength.</li>
+                        <li><strong>Volume Analysis:</strong> Volume represents the total number of coins traded during a given period. It confirms the strength of price moves — a breakout accompanied by high volume is more likely to be genuine than one with low volume. Rising volume during an uptrend confirms bullish momentum, while rising volume during a downtrend confirms bearish pressure. Divergence between price and volume often signals a potential reversal.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>No single indicator is perfect. Professional traders combine multiple tools and always use risk management. Technical analysis is about probabilities, not certainties.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 9: Risk Management       -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="2" data-category="trading" style="--card-accent: linear-gradient(135deg, #34d399, #059669);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Risk Management in Crypto</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge beginner"><i class="fas fa-seedling"></i> Beginner</span>
+                    <span class="cat-tag cat-trading"><i class="fas fa-chart-line"></i> Trading</span>
+                </div>
+                <div class="lesson-desc">The most important skill in crypto isn't picking winners — it's managing risk. Learn position sizing, stop-loss strategies, dollar-cost averaging, and portfolio diversification to protect your capital.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">8 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">4</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Position Sizing</span>
+                    <span class="lesson-topic-tag">Stop-Loss</span>
+                    <span class="lesson-topic-tag">DCA Strategy</span>
+                    <span class="lesson-topic-tag">Diversification</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Crypto markets are notoriously volatile, with prices capable of dropping 20-50% in a single day. Without proper risk management, even good trades can result in devastating losses. This lesson covers the essential techniques every crypto investor should know.</p>
+                    <ul>
+                        <li><strong>Position Sizing:</strong> Position sizing determines how much of your portfolio to allocate to a single trade. A common rule is the "1% rule" — never risk more than 1% of your total portfolio on a single trade. If you have a $10,000 portfolio, your maximum loss per trade should be $100. This means even a string of losing trades won't significantly damage your capital. Position size should be calculated based on your stop-loss distance and account size, not arbitrary amounts.</li>
+                        <li><strong>Stop-Loss Orders:</strong> A stop-loss is an order that automatically sells your position when the price reaches a specified level, limiting your potential loss. Always set a stop-loss before entering a trade. Place it at a logical level (below support for long positions) rather than a round number. Trailing stop-losses can lock in profits as the price moves in your favor while still protecting against reversals.</li>
+                        <li><strong>Dollar-Cost Averaging (DCA):</strong> DCA is the practice of investing a fixed amount at regular intervals regardless of price. For example, buying $100 worth of Bitcoin every week. This strategy reduces the impact of volatility by averaging your purchase price over time. DCA eliminates the stress of trying to time the market and has historically outperformed lump-sum investing during bear markets.</li>
+                        <li><strong>Portfolio Diversification:</strong> Don't put all your eggs in one basket. A well-diversified crypto portfolio might include large-cap coins (BTC, ETH), mid-cap projects with strong fundamentals, and a small allocation to higher-risk/higher-reward opportunities. Consider diversifying across categories too: Layer 1s, DeFi, gaming, infrastructure, and stablecoins for stability. A common allocation is 50-60% in BTC/ETH, 20-30% in established altcoins, and 10-20% in smaller projects.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>The golden rule of crypto: never invest more than you can afford to lose entirely. Risk management is what separates surviving traders from those who get wiped out.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 10: Market Sentiment      -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="3" data-category="trading" style="--card-accent: linear-gradient(135deg, #34d399, #059669);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Understanding Market Sentiment</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge intermediate"><i class="fas fa-fire"></i> Intermediate</span>
+                    <span class="cat-tag cat-trading"><i class="fas fa-chart-line"></i> Trading</span>
+                </div>
+                <div class="lesson-desc">Market sentiment drives crypto prices as much as fundamentals. Learn to read the emotional state of the market using the Fear & Greed Index, social media analysis, and on-chain metrics.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">7 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">3</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Fear & Greed Index</span>
+                    <span class="lesson-topic-tag">Social Sentiment</span>
+                    <span class="lesson-topic-tag">On-Chain Metrics</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>In cryptocurrency markets, emotions often override rational analysis. Understanding market sentiment — the overall attitude of investors toward a particular asset or the market as a whole — can give you an edge in your trading decisions.</p>
+                    <ul>
+                        <li><strong>Fear & Greed Index:</strong> The Crypto Fear & Greed Index (popularized by Alternative.me) measures market sentiment on a scale of 0 to 100. A reading of 0 represents "Extreme Fear" (often a buying opportunity — "be greedy when others are fearful"), while 100 represents "Extreme Greed" (often a signal to take profits — "be fearful when others are greedy"). The index is calculated using volatility, market momentum, social media activity, surveys, Bitcoin dominance, and Google Trends data.</li>
+                        <li><strong>Social Sentiment Analysis:</strong> Social media platforms like X (Twitter), Reddit, and Telegram are powerful indicators of crypto market sentiment. Tools like LunarCrush, Santiment, and The TIE analyze social media posts to gauge public mood. Sudden spikes in positive mentions often precede short-term price rallies, while overwhelmingly positive sentiment at price peaks can signal a market top. Watch for "FOMO" (Fear Of Missing Out) posts as a contrarian warning signal.</li>
+                        <li><strong>On-Chain Metrics:</strong> On-chain data provides objective insights into network activity and investor behavior. Key metrics include: active addresses (number of unique participants), exchange inflows/outflows (large inflows to exchanges often signal selling pressure), whale transactions (large transfers by big holders), MVRV ratio (Market Value to Realized Value — high ratios suggest overvaluation), and NUPL (Net Unrealized Profit/Loss — indicates whether the market is in profit or loss). Platforms like Glassnode, CryptoQuant, and IntoTheBlock provide these analytics.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Warren Buffett's advice applies perfectly to crypto: "Be fearful when others are greedy, and greedy when others are fearful." Use sentiment as a contrarian tool, not as confirmation of your existing bias.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 11: Protecting Assets    -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="1" data-category="security" style="--card-accent: linear-gradient(135deg, #f87171, #dc2626);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Protecting Your Crypto Assets</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge beginner"><i class="fas fa-seedling"></i> Beginner</span>
+                    <span class="cat-tag cat-security"><i class="fas fa-shield-halved"></i> Security</span>
+                </div>
+                <div class="lesson-desc">Security should be your top priority in crypto. This practical guide covers the essential security measures every crypto user should implement, from two-factor authentication to hardware wallets.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">6 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">4</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">2FA</span>
+                    <span class="lesson-topic-tag">Phishing Attacks</span>
+                    <span class="lesson-topic-tag">Secure Passwords</span>
+                    <span class="lesson-topic-tag">Hardware Wallets</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>In the decentralized world of cryptocurrency, you are your own bank — and your own security team. Unlike traditional banking where institutions protect your money, in crypto, security is entirely your responsibility. A single mistake can result in irreversible loss of funds.</p>
+                    <ul>
+                        <li><strong>Two-Factor Authentication (2FA):</strong> 2FA adds an extra layer of security beyond your password. Always enable 2FA on every exchange, wallet, and crypto-related account. Use an authenticator app (Google Authenticator, Authy, or Aegis) rather than SMS-based 2FA, as SIM swapping attacks can intercept text messages. For maximum security, use a hardware security key (YubiKey) as your second factor where supported.</li>
+                        <li><strong>Phishing Attacks:</strong> Phishing is the most common attack in crypto. Scammers create fake websites, emails, and social media profiles that look identical to legitimate services. They trick you into entering your credentials or seed phrases. Always verify URLs carefully (bookmark legitimate sites), never click links in unsolicited messages, and never enter your seed phrase anywhere except your hardware wallet's physical screen. Check for the padlock icon and correct domain spelling.</li>
+                        <li><strong>Secure Passwords:</strong> Use a unique, strong password for every crypto service. A strong password should be at least 16 characters long and include uppercase, lowercase, numbers, and symbols. Use a password manager (Bitwarden, 1Password, or KeePass) to generate and store complex passwords. Never reuse passwords across different services — if one gets compromised, all your accounts with the same password are at risk.</li>
+                        <li><strong>Hardware Wallets:</strong> A hardware wallet is the gold standard for crypto security. Devices like Ledger, Trezor, and ColdCard store your private keys in a secure element, isolated from your computer and the internet. Only buy hardware wallets directly from the manufacturer's official website — never from third-party sellers (they may have been tampered with). Always verify the receiving address on the device screen before sending funds.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>The three rules of crypto security: (1) Never share your seed phrase with anyone, ever. (2) Always verify URLs and use bookmarks. (3) Use 2FA on every account. These three habits will protect you from the vast majority of crypto threats.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 12: Common Scams         -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="2" data-category="security" style="--card-accent: linear-gradient(135deg, #f87171, #dc2626);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Common Crypto Scams</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge beginner"><i class="fas fa-seedling"></i> Beginner</span>
+                    <span class="cat-tag cat-security"><i class="fas fa-shield-halved"></i> Security</span>
+                </div>
+                <div class="lesson-desc">Scammers are constantly developing new ways to steal your crypto. Learn to recognize the most common types of crypto scams so you can protect yourself and your investments.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">5 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">5</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Rug Pulls</span>
+                    <span class="lesson-topic-tag">Phishing</span>
+                    <span class="lesson-topic-tag">Ponzi Schemes</span>
+                    <span class="lesson-topic-tag">Fake Exchanges</span>
+                    <span class="lesson-topic-tag">Social Engineering</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>The crypto space, while innovative and full of opportunity, is also a magnet for scammers. Billions of dollars have been lost to crypto scams, and new schemes emerge constantly. Education is your best defense — understanding how scams work is the first step to avoiding them.</p>
+                    <ul>
+                        <li><strong>Rug Pulls:</strong> A rug pull occurs when developers create a seemingly legitimate token or DeFi protocol, attract investment, and then suddenly abandon the project and drain all the funds. Warning signs include: anonymous teams, no audited smart contracts, locked liquidity that can be removed, unrealistic return promises, and excessive marketing with no real product. Always check if the smart contract has been audited by reputable firms like CertiK or Trail of Bits.</li>
+                        <li><strong>Phishing Scams:</strong> Phishing scams trick users into revealing sensitive information. Common tactics include fake exchange login pages, impersonation of support staff on social media, malicious browser extensions, and fake airdrop notifications. Never enter your private keys or seed phrase on any website. Always navigate to exchange websites by typing the URL directly rather than clicking links.</li>
+                        <li><strong>Ponzi Schemes:</strong> Ponzi (or pyramid) schemes promise high, guaranteed returns that are paid using new investors' money rather than legitimate profits. They inevitably collapse when new investment slows. Warning signs include: guaranteed daily/weekly returns, referral-based rewards for recruiting others, lack of transparency about the investment strategy, and pressure to recruit new members. If it sounds too good to be true, it almost certainly is.</li>
+                        <li><strong>Fake Exchanges:</strong> Scammers create fake exchange websites that mimic legitimate platforms. When you deposit funds, they're stolen. These sites often appear in search engine ads or are promoted on social media. Always verify you're on the correct domain, look for reviews from trusted sources, and start with small deposits to test any new platform.</li>
+                        <li><strong>Social Engineering:</strong> Scammers may impersonate celebrities, influencers, tech support, or even your friends (through hacked accounts) to trick you into sending crypto. They may create urgency ("Your account will be frozen!"), offer "exclusive" investment opportunities, or claim you've won a prize. Never send crypto to addresses provided in direct messages, and always verify identities through multiple channels before acting on any financial request.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>If someone promises guaranteed returns in crypto, they're likely a scammer. The crypto market is volatile and no legitimate investment can guarantee profits. Always do your own research (DYOR) before investing in any project.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 13: Smart Contract Security -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="3" data-category="security" style="--card-accent: linear-gradient(135deg, #f87171, #dc2626);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Smart Contract Security</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge advanced"><i class="fas fa-rocket"></i> Advanced</span>
+                    <span class="cat-tag cat-security"><i class="fas fa-shield-halved"></i> Security</span>
+                </div>
+                <div class="lesson-desc">Smart contract vulnerabilities have led to billions in losses. Understand the most common attack vectors, the importance of audits, and the emerging field of formal verification in DeFi security.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">14 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">4</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">Audit Basics</span>
+                    <span class="lesson-topic-tag">Common Vulnerabilities</span>
+                    <span class="lesson-topic-tag">Reentrancy</span>
+                    <span class="lesson-topic-tag">Flash Loans</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Smart contracts are immutable once deployed — any bug or vulnerability is permanently exploitable. This immutability, combined with the massive amounts of value locked in DeFi protocols, makes smart contract security one of the most critical fields in blockchain technology.</p>
+                    <ul>
+                        <li><strong>Audit Basics:</strong> A smart contract audit is a comprehensive security review conducted by specialized security firms (like Trail of Bits, OpenZeppelin, ConsenSys Diligence, or CertiK). Auditors review the code for vulnerabilities, logic errors, and potential exploits. They use both manual code review and automated analysis tools (Slither, Mythril, Echidna). Audits are not a guarantee of security but significantly reduce risk. Always check if a protocol has been audited before depositing funds.</li>
+                        <li><strong>Common Vulnerabilities:</strong> The most frequent smart contract bugs include: integer overflow/underflow (exceeding numeric limits), unchecked external calls, improper access control, front-running (miners/validators reordering transactions for profit), oracle manipulation (exploiting price feed delays), and timestamp dependence. Solidity 0.8.0+ has built-in overflow/underflow checks, but developers must still be vigilant about other vulnerability types.</li>
+                        <li><strong>Reentrancy Attacks:</strong> Reentrancy is one of the most famous smart contract vulnerabilities, responsible for the infamous 2016 DAO hack that split Ethereum into ETH and ETC. A reentrancy attack occurs when an external contract calls back into the vulnerable contract before the first call finishes executing. The attacker can repeatedly withdraw funds before the balance is updated. The standard defense is the "checks-effects-interactions" pattern: check conditions first, update state (effects), then interact with external contracts.</li>
+                        <li><strong>Flash Loan Attacks:</strong> Flash loans are uncollateralized loans that must be borrowed and repaid within a single transaction. While they have legitimate uses (arbitrage, collateral swaps), they're also powerful attack tools. An attacker can borrow a massive amount, manipulate a protocol's price oracle or governance, exploit the manipulated state, repay the flash loan, and keep the profit — all in one atomic transaction. Defenses include using time-weighted average price (TWAP) oracles, multi-block delays, and circuit breakers.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Code is law in DeFi, and bugs can be catastrophically expensive. As a user, always use audited protocols. As a developer, follow security best practices: use established libraries (OpenZeppelin), write tests, get audits, and implement bug bounty programs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 14: NFTs Beyond Art       -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="1" data-category="nft" style="--card-accent: linear-gradient(135deg, #a78bfa, #7c3aed);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">NFTs: Beyond Digital Art</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge beginner"><i class="fas fa-seedling"></i> Beginner</span>
+                    <span class="cat-tag cat-nft"><i class="fas fa-palette"></i> NFT & Web3</span>
+                </div>
+                <div class="lesson-desc">NFTs represent unique digital assets on the blockchain. While they gained fame through digital art, their applications extend far beyond — from gaming and music to real estate and identity verification.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">7 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">5</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">What are NFTs</span>
+                    <span class="lesson-topic-tag">Use Cases</span>
+                    <span class="lesson-topic-tag">Minting</span>
+                    <span class="lesson-topic-tag">Marketplaces</span>
+                    <span class="lesson-topic-tag">Royalties</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Non-Fungible Tokens (NFTs) are unique digital assets verified using blockchain technology. Unlike fungible tokens like Bitcoin or Ethereum (where one coin is identical to another), each NFT has distinct properties and cannot be replicated or exchanged on a one-to-one basis.</p>
+                    <ul>
+                        <li><strong>What Are NFTs:</strong> An NFT is a digital certificate of ownership stored on the blockchain. It can represent virtually anything digital: artwork, music, videos, virtual real estate, in-game items, domain names, or even real-world assets like property deeds. The NFT standard most commonly used is ERC-721 (for unique items) and ERC-1155 (for semi-fungible items like game resources). Ownership is publicly verifiable and transferable on the blockchain.</li>
+                        <li><strong>Use Cases Beyond Art:</strong> While profile picture (PFP) collections like Bored Ape Yacht Club brought NFTs mainstream, real utility is emerging across industries: gaming (play-to-earn games use NFTs for in-game assets), music (artists sell directly to fans and earn royalties on secondary sales), ticketing (NFT tickets prevent fraud and can grant ongoing benefits), real estate (tokenized property ownership), supply chain tracking (verifying product authenticity), and decentralized identity (self-sovereign digital IDs).</li>
+                        <li><strong>Minting NFTs:</strong> Minting is the process of creating a new NFT on the blockchain. You can mint by deploying a smart contract or using platforms like OpenSea, Rarible, or Manifold. Minting requires a digital wallet with enough cryptocurrency to pay gas fees. Creators set properties like name, description, image, and optional unlockable content. On some platforms, "lazy minting" defers the gas fee until the first sale.</li>
+                        <li><strong>NFT Marketplaces:</strong> NFT marketplaces are platforms where users can buy, sell, and trade NFTs. OpenSea is the largest general marketplace. Other notable platforms include: Blur (popular for professional traders), Magic Eden (multi-chain marketplace), Foundation (curated art), NBA Top Shot (sports highlights), and LooksRare (community-owned alternative). Each has different fee structures, features, and community focuses.</li>
+                        <li><strong>Royalties:</strong> One of the most revolutionary aspects of NFTs is creator royalties. Artists can program a royalty percentage (typically 5-10%) into their smart contract that automatically pays them every time the NFT is resold on supporting marketplaces. This creates ongoing passive income for creators, unlike traditional art sales where the artist only profits from the initial sale. However, royalty enforcement varies across marketplaces, with some (like Blur) making royalties optional.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>NFTs are evolving from speculative digital collectibles into genuine utility tokens. The most promising NFT projects are those that solve real problems — not just digital images of monkeys. Focus on utility and community when evaluating NFT investments.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 15: Web3 and Future       -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="2" data-category="nft" style="--card-accent: linear-gradient(135deg, #a78bfa, #7c3aed);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Web3 and the Future Internet</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge intermediate"><i class="fas fa-fire"></i> Intermediate</span>
+                    <span class="cat-tag cat-nft"><i class="fas fa-palette"></i> NFT & Web3</span>
+                </div>
+                <div class="lesson-desc">Web3 represents the next evolution of the internet — a decentralized, user-owned web powered by blockchain technology. Explore DAOs, dApps, decentralized identity, and the token-based governance models shaping the future.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">9 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">4</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">DAOs</span>
+                    <span class="lesson-topic-tag">dApps</span>
+                    <span class="lesson-topic-tag">Decentralized Identity</span>
+                    <span class="lesson-topic-tag">Token Governance</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>Web3 is the vision for a new iteration of the internet that is decentralized, trustless, and user-owned. While Web1 was read-only (static websites) and Web2 is read-write (social media, user-generated content controlled by corporations), Web3 aims to be read-write-own — where users control their data, identity, and digital assets through blockchain technology.</p>
+                    <ul>
+                        <li><strong>DAOs (Decentralized Autonomous Organizations):</strong> DAOs are member-owned communities governed by smart contracts instead of centralized management. Members hold governance tokens that give them voting rights on proposals like treasury allocation, protocol upgrades, and partnerships. Notable DAOs include MakerDAO (governs the DAI stablecoin), Arbitrum DAO (governs the Arbitrum network), and ConstitutionDAO (which attempted to buy a copy of the US Constitution). DAOs enable global, transparent, and borderless organizational coordination.</li>
+                        <li><strong>dApps (Decentralized Applications):</strong> dApps are applications built on blockchain networks that operate without a central authority. They use smart contracts for backend logic and the blockchain for data storage. Popular dApp categories include DeFi platforms (Uniswap, Aave), NFT marketplaces (OpenSea), social media (Lens Protocol), gaming (Axie Infinity, The Sandbox), and productivity tools. dApps are open-source, censorship-resistant, and typically have their own token economy.</li>
+                        <li><strong>Decentralized Identity (DID):</strong> Web3 introduces the concept of self-sovereign identity — you own and control your digital identity without relying on centralized authorities. Your identity is stored as NFTs or verifiable credentials on the blockchain. Projects like ENS (Ethereum Name Service), Worldcoin, and Ceramic are building identity layers for Web3. This enables portable reputation across platforms, proof of credentials without revealing personal data, and resistance to identity theft.</li>
+                        <li><strong>Token Governance:</strong> Governance tokens give holders the right to participate in protocol decisions. This creates a new model of collective ownership and decision-making. Token holders can propose changes and vote on them using on-chain or off-chain mechanisms. However, token governance faces challenges including plutocracy (whale dominance), voter apathy (low participation rates), and regulatory uncertainty around whether governance tokens constitute securities.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Web3 is still in its early stages, and its ultimate form will likely be different from today's vision. While the promises of decentralization and user ownership are compelling, challenges around scalability, UX, and regulation must be solved for mainstream adoption.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================== -->
+        <!-- LESSON 16: Global Regulations    -->
+        <!-- ============================== -->
+        <div class="lesson-card animate-in" data-delay="1" data-category="regulation" style="--card-accent: linear-gradient(135deg, #3b82f6, #2563eb);" onclick="toggleLesson(this)">
+            <div class="lesson-card-inner">
+                <div class="lesson-card-header">
+                    <div class="lesson-card-title">Global Crypto Regulations</div>
+                    <div class="lesson-expand-icon"><i class="fas fa-chevron-down"></i></div>
+                </div>
+                <div class="lesson-badges">
+                    <span class="diff-badge intermediate"><i class="fas fa-fire"></i> Intermediate</span>
+                    <span class="cat-tag cat-regulation"><i class="fas fa-gavel"></i> Regulation</span>
+                </div>
+                <div class="lesson-desc">Crypto regulation varies dramatically across the globe. Understand the major regulatory frameworks that affect the crypto industry, from the EU's MiCA to US SEC oversight, and how they impact your crypto activities.</div>
+                <div class="lesson-meta">
+                    <span class="lesson-meta-item"><i class="fas fa-clock"></i> <span class="value">8 min</span> read</span>
+                    <span class="lesson-meta-item"><i class="fas fa-list"></i> <span class="value">5</span> topics</span>
+                </div>
+                <div class="lesson-topics">
+                    <span class="lesson-topic-tag">MiCA</span>
+                    <span class="lesson-topic-tag">SEC Framework</span>
+                    <span class="lesson-topic-tag">Taxation</span>
+                    <span class="lesson-topic-tag">Compliance</span>
+                    <span class="lesson-topic-tag">KYC/AML</span>
+                </div>
+            </div>
+            <div class="lesson-expandable">
+                <div class="lesson-content">
+                    <h4><i class="fas fa-book-reader"></i> Lesson Content</h4>
+                    <p>As cryptocurrency has grown from a niche experiment to a trillion-dollar asset class, governments worldwide have scrambled to develop regulatory frameworks. Understanding these regulations is essential for anyone involved in crypto, whether as an investor, developer, or business operator.</p>
+                    <ul>
+                        <li><strong>MiCA (Markets in Crypto-Assets):</strong> The EU's Markets in Crypto-Assets regulation, fully effective since December 2024, is the world's first comprehensive crypto regulatory framework. MiCA establishes clear rules for crypto asset issuers and service providers, including licensing requirements, capital reserves, consumer protection measures, and disclosure obligations. It categorizes crypto assets into e-money tokens, asset-referenced tokens (stablecoins), and other crypto assets, with specific rules for each. MiCA aims to create a unified regulatory environment across all 27 EU member states.</li>
+                        <li><strong>SEC Framework (United States):</strong> The US Securities and Exchange Commission (SEC) has taken an enforcement-heavy approach to crypto regulation. The central question is whether a crypto token qualifies as a security under the Howey Test — if investors expect profits primarily from the efforts of others, it likely does. This has led to enforcement actions against major exchanges (Coinbase, Binance) and projects. The SEC's approach has been criticized as "regulation by enforcement" rather than providing clear, prospective rules. Recent court rulings have provided some clarity, but comprehensive legislation like the FIT21 Act remains pending.</li>
+                        <li><strong>Crypto Taxation:</strong> In most jurisdictions, cryptocurrency is subject to taxation. In the US, the IRS treats crypto as property — every sale, trade, or use of crypto to purchase goods is a taxable event. Capital gains tax applies (short-term for holdings under one year, long-term for over one year). Mining income and staking rewards are taxed as ordinary income. Other countries have varying approaches: Germany offers tax-free status for crypto held over one year, Portugal recently introduced crypto taxation, while El Salvador and the UAE offer more favorable tax environments.</li>
+                        <li><strong>Compliance:</strong> Crypto businesses must navigate a complex web of compliance requirements. These include registering with financial regulators, implementing anti-money laundering (AML) programs, maintaining records of transactions, reporting suspicious activities, and ensuring data protection compliance (GDPR). Non-compliance can result in severe penalties, including fines, license revocation, and criminal charges. Compliance is particularly challenging for DeFi protocols that operate without centralized operators.</li>
+                        <li><strong>KYC/AML (Know Your Customer / Anti-Money Laundering):</strong> KYC requires financial service providers to verify the identity of their customers. AML regulations mandate monitoring transactions for suspicious activity and reporting to authorities. Most regulated exchanges require KYC verification before allowing trading or withdrawals. The crypto industry has developed specialized tools like Chainalysis, Elliptic, and TRM Labs to help with blockchain analytics and compliance. The Travel Rule requires financial institutions to share sender and recipient information for transactions above certain thresholds.</li>
+                    </ul>
+                    <div class="content-tip">
+                        <strong><i class="fas fa-lightbulb"></i> Key Takeaway</strong>
+                        <p>Regulation is evolving rapidly. What's legal today may not be tomorrow, and requirements vary by jurisdiction. Stay informed about regulations in your country, keep records of all crypto transactions for tax purposes, and use compliant platforms when possible.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== EMPTY STATE ========== -->
+        <div class="lesson-empty" id="lessonEmpty" style="display: none;">
+            <i class="fas fa-search"></i>
+            <p>No lessons found in this category. Try selecting a different filter.</p>
+        </div>
+
+    </div>
+
+    <!-- ========== SECTION DIVIDER ========== -->
+    <div class="section-divider">
+        <div class="section-divider-icon"><i class="fas fa-book"></i></div>
+    </div>
+
+    <!-- ========== GLOSSARY SECTION ========== -->
+    <div class="glossary-section animate-in" id="glossary">
+        <div class="glossary-header">
+            <div class="glossary-title">
+                <i class="fas fa-book-open"></i>
+                Crypto Glossary
+            </div>
+            <div class="glossary-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="glossarySearch" placeholder="Search terms..." oninput="filterGlossary(this.value)">
+            </div>
+        </div>
+
+        <div class="glossary-card">
+            <div class="glossary-grid" id="glossaryGrid">
+
+                <div class="glossary-item" data-term="airdrop">
+                    <span class="glossary-item-term">Airdrop</span>
+                    <span class="glossary-item-def">A free distribution of cryptocurrency tokens or NFTs to wallet addresses, typically used as a marketing strategy or to reward early adopters of a project.</span>
+                </div>
+
+                <div class="glossary-item" data-term="all-time-high ath">
+                    <span class="glossary-item-term">ATH (All-Time High)</span>
+                    <span class="glossary-item-def">The highest price ever reached by a cryptocurrency asset, often used as a benchmark for measuring market performance and investor sentiment.</span>
+                </div>
+
+                <div class="glossary-item" data-term="bear market bearish">
+                    <span class="glossary-item-term">Bear Market</span>
+                    <span class="glossary-item-def">A prolonged period of declining cryptocurrency prices, typically defined as a drop of 20% or more from recent highs, often accompanied by pessimistic market sentiment.</span>
+                </div>
+
+                <div class="glossary-item" data-term="bitcoin btc">
+                    <span class="glossary-item-term">Bitcoin (BTC)</span>
+                    <span class="glossary-item-def">The first and largest cryptocurrency by market capitalization, created in 2009 by the pseudonymous Satoshi Nakamoto as a decentralized, peer-to-peer digital payment system.</span>
+                </div>
+
+                <div class="glossary-item" data-term="blockchain block chain">
+                    <span class="glossary-item-term">Blockchain</span>
+                    <span class="glossary-item-def">A distributed, immutable digital ledger that records transactions across a network of computers, ensuring transparency, security, and trust without the need for intermediaries.</span>
+                </div>
+
+                <div class="glossary-item" data-term="bull market bullish">
+                    <span class="glossary-item-term">Bull Market</span>
+                    <span class="glossary-item-def">A prolonged period of rising cryptocurrency prices, typically defined as an increase of 20% or more from recent lows, often characterized by optimism and increased trading activity.</span>
+                </div>
+
+                <div class="glossary-item" data-term="dao decentralized autonomous">
+                    <span class="glossary-item-term">DAO</span>
+                    <span class="glossary-item-def">Decentralized Autonomous Organization — a member-owned community governed by smart contracts and token-based voting, enabling collective decision-making without centralized leadership.</span>
+                </div>
+
+                <div class="glossary-item" data-term="defi decentralized finance">
+                    <span class="glossary-item-term">DeFi</span>
+                    <span class="glossary-item-def">Decentralized Finance — an ecosystem of blockchain-based financial applications that operate without traditional intermediaries, offering services like lending, trading, and insurance through smart contracts.</span>
+                </div>
+
+                <div class="glossary-item" data-term="dex decentralized exchange">
+                    <span class="glossary-item-term">DEX</span>
+                    <span class="glossary-item-def">Decentralized Exchange — a peer-to-peer cryptocurrency trading platform that operates without a central authority, using automated market makers and liquidity pools to facilitate trades.</span>
+                </div>
+
+                <div class="glossary-item" data-term="dapp decentralized application">
+                    <span class="glossary-item-term">DApp</span>
+                    <span class="glossary-item-def">Decentralized Application — a software application built on a blockchain network that runs on smart contracts rather than centralized servers, offering censorship resistance and user ownership.</span>
+                </div>
+
+                <div class="glossary-item" data-term="fork hard soft">
+                    <span class="glossary-item-term">Fork</span>
+                    <span class="glossary-item-def">A change to a blockchain's protocol that creates two separate versions of the ledger — a hard fork creates incompatible chains, while a soft fork maintains backward compatibility.</span>
+                </div>
+
+                <div class="glossary-item" data-term="gas fee gas">
+                    <span class="glossary-item-term">Gas Fee</span>
+                    <span class="glossary-item-def">The fee paid to blockchain validators or miners for processing and confirming transactions, measured in small fractions of the native cryptocurrency (e.g., gwei on Ethereum).</span>
+                </div>
+
+                <div class="glossary-item" data-term="hodl hold">
+                    <span class="glossary-item-term">HODL</span>
+                    <span class="glossary-item-def">A crypto slang term derived from a misspelled "hold," meaning to keep your cryptocurrency investments long-term regardless of market volatility rather than selling during price dips.</span>
+                </div>
+
+                <div class="glossary-item" data-term="market cap capitalization">
+                    <span class="glossary-item-term">Market Cap</span>
+                    <span class="glossary-item-def">The total value of all coins in circulation for a cryptocurrency, calculated by multiplying the current price by the circulating supply — a key metric for comparing asset sizes.</span>
+                </div>
+
+                <div class="glossary-item" data-term="nft non-fungible">
+                    <span class="glossary-item-term">NFT</span>
+                    <span class="glossary-item-def">Non-Fungible Token — a unique digital asset verified on the blockchain that represents ownership of a distinct item, such as artwork, music, videos, or virtual real estate.</span>
+                </div>
+
+                <div class="glossary-item" data-term="p2p peer-to-peer">
+                    <span class="glossary-item-term">Peer-to-Peer (P2P)</span>
+                    <span class="glossary-item-def">A decentralized communication model where two or more parties interact directly without an intermediary, fundamental to how blockchain networks and cryptocurrency transactions operate.</span>
+                </div>
+
+                <div class="glossary-item" data-term="private key secret key">
+                    <span class="glossary-item-term">Private Key</span>
+                    <span class="glossary-item-def">A cryptographic string of characters that proves ownership of a cryptocurrency wallet and authorizes transactions — losing your private key means permanently losing access to your funds.</span>
+                </div>
+
+                <div class="glossary-item" data-term="public key address">
+                    <span class="glossary-item-term">Public Key</span>
+                    <span class="glossary-item-def">A cryptographic address derived from your private key that you share with others to receive cryptocurrency — it functions like a bank account number that is safe to distribute publicly.</span>
+                </div>
+
+                <div class="glossary-item" data-term="rug pull exit scam">
+                    <span class="glossary-item-term">Rug Pull</span>
+                    <span class="glossary-item-def">A type of crypto scam where developers suddenly abandon a project and drain all investor funds after building hype and attracting capital, leaving buyers with worthless tokens.</span>
+                </div>
+
+                <div class="glossary-item" data-term="smart contract contract">
+                    <span class="glossary-item-term">Smart Contract</span>
+                    <span class="glossary-item-def">A self-executing program stored on the blockchain that automatically enforces the terms of an agreement when predetermined conditions are met, eliminating the need for intermediaries.</span>
+                </div>
+
+                <div class="glossary-item" data-term="staking stake pos">
+                    <span class="glossary-item-term">Staking</span>
+                    <span class="glossary-item-def">The process of locking cryptocurrency in a blockchain network to support its operations (validating transactions) in exchange for earning rewards, used in Proof of Stake consensus mechanisms.</span>
+                </div>
+
+                <div class="glossary-item" data-term="token cryptocurrency coin">
+                    <span class="glossary-item-term">Token</span>
+                    <span class="glossary-item-def">A digital unit of value created on an existing blockchain (unlike coins, which have their own native blockchain), used for various purposes including governance, utility, and representational rights.</span>
+                </div>
+
+                <div class="glossary-item" data-term="wallet crypto wallet">
+                    <span class="glossary-item-term">Wallet</span>
+                    <span class="glossary-item-def">A software program or physical device that stores your private keys and allows you to send, receive, and manage cryptocurrency — types include hot wallets (online) and cold wallets (offline).</span>
+                </div>
+
+                <div class="glossary-item" data-term="yield farming liquidity mining">
+                    <span class="glossary-item-term">Yield Farming</span>
+                    <span class="glossary-item-def">The practice of lending or staking cryptocurrency assets in DeFi protocols to earn returns, often measured as APY, by providing liquidity or participating in incentive programs across multiple platforms.</span>
+                </div>
+
+            </div>
+
+            <div class="glossary-empty" id="glossaryEmpty" style="display: none;">
+                <i class="fas fa-search"></i>
+                <p>No matching terms found. Try a different search term.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SECTION DIVIDER ========== -->
+    <div class="section-divider">
+        <div class="section-divider-icon"><i class="fab fa-telegram"></i></div>
+    </div>
+
+    <!-- ========== CTA SECTION ========== -->
+    <div class="academy-cta animate-in">
+        <div class="academy-cta-icon">
+            <i class="fab fa-telegram-plane"></i>
+        </div>
+        <h2>Join Our Telegram Community</h2>
+        <p>Get exclusive educational content, market analysis, and real-time updates directly in your Telegram app. Join 50,000+ learners who are mastering crypto together.</p>
+        <a href="https://t.me/cryptositnews" target="_blank" rel="noopener" class="cta-btn">
+            <i class="fab fa-telegram-plane"></i> Join CryptositNews on Telegram
+        </a>
+    </div>
+
+</div>
+
+<!-- ========== JAVASCRIPT ========== -->
+<script>
+    // ============================================
+    // LESSON EXPAND / COLLAPSE
+    // ============================================
+    function toggleLesson(card) {
+        const wasExpanded = card.classList.contains('expanded');
+        // Optionally close all other cards first
+        // document.querySelectorAll('.lesson-card.expanded').forEach(c => c.classList.remove('expanded'));
+        card.classList.toggle('expanded');
+    }
+
+    // ============================================
+    // CATEGORY FILTER
+    // ============================================
+    function filterLessons(category, btn) {
+        // Update active tab
+        document.querySelectorAll('#academyFilters .academy-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+
+        const cards = document.querySelectorAll('.lesson-card');
+        let visibleCount = 0;
+
+        cards.forEach((card, i) => {
+            const cardCategory = card.getAttribute('data-category');
+            const show = (category === 'all' || cardCategory === category);
+
+            if (show) {
+                card.style.display = '';
+                card.style.animation = 'fadeInUp 0.4s ease forwards ' + (visibleCount * 0.06) + 's';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+                card.style.animation = '';
+                card.classList.remove('expanded');
+            }
+        });
+
+        // Show/hide empty state
+        const emptyState = document.getElementById('lessonEmpty');
+        if (emptyState) {
+            emptyState.style.display = visibleCount === 0 ? '' : 'none';
+        }
+    }
+
+    // ============================================
+    // GLOSSARY SEARCH
+    // ============================================
+    function filterGlossary(query) {
+        const items = document.querySelectorAll('#glossaryGrid .glossary-item');
+        const normalizedQuery = query.toLowerCase().trim();
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const term = item.getAttribute('data-term').toLowerCase();
+            const termText = item.querySelector('.glossary-item-term').textContent.toLowerCase();
+            const defText = item.querySelector('.glossary-item-def').textContent.toLowerCase();
+
+            const match = !normalizedQuery ||
+                term.includes(normalizedQuery) ||
+                termText.includes(normalizedQuery) ||
+                defText.includes(normalizedQuery);
+
+            item.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+
+        // Show/hide glossary empty state
+        const glossaryEmpty = document.getElementById('glossaryEmpty');
+        if (glossaryEmpty) {
+            glossaryEmpty.style.display = visibleCount === 0 ? '' : 'none';
+        }
+    }
+</script>
+{% endblock %}

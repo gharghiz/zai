@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+
+{% block title %}Crypto Events Calendar - CryptositNews{% endblock %}
+{% block og_title %}Crypto Events Calendar - CryptositNews{% endblock %}
+{% block og_desc %}Stay ahead with our comprehensive crypto events calendar. Track network upgrades, conferences, token unlocks, regulatory deadlines, and more.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-page { max-width: 1200px; margin: 0 auto; }
+
+    /* Page Header */
+    .page-hero {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        padding: 2.5rem 1rem;
+        background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(167,139,250,0.06));
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        position: relative;
+        overflow: hidden;
+    }
+    .page-hero::before {
+        content: '';
+        position: absolute; top: -50%; right: -30%;
+        width: 300px; height: 300px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(34,211,238,0.08), transparent 70%);
+        pointer-events: none;
+    }
+    .page-hero h1 {
+        font-size: 2.2rem; font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text; margin-bottom: 0.6rem;
+    }
+    .page-hero p { color: var(--text-secondary); font-size: 1rem; max-width: 600px; margin: 0 auto; }
+
+    /* Stats Row */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 1.2rem;
+        text-align: center;
+        transition: var(--transition);
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-glow);
+        border-color: rgba(34,211,238,0.2);
+    }
+    .stat-card .stat-icon {
+        width: 42px; height: 42px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 0.8rem; font-size: 1rem;
+    }
+    .stat-card .stat-value {
+        font-size: 1.6rem; font-weight: 900;
+        margin-bottom: 0.2rem;
+    }
+    .stat-card .stat-label {
+        font-size: 0.78rem; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+    }
+
+    /* Filters Bar */
+    .filters-bar {
+        display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 2rem;
+        padding: 1rem 1.2rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        align-items: center;
+    }
+    .filter-select {
+        padding: 8px 14px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.85rem; font-family: inherit;
+        cursor: pointer; outline: none;
+        transition: var(--transition);
+        min-width: 150px;
+    }
+    .filter-select:focus { border-color: var(--accent-cyan); }
+    .filter-select option { background: var(--bg-secondary); color: var(--text-primary); }
+
+    .filter-search {
+        flex: 1; min-width: 200px;
+        padding: 8px 14px 8px 36px;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.85rem; font-family: inherit;
+        outline: none; transition: var(--transition);
+    }
+    .filter-search:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.1); }
+    .filter-search-wrapper {
+        position: relative; flex: 1; min-width: 200px;
+    }
+    .filter-search-wrapper i {
+        position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+        color: var(--text-muted); font-size: 0.8rem; pointer-events: none;
+    }
+
+    /* Status filter pills */
+    .filter-pills {
+        display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .filter-pill {
+        padding: 6px 14px; border-radius: 20px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.8rem;
+        cursor: pointer; transition: var(--transition); font-weight: 500;
+    }
+    .filter-pill:hover { border-color: var(--accent-cyan); color: var(--text-primary); }
+    .filter-pill.active {
+        background: rgba(34,211,238,0.12); border-color: var(--accent-cyan);
+        color: var(--accent-cyan); font-weight: 700;
+    }
+
+    /* Month Sections */
+    .month-section {
+        margin-bottom: 2.5rem;
+    }
+    .month-header {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 1.2rem; padding-bottom: 0.8rem;
+        border-bottom: 2px solid var(--border-glass);
+    }
+    .month-header h2 {
+        font-size: 1.3rem; font-weight: 800;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .month-header .month-count {
+        font-size: 0.72rem; padding: 3px 10px;
+        border-radius: 12px; background: rgba(34,211,238,0.12);
+        color: var(--accent-cyan); font-weight: 700;
+    }
+    .month-header i { color: var(--accent-cyan); font-size: 1.1rem; }
+
+    /* Event Cards */
+    .events-list { display: flex; flex-direction: column; gap: 1rem; }
+
+    .event-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        transition: var(--transition);
+        display: flex; gap: 1.2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .event-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-glow);
+        border-color: rgba(34,211,238,0.2);
+    }
+    .event-card.status-live {
+        border-color: rgba(52,211,153,0.3);
+    }
+    .event-card.status-live::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, var(--accent-green), #4ade80);
+        animation: pulse-glow 2s ease infinite;
+    }
+    .event-card.status-completed { opacity: 0.55; }
+    .event-card.status-completed:hover { opacity: 0.8; }
+    .event-card.importance-high {
+        border-left: 4px solid var(--accent-orange);
+    }
+
+    /* Event Date Badge */
+    .event-date-badge {
+        flex-shrink: 0;
+        text-align: center;
+        min-width: 64px;
+        padding: 10px 8px;
+        border-radius: var(--radius-md);
+        background: var(--gradient-card);
+        border: 1px solid var(--border-glass);
+    }
+    .event-date-badge .day {
+        font-size: 1.6rem; font-weight: 900;
+        color: var(--text-primary); line-height: 1;
+    }
+    .event-date-badge .month-label {
+        font-size: 0.68rem; font-weight: 700;
+        color: var(--accent-cyan); text-transform: uppercase;
+        letter-spacing: 0.5px; margin-top: 2px;
+    }
+    .event-date-badge .time-label {
+        font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;
+    }
+
+    /* Event Body */
+    .event-body { flex: 1; min-width: 0; }
+    .event-meta-top {
+        display: flex; gap: 8px; flex-wrap: wrap;
+        align-items: center; margin-bottom: 0.6rem;
+    }
+    .event-cat-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 10px; border-radius: 6px;
+        font-size: 0.72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .event-status-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 8px; border-radius: 4px;
+        font-size: 0.68rem; font-weight: 700;
+    }
+    .event-status-badge.upcoming {
+        background: rgba(34,211,238,0.12); color: var(--accent-cyan);
+    }
+    .event-status-badge.live {
+        background: rgba(52,211,153,0.15); color: var(--accent-green);
+        animation: neonPulse 2s ease infinite;
+    }
+    .event-status-badge.completed {
+        background: rgba(148,163,184,0.12); color: var(--text-muted);
+    }
+    .event-importance-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 8px; border-radius: 4px;
+        font-size: 0.68rem; font-weight: 700;
+    }
+    .event-importance-badge.high {
+        background: rgba(251,146,60,0.12); color: var(--accent-orange);
+    }
+    .event-importance-badge.medium {
+        background: rgba(251,191,36,0.12); color: var(--accent-yellow);
+    }
+    .event-importance-badge.low {
+        background: rgba(148,163,184,0.12); color: var(--text-muted);
+    }
+
+    .event-title {
+        font-size: 1.05rem; font-weight: 800;
+        color: var(--text-primary); margin-bottom: 0.4rem;
+        line-height: 1.4;
+    }
+    .event-card.status-completed .event-title { text-decoration: line-through; text-decoration-color: var(--text-muted); }
+    .event-description {
+        font-size: 0.88rem; color: var(--text-secondary);
+        line-height: 1.7; margin-bottom: 0.8rem;
+    }
+    .event-tags {
+        display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 0.6rem;
+    }
+    .event-tag {
+        padding: 3px 8px; border-radius: 4px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        font-size: 0.7rem; color: var(--text-muted); font-weight: 500;
+    }
+    .event-coins {
+        display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .coin-badge {
+        padding: 3px 8px; border-radius: 4px;
+        background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.15);
+        font-size: 0.7rem; color: var(--accent-yellow); font-weight: 700;
+    }
+    .event-footer {
+        display: flex; gap: 12px; align-items: center;
+        margin-top: 0.8rem; flex-wrap: wrap;
+    }
+    .event-link {
+        font-size: 0.78rem; color: var(--accent-cyan);
+        display: flex; align-items: center; gap: 4px;
+        font-weight: 600; transition: var(--transition);
+    }
+    .event-link:hover { color: var(--accent-blue); transform: translateX(2px); }
+
+    /* Category filter pills */
+    .category-pills {
+        display: flex; gap: 6px; flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .category-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 12px; border-radius: 20px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.78rem;
+        cursor: pointer; transition: var(--transition); font-weight: 500;
+    }
+    .category-pill:hover {
+        background: var(--bg-glass-hover); border-color: var(--border-glow);
+    }
+    .category-pill.active {
+        border-color: var(--accent-cyan); color: var(--accent-cyan);
+        background: rgba(34,211,238,0.08);
+    }
+    .category-pill i { font-size: 0.72rem; }
+    .category-pill .pill-count {
+        font-size: 0.65rem; padding: 1px 6px;
+        border-radius: 10px; background: rgba(255,255,255,0.06);
+        font-weight: 700;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center; padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; display: block; }
+    .empty-state h3 { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+
+    /* Share Bar for Events Page */
+    .page-share-bar {
+        display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+        margin-bottom: 2rem; padding: 0.8rem 1rem;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md);
+    }
+    .page-share-bar .share-label { margin-right: 4px; }
+    .page-share-btn {
+        padding: 6px 12px; border-radius: var(--radius-sm);
+        background: var(--bg-glass-hover); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.78rem;
+        cursor: pointer; transition: var(--transition);
+        display: flex; align-items: center; gap: 5px; font-weight: 500;
+        text-decoration: none;
+    }
+    .page-share-btn:hover { color: var(--text-primary); transform: translateY(-2px); border-color: var(--border-glow); }
+    .page-share-btn.twitter:hover { background: rgba(29,161,242,0.12); color: #1DA1F2; border-color: rgba(29,161,242,0.3); }
+    .page-share-btn.telegram:hover { background: rgba(34,158,217,0.12); color: #229ED9; border-color: rgba(34,158,217,0.3); }
+    .page-share-btn.whatsapp:hover { background: rgba(37,211,102,0.12); color: #25D366; border-color: rgba(37,211,102,0.3); }
+
+    @media (max-width: 768px) {
+        .event-card { flex-direction: column; gap: 0.8rem; }
+        .event-date-badge { display: flex; align-items: center; gap: 10px; min-width: auto; text-align: left; }
+        .page-hero h1 { font-size: 1.5rem; }
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        .filters-bar { flex-direction: column; }
+        .filter-select { width: 100%; }
+        .filter-search-wrapper { width: 100%; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="calendar-page animate-in">
+    <!-- Page Hero -->
+    <div class="page-hero">
+        <h1><i class="fas fa-calendar-alt"></i> Crypto Events Calendar</h1>
+        <p>Track upcoming crypto events — network upgrades, conferences, token unlocks, regulatory decisions, and more. Never miss an important date.</p>
+    </div>
+
+    <!-- Share Bar -->
+    <div class="page-share-bar">
+        <span class="share-label" style="color: var(--text-muted); font-size: 0.82rem; display: flex; align-items: center; gap: 5px;">
+            <i class="fas fa-share-alt"></i> Share:
+        </span>
+        <a href="https://twitter.com/intent/tweet?text=Crypto%20Events%20Calendar%20%F0%9F%93%85&url=https://cryptositnews.com/calendar" target="_blank" class="page-share-btn twitter"><i class="fab fa-twitter"></i> Twitter</a>
+        <a href="https://t.me/share/url?url=https://cryptositnews.com/calendar&text=Crypto%20Events%20Calendar" target="_blank" class="page-share-btn telegram"><i class="fab fa-telegram"></i> Telegram</a>
+        <a href="https://wa.me/?text=Crypto%20Events%20Calendar%20%F0%9F%93%85%20https://cryptositnews.com/calendar" target="_blank" class="page-share-btn whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow">
+        <!-- Filled by JS -->
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+        <div class="filter-pills" id="statusFilters">
+            <button class="filter-pill active" data-status="all" onclick="filterByStatus('all')">All</button>
+            <button class="filter-pill" data-status="upcoming" onclick="filterByStatus('upcoming')"><i class="fas fa-clock" style="font-size:0.7rem;"></i> Upcoming</button>
+            <button class="filter-pill" data-status="live" onclick="filterByStatus('live')"><i class="fas fa-circle" style="font-size:0.5rem; color:var(--accent-green);"></i> Live</button>
+            <button class="filter-pill" data-status="completed" onclick="filterByStatus('completed')"><i class="fas fa-check" style="font-size:0.7rem;"></i> Completed</button>
+        </div>
+        <div class="filter-search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" class="filter-search" id="searchInput" placeholder="Search events, coins, tags..." oninput="debounceSearch()">
+        </div>
+    </div>
+
+    <!-- Category Pills -->
+    <div class="category-pills" id="categoryPills">
+        <!-- Filled by JS -->
+    </div>
+
+    <!-- Events Container -->
+    <div id="eventsContainer">
+        <!-- Filled by JS -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const PAGE_URL = 'https://cryptositnews.com/calendar';
+let currentStatus = 'all';
+let currentCategory = 'all';
+let searchQuery = '';
+let allEvents = [];
+
+const CATEGORY_META = {
+    network_upgrade: { name: "Network Upgrade", icon: "fas fa-server", color: "#22d3ee" },
+    conference: { name: "Conference", icon: "fas fa-users", color: "#a78bfa" },
+    airdrop: { name: "Airdrop / Campaign", icon: "fas fa-parachute-box", color: "#34d399" },
+    regulation: { name: "Regulation", icon: "fas fa-gavel", color: "#f87171" },
+    token_unlock: { name: "Token Unlock", icon: "fas fa-lock-open", color: "#fb923c" },
+    mainnet_launch: { name: "Mainnet Launch", icon: "fas fa-rocket", color: "#fbbf24" },
+    hard_fork: { name: "Hard Fork", icon: "fas fa-code-branch", color: "#f472b6" },
+    listing: { name: "Exchange Listing", icon: "fas fa-plus-circle", color: "#60a5fa" },
+    milestone: { name: "Milestone", icon: "fas fa-flag", color: "#c084fc" },
+    macro_economic: { name: "Macro Economic", icon: "fas fa-landmark", color: "#94a3b8" },
+    stablecoin: { name: "Stablecoin Event", icon: "fas fa-dollar-sign", color: "#4ade80" },
+};
+
+const MONTH_NAMES = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+
+let searchTimer;
+function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+        renderEvents();
+    }, 300);
+}
+
+function filterByStatus(status) {
+    currentStatus = status;
+    document.querySelectorAll('#statusFilters .filter-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.status === status);
+    });
+    renderEvents();
+}
+
+function filterByCategory(category) {
+    currentCategory = category;
+    document.querySelectorAll('#categoryPills .category-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.cat === category);
+    });
+    renderEvents();
+}
+
+function formatDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00Z');
+    return {
+        day: d.getUTCDate(),
+        month: MONTH_NAMES[d.getUTCMonth()].substring(0, 3),
+        full: MONTH_NAMES[d.getUTCMonth()] + ' ' + d.getUTCDate(),
+        monthKey: dateStr.substring(0, 7),
+        yearMonth: MONTH_NAMES[d.getUTCMonth()] + ' ' + d.getUTCFullYear()
+    };
+}
+
+function getDaysUntil(dateStr) {
+    const now = new Date();
+    const event = new Date(dateStr + 'T23:59:59Z');
+    const diff = Math.ceil((event - now) / (1000 * 60 * 60 * 24));
+    if (diff < 0) return null;
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    return 'In ' + diff + ' days';
+}
+
+function renderStats(stats) {
+    const el = document.getElementById('statsRow');
+    el.innerHTML = `
+        <div class="stat-card" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0s; opacity: 0;">
+            <div class="stat-icon" style="background: rgba(34,211,238,0.12); color: var(--accent-cyan);"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-value" style="color: var(--accent-cyan);">${stats.total}</div>
+            <div class="stat-label">Total Events</div>
+        </div>
+        <div class="stat-card" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.1s; opacity: 0;">
+            <div class="stat-icon" style="background: rgba(52,211,153,0.12); color: var(--accent-green);"><i class="fas fa-clock"></i></div>
+            <div class="stat-value" style="color: var(--accent-green);">${stats.upcoming}</div>
+            <div class="stat-label">Upcoming</div>
+        </div>
+        <div class="stat-card" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.15s; opacity: 0;">
+            <div class="stat-icon" style="background: rgba(251,146,60,0.12); color: var(--accent-orange);"><i class="fas fa-fire"></i></div>
+            <div class="stat-value" style="color: var(--accent-orange);">${stats.high_importance}</div>
+            <div class="stat-label">High Importance</div>
+        </div>
+        <div class="stat-card" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.2s; opacity: 0;">
+            <div class="stat-icon" style="background: rgba(251,191,36,0.12); color: var(--accent-yellow);"><i class="fas fa-coins"></i></div>
+            <div class="stat-value" style="color: var(--accent-yellow);">${stats.coins_involved}</div>
+            <div class="stat-label">Coins Involved</div>
+        </div>
+        <div class="stat-card" style="animation: fadeInUp 0.4s ease forwards; animation-delay: 0.25s; opacity: 0;">
+            <div class="stat-icon" style="background: rgba(167,139,250,0.12); color: var(--accent-purple);"><i class="fas fa-layer-group"></i></div>
+            <div class="stat-value" style="color: var(--accent-purple);">${stats.active_months}</div>
+            <div class="stat-label">Active Months</div>
+        </div>
+    `;
+}
+
+function renderCategoryPills() {
+    const catCounts = {};
+    allEvents.forEach(e => {
+        catCounts[e.category] = (catCounts[e.category] || 0) + 1;
+    });
+
+    const el = document.getElementById('categoryPills');
+    let html = `<button class="category-pill active" data-cat="all" onclick="filterByCategory('all')">
+        <i class="fas fa-th-large"></i> All <span class="pill-count">${allEvents.length}</span>
+    </button>`;
+
+    Object.keys(CATEGORY_META).sort((a, b) => (catCounts[b] || 0) - (catCounts[a] || 0)).forEach(cat => {
+        const meta = CATEGORY_META[cat];
+        const count = catCounts[cat] || 0;
+        if (count > 0) {
+            html += `<button class="category-pill" data-cat="${cat}" onclick="filterByCategory('${cat}')">
+                <i class="${meta.icon}" style="color:${meta.color};"></i> ${meta.name} <span class="pill-count">${count}</span>
+            </button>`;
+        }
+    });
+    el.innerHTML = html;
+}
+
+function renderEvents() {
+    let filtered = allEvents.slice();
+
+    // Status filter
+    if (currentStatus !== 'all') {
+        filtered = filtered.filter(e => e.status === currentStatus);
+    }
+
+    // Category filter
+    if (currentCategory !== 'all') {
+        filtered = filtered.filter(e => e.category === currentCategory);
+    }
+
+    // Search filter
+    if (searchQuery) {
+        filtered = filtered.filter(e =>
+            e.title.toLowerCase().includes(searchQuery) ||
+            e.description.toLowerCase().includes(searchQuery) ||
+            e.tags.some(t => t.toLowerCase().includes(searchQuery)) ||
+            e.coins.some(c => c.toLowerCase().includes(searchQuery))
+        );
+    }
+
+    const container = document.getElementById('eventsContainer');
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <h3>No events found</h3>
+                <p>Try adjusting your filters or search query.</p>
+            </div>`;
+        return;
+    }
+
+    // Group by month
+    const grouped = {};
+    filtered.forEach(e => {
+        const dt = formatDate(e.date);
+        if (!grouped[dt.monthKey]) grouped[dt.monthKey] = { label: dt.yearMonth, events: [] };
+        grouped[dt.monthKey].events.push(e);
+    });
+
+    let html = '';
+    Object.keys(grouped).sort().forEach(monthKey => {
+        const group = grouped[monthKey];
+        html += `<div class="month-section">
+            <div class="month-header">
+                <h2><i class="fas fa-calendar"></i> ${group.label}</h2>
+                <span class="month-count">${group.events.length} events</span>
+            </div>
+            <div class="events-list">`;
+
+        group.events.forEach((e, idx) => {
+            const dt = formatDate(e.date);
+            const cat = CATEGORY_META[e.category] || { name: e.category, icon: 'fas fa-circle', color: '#94a3b8' };
+            const daysUntil = getDaysUntil(e.date);
+
+            html += `<div class="event-card status-${e.status} ${e.importance === 'high' ? 'importance-high' : ''}" style="animation: fadeInUp 0.4s ease forwards; animation-delay: ${idx * 0.06}s; opacity: 0;">
+                <div class="event-date-badge">
+                    <div class="day">${dt.day}</div>
+                    <div class="month-label">${dt.month}</div>
+                    <div class="time-label">${e.time || ''}</div>
+                </div>
+                <div class="event-body">
+                    <div class="event-meta-top">
+                        <span class="event-cat-badge" style="background: ${cat.color}15; color: ${cat.color};">
+                            <i class="${cat.icon}"></i> ${cat.name}
+                        </span>
+                        <span class="event-status-badge ${e.status}">
+                            ${e.status === 'live' ? '<i class="fas fa-circle" style="font-size:0.4rem;"></i> LIVE' :
+                              e.status === 'upcoming' ? '<i class="fas fa-clock"></i> ' + (daysUntil || 'Upcoming') :
+                              '<i class="fas fa-check"></i> Completed'}
+                        </span>
+                        <span class="event-importance-badge ${e.importance}">
+                            ${e.importance === 'high' ? '<i class="fas fa-star"></i> High' :
+                              e.importance === 'medium' ? '<i class="fas fa-minus"></i> Medium' :
+                              '<i class="fas fa-minus"></i> Low'}
+                        </span>
+                    </div>
+                    <div class="event-title">${e.title}</div>
+                    <div class="event-description">${e.description}</div>
+                    <div class="event-tags">
+                        ${e.tags.map(t => `<span class="event-tag">#${t}</span>`).join('')}
+                    </div>
+                    ${e.coins.length > 0 ? `<div class="event-coins">
+                        ${e.coins.map(c => `<span class="coin-badge">${c}</span>`).join('')}
+                    </div>` : ''}
+                    <div class="event-footer">
+                        <span style="font-size:0.78rem; color: var(--text-muted);"><i class="far fa-calendar-alt"></i> ${e.date}</span>
+                        ${e.source ? `<a href="${e.source}" target="_blank" class="event-link"><i class="fas fa-external-link-alt"></i> Source</a>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+// Load data
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/events?stats=true')
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                allEvents = data.data;
+                renderStats(data.stats);
+                renderCategoryPills();
+                renderEvents();
+            }
+        })
+        .catch(() => {
+            document.getElementById('eventsContainer').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Failed to load events</h3>
+                    <p>Please try refreshing the page.</p>
+                </div>`;
+        });
+});
+</script>
+{% endblock %}

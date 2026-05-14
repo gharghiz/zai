@@ -1,0 +1,2060 @@
+{% extends "base.html" %}
+
+{% block title %}CryptositNews - Real-time Crypto News & AI Insights{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       prefers-reduced-motion support
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+        .ticker-track { animation: none !important; }
+        .animate-in, .animate-fade, .animate-scale, .animate-left, .animate-right {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+    }
+
+    /* ============================================
+       Animated Price Ticker
+       ============================================ */
+    .price-ticker-wrapper {
+        width: 100%; overflow: hidden;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); margin-bottom: 1.5rem; position: relative;
+    }
+    .price-ticker-wrapper::before, .price-ticker-wrapper::after {
+        content: ''; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none;
+    }
+    .price-ticker-wrapper::before { left: 0; background: linear-gradient(to right, var(--bg-primary), transparent); }
+    .price-ticker-wrapper::after { right: 0; background: linear-gradient(to left, var(--bg-primary), transparent); }
+    html.light .price-ticker-wrapper::before { background: linear-gradient(to right, var(--bg-primary), transparent); }
+    html.light .price-ticker-wrapper::after { background: linear-gradient(to left, var(--bg-primary), transparent); }
+    .ticker-track { display: flex; align-items: center; width: max-content; animation: ticker-scroll 40s linear infinite; }
+    .ticker-track:hover { animation-play-state: paused; }
+    @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .ticker-coin {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 22px; white-space: nowrap; border-right: 1px solid var(--border-glass);
+        cursor: default; transition: background 0.2s;
+    }
+    .ticker-coin:hover { background: var(--bg-glass-hover); }
+    .ticker-coin .coin-logo { width: 26px; height: 26px; border-radius: 50%; }
+    .ticker-coin .coin-name { font-weight: 700; font-size: 0.9rem; color: var(--text-primary); }
+    .ticker-coin .coin-sym { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+    .ticker-coin .coin-price { font-weight: 600; font-size: 0.88rem; color: var(--text-secondary); }
+    .ticker-coin .coin-change {
+        font-weight: 700; font-size: 0.8rem; padding: 3px 8px; border-radius: 6px;
+        display: inline-flex; align-items: center; gap: 3px;
+    }
+    .coin-change.up { color: var(--accent-green); background: rgba(52, 211, 153, 0.1); }
+    .coin-change.down { color: var(--accent-red); background: rgba(248, 113, 113, 0.1); }
+    .ticker-sparkline {
+        width: 40px; height: 18px;
+        flex-shrink: 0;
+    }
+    .ticker-sparkline polyline {
+        fill: none;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    /* ============================================
+       Market Stats Bar
+       ============================================ */
+    .market-stats-bar {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); padding: 1rem 1.2rem;
+        display: flex; align-items: center; gap: 12px;
+        transition: var(--transition);
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); border-color: var(--border-glow); }
+    .stat-icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .stat-info .stat-label { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .stat-info .stat-value { font-size: 1.15rem; font-weight: 800; }
+
+    /* ============================================
+       UPGRADE 1: Hero Stats Counter
+       ============================================ */
+    .hero-stats-section {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 1.2rem; margin-bottom: 2rem;
+    }
+    .hero-stat-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.5rem 1.2rem;
+        text-align: center; position: relative; overflow: hidden;
+        transition: var(--transition);
+    }
+    .hero-stat-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: var(--gradient-primary); opacity: 0; transition: opacity 0.3s;
+    }
+    .hero-stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-glow); border-color: var(--border-glow); }
+    .hero-stat-card:hover::before { opacity: 1; }
+    .hero-stat-icon {
+        width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 0.8rem;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem; position: relative;
+    }
+    .hero-stat-icon .icon-ring {
+        position: absolute; inset: -4px; border-radius: 18px;
+        border: 2px solid transparent; opacity: 0; transition: opacity 0.3s;
+    }
+    .hero-stat-card:hover .icon-ring { opacity: 1; animation: livePulse 2s ease infinite; }
+    .hero-stat-number {
+        font-size: 2rem; font-weight: 900; line-height: 1.1; margin-bottom: 0.3rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .hero-stat-label {
+        font-size: 0.78rem; color: var(--text-muted); font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    /* ============================================
+       UPGRADE 2: Enhanced Featured Card
+       ============================================ */
+    .featured-section { margin-bottom: 2rem; }
+    .featured-card {
+        display: grid; grid-template-columns: 1.2fr 1fr; gap: 0;
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl); overflow: hidden;
+        transition: var(--transition); cursor: pointer;
+        position: relative;
+    }
+    .featured-card::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.03), rgba(167, 139, 250, 0.03));
+        pointer-events: none; z-index: 1;
+    }
+    .featured-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); }
+    .featured-card .featured-img-wrapper {
+        position: relative; overflow: hidden;
+    }
+    .featured-card .featured-img {
+        width: 100%; height: 100%; min-height: 300px; object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    .featured-card:hover .featured-img { transform: scale(1.03); }
+    /* Gradient overlay on featured image */
+    .featured-img-overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(5, 10, 24, 0.2), rgba(167, 139, 250, 0.15));
+        pointer-events: none;
+    }
+    /* FEATURED ribbon badge */
+    .featured-ribbon {
+        position: absolute; top: 16px; left: 0; z-index: 5;
+        background: var(--gradient-primary);
+        color: white; font-size: 0.7rem; font-weight: 800;
+        padding: 6px 20px 6px 14px; letter-spacing: 1px;
+        text-transform: uppercase;
+        clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+        box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
+    }
+    .featured-ribbon i { margin-right: 4px; }
+    /* Bookmark button on featured card */
+    .featured-bookmark-btn {
+        position: absolute; top: 14px; right: 14px; z-index: 5;
+        width: 40px; height: 40px; border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: white; font-size: 1rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: var(--transition);
+    }
+    .featured-bookmark-btn:hover { background: rgba(0, 0, 0, 0.7); transform: scale(1.1); }
+    .featured-bookmark-btn.bookmarked { color: var(--accent-red); }
+    .featured-card .featured-body {
+        padding: 2rem; display: flex; flex-direction: column; justify-content: center;
+        position: relative; z-index: 2;
+    }
+    .featured-card .featured-meta { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .featured-card .featured-label {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 20px;
+        background: var(--gradient-primary); color: white;
+        font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .featured-card h2 {
+        font-size: 1.6rem; font-weight: 800; line-height: 1.3; margin-bottom: 12px;
+    }
+    .featured-card h2 a { color: var(--text-primary); }
+    .featured-card h2 a:hover { color: var(--accent-cyan); }
+    .featured-card .featured-summary {
+        color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;
+        display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        margin-bottom: 16px;
+    }
+    .featured-card .featured-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 0.82rem; color: var(--text-muted); flex-wrap: wrap; gap: 8px;
+    }
+    .featured-reading-info {
+        display: flex; gap: 12px; align-items: center; font-size: 0.78rem; color: var(--text-muted);
+    }
+    .featured-reading-info span { display: flex; align-items: center; gap: 4px; }
+
+    /* ============================================
+       Section Headers
+       ============================================ */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem; }
+    .section-header h2 { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .section-header .view-all {
+        font-size: 0.85rem; font-weight: 600; color: var(--accent-cyan);
+        display: flex; align-items: center; gap: 4px;
+    }
+    .section-header .view-all:hover { gap: 8px; }
+
+    /* ============================================
+       Categories Bar
+       ============================================ */
+    .categories-bar {
+        display: flex; gap: 8px; flex-wrap: wrap; padding: 0.5rem 0; margin-bottom: 0.5rem;
+    }
+    .cat-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: 24px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.82rem; font-weight: 500;
+        transition: var(--transition); text-decoration: none;
+    }
+    .cat-chip:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); color: var(--text-primary); border-color: var(--border-glow); }
+    .cat-chip .chip-icon { width: 24px; height: 24px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+
+    /* ============================================
+       UPGRADE 4: Breaking News Section
+       ============================================ */
+    .breaking-news-section {
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.06), rgba(245, 158, 11, 0.04));
+        border: 1px solid rgba(220, 38, 38, 0.15);
+        border-radius: var(--radius-xl); padding: 1.5rem;
+        position: relative; overflow: hidden;
+    }
+    .breaking-news-section::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
+        background-size: 200% 100%;
+        animation: bannerShift 3s ease infinite;
+    }
+    .breaking-news-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 1rem;
+    }
+    .breaking-news-header h2 {
+        font-size: 1.15rem; font-weight: 800;
+        display: flex; align-items: center; gap: 8px;
+        color: var(--accent-red);
+    }
+    .breaking-news-header h2 i { animation: float 2s ease infinite; }
+    .breaking-news-header .view-all { color: var(--accent-red); }
+    .breaking-news-header .view-all:hover { color: #ef4444; }
+    .breaking-news-scroll {
+        display: flex; gap: 1rem; overflow-x: auto;
+        scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.5rem;
+    }
+    .breaking-news-scroll::-webkit-scrollbar { height: 4px; }
+    .breaking-news-scroll::-webkit-scrollbar-track { background: transparent; }
+    .breaking-news-scroll::-webkit-scrollbar-thumb { background: rgba(220, 38, 38, 0.3); border-radius: 2px; }
+    .breaking-card {
+        flex: 0 0 300px; scroll-snap-align: start;
+        background: var(--bg-card); border: 1px solid rgba(220, 38, 38, 0.2);
+        border-radius: var(--radius-lg); overflow: hidden;
+        transition: var(--transition); position: relative;
+        animation: breakingPulse 3s ease infinite;
+    }
+    @keyframes breakingPulse {
+        0%, 100% { border-color: rgba(220, 38, 38, 0.2); box-shadow: none; }
+        50% { border-color: rgba(220, 38, 38, 0.4); box-shadow: 0 0 20px rgba(220, 38, 38, 0.1); }
+    }
+    .breaking-card:hover { transform: translateY(-3px); box-shadow: 0 0 30px rgba(220, 38, 38, 0.15); }
+    .breaking-card-img-wrapper { overflow: hidden; position: relative; height: 160px; }
+    .breaking-card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+    .breaking-card:hover .breaking-card-img-wrapper img { transform: scale(1.05); }
+    .breaking-card-badge {
+        position: absolute; top: 10px; left: 10px;
+        background: linear-gradient(135deg, #dc2626, #f59e0b);
+        color: white; font-size: 0.65rem; font-weight: 800;
+        padding: 3px 10px; border-radius: 20px;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .breaking-card-body { padding: 1rem; }
+    .breaking-card-title {
+        font-size: 0.95rem; font-weight: 700; line-height: 1.4; margin-bottom: 8px;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .breaking-card-title a { color: var(--text-primary); }
+    .breaking-card-title a:hover { color: var(--accent-red); }
+    .breaking-card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-muted); }
+    .breaking-countdown {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: rgba(220, 38, 38, 0.15);
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--accent-red);
+    }
+    .breaking-live-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: #dc2626;
+        animation: livePulse 1s ease infinite;
+    }
+
+    /* ============================================
+       Fear & Greed Gauge
+       ============================================ */
+    .fng-section { margin-bottom: 2rem; }
+    .fng-card {
+        display: flex; align-items: center; gap: 2rem;
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.5rem 2rem;
+        transition: var(--transition);
+    }
+    .fng-card:hover { border-color: var(--border-glow); }
+    .fng-gauge {
+        width: 110px; height: 110px; border-radius: 50%; position: relative;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .fng-gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .fng-gauge .gauge-bg { fill: none; stroke: var(--bg-glass); stroke-width: 8; }
+    .fng-gauge .gauge-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+    .fng-gauge .gauge-value {
+        position: absolute; font-size: 1.8rem; font-weight: 900;
+    }
+    .fng-info h3 { font-size: 1rem; margin-bottom: 0.4rem; }
+    .fng-info p { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; }
+    .fng-label {
+        display: inline-block; padding: 4px 12px; border-radius: 20px;
+        font-size: 0.8rem; font-weight: 700; margin-top: 0.5rem;
+    }
+
+    /* ============================================
+       Two Column Layout
+       ============================================ */
+    .home-grid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; }
+
+    /* ============================================
+       Trending Keywords
+       ============================================ */
+    .tags-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 2rem; }
+    .tag-pill {
+        padding: 6px 14px; border-radius: 20px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.8rem; font-weight: 500;
+        transition: var(--transition); text-decoration: none; cursor: pointer;
+    }
+    .tag-pill:hover { background: rgba(34, 211, 238, 0.1); border-color: var(--accent-cyan); color: var(--accent-cyan); transform: translateY(-2px); }
+
+    /* ============================================
+       Trending Coins
+       ============================================ */
+    .trending-section { margin-bottom: 2rem; }
+    .trending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .trending-card {
+        display: flex; align-items: center; gap: 12px;
+        padding: 1rem 1.2rem; background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md); transition: var(--transition); cursor: pointer;
+    }
+    .trending-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); border-color: var(--border-glow); }
+    .trending-card .rank {
+        font-size: 0.7rem; font-weight: 800; color: var(--text-muted);
+        width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+        background: var(--bg-glass); border-radius: 50%;
+    }
+    .trending-card .t-img { width: 34px; height: 34px; border-radius: 50%; }
+    .trending-card .t-info { flex: 1; }
+    .trending-card .t-name { font-weight: 700; font-size: 0.9rem; }
+    .trending-card .t-sym { color: var(--text-muted); font-size: 0.75rem; font-weight: 500; }
+    .trending-card .t-price { text-align: right; }
+    .trending-card .t-price .price { font-weight: 700; font-size: 0.9rem; }
+    .trending-card .t-price .change { font-size: 0.78rem; font-weight: 600; }
+
+    /* ============================================
+       News Grid
+       ============================================ */
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+    .news-card {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); overflow: hidden; transition: var(--transition);
+        position: relative;
+    }
+    .news-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-glow); border-color: var(--border-glow); }
+    .news-card-image {
+        width: 100%; height: 190px; object-fit: cover;
+        background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+        transition: transform 0.5s ease;
+    }
+    .news-card:hover .news-card-image { transform: scale(1.03); }
+    .news-card-img-wrapper { overflow: hidden; position: relative; }
+    .news-card-img-wrapper .news-card-overlay {
+        position: absolute; bottom: 0; left: 0; right: 0;
+        padding: 2rem 1rem 0.8rem;
+        background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+        pointer-events: none;
+    }
+    .news-card-body { padding: 1.2rem; }
+    .news-card-meta { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .news-card-title {
+        font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; line-height: 1.4;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .news-card-title a { color: var(--text-primary); }
+    .news-card-title a:hover { color: var(--accent-cyan); }
+    .news-card-summary {
+        color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 12px;
+        display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .news-card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); }
+
+    /* V6: Enhanced News Card Interactions */
+    .news-card { perspective: 1000px; }
+    .news-card:hover { transform: translateY(-5px) scale(1.01); }
+    .news-card-reading-bar {
+        position: absolute;
+        bottom: 0; left: 0;
+        height: 3px;
+        background: var(--gradient-primary);
+        border-radius: 0 2px 0 0;
+        transition: width 0.3s ease;
+        z-index: 3;
+    }
+    .news-card-interactions {
+        display: flex;
+        gap: 6px;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: var(--transition);
+    }
+    .news-card:hover .news-card-interactions {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .news-interact-btn {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+    }
+    .news-interact-btn:hover {
+        background: var(--bg-glass-hover);
+        color: var(--accent-cyan);
+        border-color: var(--border-glow);
+    }
+    .news-card-reading-time {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+    }
+
+    /* ============================================
+       UPGRADE 3: Bookmark Button on Cards
+       ============================================ */
+    .bookmark-btn {
+        position: absolute; top: 12px; right: 12px; z-index: 5;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: var(--transition);
+    }
+    .bookmark-btn:hover { background: rgba(0, 0, 0, 0.65); transform: scale(1.12); }
+    .bookmark-btn.bookmarked { color: var(--accent-red); }
+    .bookmark-btn.bookmarked i { font-weight: 900; }
+
+    /* ============================================
+       Telegram Section
+       ============================================ */
+    .telegram-section { margin-bottom: 2rem; }
+    .telegram-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .telegram-badge-inline {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+        background: rgba(0, 136, 204, 0.15); color: #229ED9;
+    }
+
+    /* ============================================
+       UPGRADE 5: Enhanced Sidebar
+       ============================================ */
+    /* Quick Stats Widget */
+    .quick-stats-widget {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg); padding: 1.2rem; margin-bottom: 1.5rem;
+    }
+    .quick-stats-widget h3 {
+        font-size: 0.95rem; font-weight: 700; margin-bottom: 0.8rem;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .quick-stat-row {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0.5rem 0; border-bottom: 1px solid var(--border-glass);
+    }
+    .quick-stat-row:last-child { border-bottom: none; }
+    .quick-stat-row-label {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 0.82rem; color: var(--text-secondary);
+    }
+    .quick-stat-row-label i { font-size: 0.75rem; }
+    .quick-stat-row-icon {
+        width: 28px; height: 28px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem;
+    }
+    .quick-stat-row-value {
+        font-size: 0.88rem; font-weight: 700; color: var(--text-primary);
+    }
+    .quick-stat-row-icon.animate-icon { animation: float 3s ease infinite; }
+
+    /* Hot Topics Cloud */
+    .hot-topics-widget { margin-bottom: 1.5rem; }
+    .hot-topics-widget h3 {
+        font-size: 0.95rem; font-weight: 700; margin-bottom: 0.8rem;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .hot-topic-tag {
+        display: inline-block; padding: 5px 14px; border-radius: 20px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        color: var(--text-secondary); font-size: 0.78rem; font-weight: 500;
+        transition: var(--transition); text-decoration: none; margin: 0 4px 6px 0;
+        position: relative;
+    }
+    .hot-topic-tag:hover {
+        background: rgba(167, 139, 250, 0.1);
+        border-color: var(--accent-purple);
+        color: var(--accent-purple);
+        transform: translateY(-2px);
+        box-shadow: 0 0 16px rgba(167, 139, 250, 0.15);
+    }
+    .hot-topic-tag.popular { border-color: rgba(251, 191, 36, 0.3); }
+    .hot-topic-tag.popular:hover {
+        background: rgba(251, 191, 36, 0.1);
+        border-color: var(--accent-yellow);
+        color: var(--accent-yellow);
+        box-shadow: 0 0 16px rgba(251, 191, 36, 0.15);
+    }
+
+    /* Enhanced Telegram CTA */
+    .telegram-cta-enhanced {
+        background: linear-gradient(135deg, rgba(34, 158, 217, 0.1), rgba(34, 158, 217, 0.02));
+        border: 1px solid rgba(34, 158, 217, 0.2);
+        border-radius: var(--radius-lg); padding: 1.5rem;
+        text-align: center; position: relative; overflow: hidden;
+    }
+    .telegram-cta-enhanced::before {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(34, 158, 217, 0.06) 0%, transparent 60%);
+        animation: float 6s ease infinite;
+    }
+    .telegram-cta-enhanced .cta-icon {
+        width: 60px; height: 60px; border-radius: 16px;
+        background: linear-gradient(135deg, #229ED9, #1a8bc4);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1rem; font-size: 1.8rem; color: white;
+        box-shadow: 0 4px 20px rgba(34, 158, 217, 0.3);
+        position: relative;
+    }
+    .telegram-cta-enhanced h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; position: relative; }
+    .telegram-cta-enhanced p { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem; position: relative; }
+    .telegram-cta-enhanced .cta-stats {
+        display: flex; justify-content: center; gap: 16px; margin-bottom: 1rem;
+        font-size: 0.75rem; color: var(--text-muted); position: relative;
+    }
+    .telegram-cta-enhanced .cta-stats span { display: flex; align-items: center; gap: 4px; }
+
+    /* ============================================
+       UPGRADE 7: Newsletter Section
+       ============================================ */
+    .newsletter-section {
+        margin-top: 3rem; padding: 3rem 2rem;
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(167, 139, 250, 0.08), rgba(59, 130, 246, 0.06));
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl); text-align: center;
+        position: relative; overflow: hidden;
+    }
+    .newsletter-section::before {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle at 30% 50%, rgba(34, 211, 238, 0.05) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 50%, rgba(167, 139, 250, 0.05) 0%, transparent 50%);
+        animation: float 8s ease infinite;
+    }
+    .newsletter-envelope {
+        width: 64px; height: 64px; border-radius: 16px;
+        background: var(--gradient-primary);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1rem; font-size: 1.6rem; color: white;
+        box-shadow: 0 8px 32px rgba(34, 211, 238, 0.25);
+        animation: float 3s ease infinite;
+        position: relative;
+    }
+    .newsletter-section h2 {
+        font-size: 1.5rem; font-weight: 800; margin-bottom: 0.4rem; position: relative;
+    }
+    .newsletter-section .newsletter-subtitle {
+        color: var(--text-secondary); font-size: 1rem; margin-bottom: 1.5rem; position: relative;
+    }
+    .newsletter-form {
+        display: flex; gap: 0.75rem; max-width: 480px; margin: 0 auto 1.2rem;
+        position: relative;
+    }
+    .newsletter-form input {
+        flex: 1; padding: 14px 18px;
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm); color: var(--text-primary);
+        font-size: 0.9rem; font-family: inherit; outline: none;
+        transition: var(--transition);
+    }
+    .newsletter-form input::placeholder { color: var(--text-muted); }
+    .newsletter-form input:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
+    }
+    .newsletter-form button {
+        padding: 14px 28px;
+        background: var(--gradient-primary); color: white;
+        border: none; border-radius: var(--radius-sm);
+        font-weight: 700; font-size: 0.9rem; font-family: inherit;
+        cursor: pointer; transition: var(--transition);
+        white-space: nowrap;
+    }
+    .newsletter-form button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34, 211, 238, 0.3); }
+    .newsletter-trust {
+        display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;
+        font-size: 0.78rem; color: var(--text-muted); position: relative;
+    }
+    .newsletter-trust span { display: flex; align-items: center; gap: 4px; }
+    .newsletter-trust i { font-size: 0.7rem; }
+    .newsletter-counter {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        justify-content: center;
+    }
+    .newsletter-counter-item {
+        text-align: center;
+    }
+    .newsletter-counter-item .counter-number {
+        font-size: 1.5rem;
+        font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .newsletter-counter-item .counter-label {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    /* ============================================
+       Loading Skeleton
+       ============================================ */
+    .skeleton-news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+    .skeleton-featured { display: grid; grid-template-columns: 1.2fr 1fr; border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border-glass); }
+
+    /* ============================================
+       Responsive
+       ============================================ */
+    @media (max-width: 900px) {
+        .home-grid { grid-template-columns: 1fr; }
+        .fng-card { flex-direction: column; text-align: center; gap: 1rem; }
+        .news-grid { grid-template-columns: 1fr; }
+        .trending-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+        .market-stats-bar { grid-template-columns: repeat(2, 1fr); }
+        .featured-card { grid-template-columns: 1fr; }
+        .featured-card .featured-img { min-height: 200px; }
+        .skeleton-featured { grid-template-columns: 1fr; }
+        .hero-stats-section { grid-template-columns: repeat(2, 1fr); }
+        .newsletter-form { flex-direction: column; }
+    }
+    @media (max-width: 768px) {
+        .ticker-coin { padding: 10px 16px; }
+        .market-stats-bar { grid-template-columns: 1fr; }
+        .featured-card h2 { font-size: 1.2rem; }
+        .hero-stats-section { grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+        .hero-stat-number { font-size: 1.5rem; }
+        .breaking-card { flex: 0 0 260px; }
+    }
+    @media (max-width: 480px) {
+        .hero-stats-section { grid-template-columns: 1fr; }
+        .newsletter-section { padding: 2rem 1rem; }
+    }
+
+    /* ============================================
+       V4: Crypto Converter Widget
+       ============================================ */
+    .converter-widget {
+        background: var(--bg-card); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl); padding: 1.5rem;
+        margin-bottom: 2rem; position: relative; overflow: hidden;
+    }
+    .converter-widget::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: var(--gradient-primary);
+    }
+    .converter-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 1.2rem;
+    }
+    .converter-header h3 {
+        font-size: 1rem; font-weight: 800;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .converter-live {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 10px; border-radius: 20px;
+        background: rgba(52, 211, 153, 0.08); border: 1px solid rgba(52, 211, 153, 0.15);
+        font-size: 0.7rem; font-weight: 600; color: var(--accent-green);
+    }
+    .converter-live .live-dot-sm {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--accent-green); animation: livePulse 2s ease infinite;
+    }
+    .converter-body {
+        display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem;
+        align-items: end;
+    }
+    .converter-input-group { display: flex; flex-direction: column; gap: 6px; }
+    .converter-input-group label {
+        font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .converter-input-row {
+        display: flex; gap: 8px; align-items: center;
+    }
+    .converter-amount-input {
+        flex: 1; padding: 12px 14px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm); color: var(--text-primary);
+        font-size: 1.1rem; font-weight: 700; font-family: inherit;
+        outline: none; transition: var(--transition);
+    }
+    .converter-amount-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.1); }
+    .converter-coin-select {
+        padding: 12px 10px; min-width: 110px;
+        background: var(--bg-glass); border: 1px solid var(--border-glass);
+        border-radius: var(--radius-sm); color: var(--text-primary);
+        font-size: 0.85rem; font-weight: 600; font-family: inherit;
+        outline: none; cursor: pointer; transition: var(--transition);
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 30px;
+    }
+    .converter-coin-select:focus { border-color: var(--accent-cyan); }
+    .converter-swap-btn {
+        width: 44px; height: 44px; border-radius: 50%;
+        background: var(--gradient-primary); color: white; border: none;
+        font-size: 1rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: var(--transition);
+        box-shadow: 0 4px 16px rgba(34, 211, 238, 0.25);
+        margin-bottom: 2px;
+    }
+    .converter-swap-btn:hover { transform: rotate(180deg) scale(1.1); }
+    .converter-result {
+        margin-top: 1rem; padding: 1rem;
+        background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(167,139,250,0.06));
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-md);
+        text-align: center;
+    }
+    .converter-result-value {
+        font-size: 1.8rem; font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 4px;
+    }
+    .converter-result-label { font-size: 0.78rem; color: var(--text-muted); }
+    @media (max-width: 640px) {
+        .converter-body { grid-template-columns: 1fr; }
+        .converter-swap-btn { transform: rotate(90deg); margin: 0 auto; }
+        .converter-swap-btn:hover { transform: rotate(270deg) scale(1.1); }
+    }
+
+    /* ============================================
+       V6: Hero Banner
+       ============================================ */
+    .hero-banner {
+        position: relative;
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(167, 139, 250, 0.08), rgba(59, 130, 246, 0.06));
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-xl);
+        padding: 3rem 2.5rem;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        min-height: 220px;
+    }
+    .hero-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%; right: -20%;
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(34, 211, 238, 0.12) 0%, transparent 60%);
+        animation: float 8s ease infinite;
+        pointer-events: none;
+    }
+    .hero-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -40%; left: -10%;
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(167, 139, 250, 0.1) 0%, transparent 60%);
+        animation: float 10s ease infinite reverse;
+        pointer-events: none;
+    }
+    .hero-banner-content {
+        flex: 1;
+        position: relative;
+        z-index: 2;
+    }
+    .hero-banner-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        background: rgba(34, 211, 238, 0.12);
+        border: 1px solid rgba(34, 211, 238, 0.2);
+        color: var(--accent-cyan);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+        animation: pulse-glow 3s ease infinite;
+    }
+    .hero-banner h1 {
+        font-size: 2.2rem;
+        font-weight: 900;
+        line-height: 1.2;
+        margin-bottom: 0.8rem;
+    }
+    .hero-banner h1 .gradient-text {
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .hero-banner p {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        max-width: 550px;
+        margin-bottom: 1.2rem;
+    }
+    .hero-banner-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+    }
+    .hero-banner-visual {
+        position: relative;
+        z-index: 2;
+        flex-shrink: 0;
+    }
+    .hero-stats-orbit {
+        width: 180px; height: 180px;
+        position: relative;
+    }
+    .orbit-ring {
+        position: absolute;
+        border: 1px solid var(--border-glass);
+        border-radius: 50%;
+        animation: orbitSpin 20s linear infinite;
+    }
+    .orbit-ring:nth-child(1) { inset: 0; }
+    .orbit-ring:nth-child(2) { inset: 20px; animation-duration: 15s; animation-direction: reverse; }
+    .orbit-ring:nth-child(3) { inset: 40px; animation-duration: 25s; }
+    .orbit-dot {
+        position: absolute;
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        top: -5px; left: 50%;
+        margin-left: -5px;
+    }
+    .orbit-dot:nth-child(1) { background: var(--accent-cyan); box-shadow: 0 0 12px var(--accent-cyan); }
+    .orbit-ring:nth-child(2) .orbit-dot { background: var(--accent-purple); box-shadow: 0 0 12px var(--accent-purple); }
+    .orbit-ring:nth-child(3) .orbit-dot { background: var(--accent-green); box-shadow: 0 0 12px var(--accent-green); }
+    .orbit-center-icon {
+        position: absolute;
+        inset: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        animation: float 3s ease infinite;
+    }
+    @keyframes orbitSpin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    @media (max-width: 900px) {
+        .hero-banner { flex-direction: column; text-align: center; padding: 2rem 1.5rem; }
+        .hero-banner p { margin: 0 auto 1.2rem; }
+        .hero-banner-actions { justify-content: center; }
+        .hero-banner h1 { font-size: 1.6rem; }
+        .hero-banner-visual { display: none; }
+    }
+    @media (max-width: 480px) {
+        .hero-banner h1 { font-size: 1.3rem; }
+        .hero-banner-actions { flex-direction: column; }
+    }
+
+    /* ============================================
+       V6: Quick Actions Bar
+       ============================================ */
+    .quick-actions-bar {
+        display: flex;
+        gap: 0.8rem;
+        margin-bottom: 2rem;
+        padding: 0.8rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        border-radius: var(--radius-lg);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .quick-actions-bar::-webkit-scrollbar { height: 0; }
+    .quick-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: var(--radius-md);
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        color: var(--text-secondary);
+        font-size: 0.82rem;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        flex-shrink: 0;
+    }
+    .quick-action-btn i { font-size: 0.9rem; }
+    .quick-action-btn:hover {
+        background: var(--bg-glass-hover);
+        border-color: var(--border-glow);
+        color: var(--text-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    .quick-action-btn .action-badge {
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 0.65rem;
+        font-weight: 700;
+    }
+    @media (max-width: 768px) {
+        .quick-actions-bar { gap: 0.5rem; padding: 0.6rem; }
+        .quick-action-btn { padding: 8px 14px; font-size: 0.78rem; }
+    }
+
+    /* ============================================
+       V6: AI Picks Section
+       ============================================ */
+    .ai-picks-section {
+        margin-bottom: 2rem;
+    }
+    .ai-picks-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(167, 139, 250, 0.12));
+        border: 1px solid rgba(34, 211, 238, 0.2);
+        color: var(--accent-cyan);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .ai-picks-badge i { animation: float 2s ease infinite; }
+    .ai-picks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.2rem;
+    }
+    .ai-pick-card {
+        background: var(--bg-card);
+        border: 1px solid rgba(34, 211, 238, 0.15);
+        border-radius: var(--radius-lg);
+        padding: 1.2rem;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .ai-pick-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .ai-pick-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(34, 211, 238, 0.3);
+        box-shadow: 0 0 30px rgba(34, 211, 238, 0.1);
+    }
+    .ai-pick-card:hover::before { opacity: 1; }
+    .ai-pick-score {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    .ai-pick-score.bullish { background: rgba(52, 211, 153, 0.1); color: var(--accent-green); }
+    .ai-pick-score.bearish { background: rgba(248, 113, 113, 0.1); color: var(--accent-red); }
+    .ai-pick-score.neutral { background: rgba(34, 211, 238, 0.1); color: var(--accent-cyan); }
+    .ai-pick-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.4;
+        margin-bottom: 6px;
+    }
+    .ai-pick-card h3 a { color: var(--text-primary); }
+    .ai-pick-card h3 a:hover { color: var(--accent-cyan); }
+    .ai-pick-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    .ai-pick-views { display: flex; align-items: center; gap: 4px; }
+
+    /* V6: Scroll Reveal Animations */
+    .scroll-reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .scroll-reveal.revealed {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .scroll-reveal:nth-child(2) { transition-delay: 0.1s; }
+    .scroll-reveal:nth-child(3) { transition-delay: 0.2s; }
+    .scroll-reveal:nth-child(4) { transition-delay: 0.3s; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Animated Price Ticker -->
+{% if coin_prices %}
+<div class="price-ticker-wrapper animate-fade">
+    <div class="ticker-track" id="tickerTrack">
+        {% for coin in coin_prices[:10] %}
+        <div class="ticker-coin">
+            {% if coin.image %}<img src="{{ coin.image }}" alt="{{ coin.symbol }}" class="coin-logo" loading="lazy" onerror="this.style.display='none'">{% endif %}
+            <span class="coin-name">{{ coin.name }}</span>
+            <span class="coin-sym">{{ coin.symbol }}</span>
+            <span class="coin-price">${{ '%.2f'|format(coin.price) if coin.price >= 1 else ('%.4f'|format(coin.price) if coin.price else 'N/A') }}</span>
+            {% if coin.change_24h is not none %}
+            <span class="coin-change {{ 'up' if coin.change_24h >= 0 else 'down' }}">
+                <i class="fas fa-caret-{{ 'up' if coin.change_24h >= 0 else 'down' }}"></i>
+                {{ '%.2f'|format(coin.change_24h | abs) }}%
+            </span>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% for coin in coin_prices[:10] %}
+        <div class="ticker-coin">
+            {% if coin.image %}<img src="{{ coin.image }}" alt="{{ coin.symbol }}" class="coin-logo" loading="lazy" onerror="this.style.display='none'">{% endif %}
+            <span class="coin-name">{{ coin.name }}</span>
+            <span class="coin-sym">{{ coin.symbol }}</span>
+            <span class="coin-price">${{ '%.2f'|format(coin.price) if coin.price >= 1 else ('%.4f'|format(coin.price) if coin.price else 'N/A') }}</span>
+            {% if coin.change_24h is not none %}
+            <span class="coin-change {{ 'up' if coin.change_24h >= 0 else 'down' }}">
+                <i class="fas fa-caret-{{ 'up' if coin.change_24h >= 0 else 'down' }}"></i>
+                {{ '%.2f'|format(coin.change_24h | abs) }}%
+            </span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Market Stats Bar -->
+{% if global_data %}
+<div class="market-stats-bar">
+    <div class="stat-card animate-in" style="animation-delay: 0s">
+        <div class="stat-icon" style="background: rgba(34,211,238,0.1); color: var(--accent-cyan);">
+            <i class="fas fa-globe-americas"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Market Cap</div>
+            <div class="stat-value">${{ '%.2fT'|format(global_data.total_market_cap_usd / 1e12) if global_data.total_market_cap_usd else 'N/A' }}</div>
+        </div>
+    </div>
+    <div class="stat-card animate-in" style="animation-delay: 0.05s">
+        <div class="stat-icon" style="background: rgba(59,130,246,0.1); color: var(--accent-blue);">
+            <i class="fas fa-exchange-alt"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">24h Volume</div>
+            <div class="stat-value">${{ '%.1fB'|format(global_data.total_volume_usd / 1e9) if global_data.total_volume_usd else 'N/A' }}</div>
+        </div>
+    </div>
+    <div class="stat-card animate-in" style="animation-delay: 0.1s">
+        <div class="stat-icon" style="background: rgba(251,191,36,0.1); color: var(--accent-yellow);">
+            <i class="fab fa-bitcoin"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">BTC Dominance</div>
+            <div class="stat-value">{{ '%.1f%%'|format(global_data.btc_dominance) if global_data.btc_dominance else 'N/A' }}</div>
+        </div>
+    </div>
+    <div class="stat-card animate-in" style="animation-delay: 0.15s">
+        <div class="stat-icon" style="background: rgba(167,139,250,0.1); color: var(--accent-purple);">
+            <i class="fab fa-ethereum"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">ETH Dominance</div>
+            <div class="stat-value">{{ '%.1f%%'|format(global_data.eth_dominance) if global_data.eth_dominance else 'N/A' }}</div>
+        </div>
+    </div>
+    <div class="stat-card animate-in" style="animation-delay: 0.2s">
+        <div class="stat-icon" style="background: rgba(52,211,153,0.1); color: var(--accent-green);">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Active Coins</div>
+            <div class="stat-value">{{ '{:,}'.format(global_data.active_cryptocurrencies) if global_data.active_cryptocurrencies else 'N/A' }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- V4: Live Update Time -->
+<div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+    <div class="live-update-indicator">
+        <span class="live-dot-sm"></span>
+        Live &bull; Updated <span class="live-time" id="liveUpdateTime">just now</span>
+    </div>
+</div>
+
+<!-- ============================================
+     V6: Hero Banner
+     ============================================ -->
+<div class="hero-banner animate-fade">
+    <div class="hero-banner-content">
+        <div class="hero-banner-badge">
+            <i class="fas fa-bolt"></i>
+            AI-Powered Crypto Intelligence
+        </div>
+        <h1>Your <span class="gradient-text">Real-Time</span> Crypto News Hub</h1>
+        <p>Get AI-analyzed insights from 70+ sources. Track markets, discover breaking news, and stay ahead with real-time data & smart alerts.</p>
+        <div class="hero-banner-actions">
+            <a href="/news" class="btn btn-primary"><i class="fas fa-newspaper"></i> Explore News</a>
+            <a href="/market" class="btn btn-ghost"><i class="fas fa-chart-line"></i> Live Markets</a>
+            <a href="{{ telegram_channel }}" target="_blank" class="btn btn-ghost"><i class="fab fa-telegram"></i> Join Telegram</a>
+        </div>
+    </div>
+    <div class="hero-banner-visual">
+        <div class="hero-stats-orbit">
+            <div class="orbit-ring"><div class="orbit-dot"></div></div>
+            <div class="orbit-ring"><div class="orbit-dot"></div></div>
+            <div class="orbit-ring"><div class="orbit-dot"></div></div>
+            <div class="orbit-center-icon">
+                <i class="fas fa-chart-pie" style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================
+     V6: Quick Actions Bar
+     ============================================ -->
+<div class="quick-actions-bar animate-fade">
+    <a href="/converter" class="quick-action-btn">
+        <i class="fas fa-exchange-alt" style="color: var(--accent-cyan);"></i>
+        Converter
+    </a>
+    <a href="/calendar" class="quick-action-btn">
+        <i class="fas fa-calendar-alt" style="color: var(--accent-purple);"></i>
+        Events
+        <span class="action-badge" style="background: rgba(167,139,250,0.15); color: var(--accent-purple);">New</span>
+    </a>
+    <a href="/whale-alerts" class="quick-action-btn">
+        <i class="fas fa-water" style="color: var(--accent-blue);"></i>
+        Whale Alerts
+    </a>
+    <a href="/weekly-report" class="quick-action-btn">
+        <i class="fas fa-file-alt" style="color: var(--accent-green);"></i>
+        Weekly Report
+    </a>
+    <a href="/airdrops" class="quick-action-btn">
+        <i class="fas fa-gift" style="color: var(--accent-yellow);"></i>
+        Airdrops
+    </a>
+    <a href="/daily-summary" class="quick-action-btn">
+        <i class="fas fa-robot" style="color: var(--accent-orange);"></i>
+        AI Summary
+    </a>
+    <a href="/academy" class="quick-action-btn">
+        <i class="fas fa-graduation-cap" style="color: var(--accent-red);"></i>
+        Academy
+    </a>
+</div>
+
+<!-- ============================================
+     UPGRADE 1: Animated Stats Counter
+     ============================================ -->
+{% if stats %}
+<div class="hero-stats-section scroll-reveal" id="heroStatsSection">
+    <div class="hero-stat-card animate-in" style="animation-delay: 0.1s">
+        <div class="hero-stat-icon" style="background: rgba(34,211,238,0.1); color: var(--accent-cyan);">
+            <i class="fas fa-newspaper"></i>
+            <div class="icon-ring" style="border-color: rgba(34,211,238,0.3);"></div>
+        </div>
+        <div class="hero-stat-number" data-target="{{ stats.total_articles or 0 }}">0</div>
+        <div class="hero-stat-label">Total Articles</div>
+    </div>
+    <div class="hero-stat-card animate-in" style="animation-delay: 0.2s">
+        <div class="hero-stat-icon" style="background: rgba(59,130,246,0.1); color: var(--accent-blue);">
+            <i class="fas fa-rss"></i>
+            <div class="icon-ring" style="border-color: rgba(59,130,246,0.3);"></div>
+        </div>
+        <div class="hero-stat-number" data-target="{{ stats.total_sources or 0 }}">0</div>
+        <div class="hero-stat-label">Active Sources</div>
+    </div>
+    <div class="hero-stat-card animate-in" style="animation-delay: 0.3s">
+        <div class="hero-stat-icon" style="background: rgba(251,191,36,0.1); color: var(--accent-yellow);">
+            <i class="fab fa-bitcoin"></i>
+            <div class="icon-ring" style="border-color: rgba(251,191,36,0.3);"></div>
+        </div>
+        <div class="hero-stat-number" data-target="{{ stats.tracked_coins or 0 }}">0</div>
+        <div class="hero-stat-label">Tracked Coins</div>
+    </div>
+    <div class="hero-stat-card animate-in" style="animation-delay: 0.4s">
+        <div class="hero-stat-icon" style="background: rgba(167,139,250,0.1); color: var(--accent-purple);">
+            <i class="fas fa-robot"></i>
+            <div class="icon-ring" style="border-color: rgba(167,139,250,0.3);"></div>
+        </div>
+        <div class="hero-stat-number" data-target="{{ stats.ai_processed or 0 }}">0</div>
+        <div class="hero-stat-label">AI Analyzed</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Categories Bar -->
+<div class="categories-bar">
+    {% for cat in site_categories %}
+    <a href="/news?category={{ cat.slug }}" class="cat-chip">
+        <span class="chip-icon" style="background: {{ cat.color }}18; color: {{ cat.color }};"><i class="{{ cat.icon }}"></i></span>
+        {{ cat.name }}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- ============================================
+     V4: Crypto Converter Widget
+     ============================================ -->
+<div class="converter-widget animate-in" style="animation-delay: 0.15s">
+    <div class="converter-header">
+        <h3><i class="fas fa-exchange-alt" style="color: var(--accent-cyan);"></i> Crypto Converter</h3>
+        <div class="converter-live">
+            <span class="live-dot-sm"></span> Live Prices
+        </div>
+    </div>
+    <div class="converter-body">
+        <div class="converter-input-group">
+            <label>From</label>
+            <div class="converter-input-row">
+                <input type="number" class="converter-amount-input" id="converterFromAmount" value="1" min="0" step="any" oninput="convertCrypto()">
+                <select class="converter-coin-select" id="converterFromCoin" onchange="convertCrypto()">
+                    <option value="bitcoin">BTC</option>
+                    <option value="ethereum">ETH</option>
+                    <option value="tether">USDT</option>
+                    <option value="binancecoin">BNB</option>
+                    <option value="solana">SOL</option>
+                    <option value="ripple">XRP</option>
+                    <option value="cardano">ADA</option>
+                    <option value="dogecoin">DOGE</option>
+                </select>
+            </div>
+        </div>
+        <button class="converter-swap-btn" onclick="swapConverter()" title="Swap currencies">
+            <i class="fas fa-arrows-alt-h"></i>
+        </button>
+        <div class="converter-input-group">
+            <label>To</label>
+            <div class="converter-input-row">
+                <input type="number" class="converter-amount-input" id="converterToAmount" readonly placeholder="0.00" style="opacity:0.8;">
+                <select class="converter-coin-select" id="converterToCoin" onchange="convertCrypto()">
+                    <option value="tether" selected>USDT</option>
+                    <option value="bitcoin">BTC</option>
+                    <option value="ethereum">ETH</option>
+                    <option value="binancecoin">BNB</option>
+                    <option value="solana">SOL</option>
+                    <option value="ripple">XRP</option>
+                    <option value="cardano">ADA</option>
+                    <option value="dogecoin">DOGE</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="converter-result" id="converterResult">
+        <div class="converter-result-value" id="converterResultValue">Loading...</div>
+        <div class="converter-result-label" id="converterResultLabel">1 BTC = ... USDT</div>
+    </div>
+</div>
+
+<!-- ============================================
+     UPGRADE 4: Breaking News Section
+     ============================================ -->
+{% set breaking_articles = articles | selectattr('category', 'equalto', 'breaking') | list if articles else [] %}
+{% if breaking_articles %}
+<div class="breaking-news-section scroll-reveal animate-in" style="animation-delay: 0.05s">
+    <div class="breaking-news-header">
+        <h2><i class="fas fa-fire"></i> Breaking News</h2>
+        <a href="/news?category=breaking" class="view-all">View All Breaking <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="breaking-news-scroll">
+        {% for article in breaking_articles[:3] %}
+        <div class="breaking-card">
+            <div class="breaking-card-img-wrapper">
+                {% if article.image_url %}
+                <img src="{{ article.image_url }}" alt="{{ article.title }}" loading="lazy" onerror="this.style.display='none'">
+                {% else %}
+                <div style="width:100%;height:100%;background:linear-gradient(135deg, rgba(220,38,38,0.1), rgba(245,158,11,0.1));display:flex;align-items:center;justify-content:center;">
+                    <i class="fas fa-bolt" style="font-size:2.5rem;color:var(--accent-red);opacity:0.3;"></i>
+                </div>
+                {% endif %}
+                <span class="breaking-card-badge"><i class="fas fa-bolt"></i> Breaking</span>
+                <!-- UPGRADE 3: Bookmark button -->
+                <button class="bookmark-btn" data-article-id="{{ article.id }}"
+                    onclick="event.preventDefault(); event.stopPropagation(); toggleBookmark({{ article.id }}, '{{ article.title | e }}', '{{ article.url | default('') }}', '{{ article.source | default('') }}'); return false;"
+                    aria-label="Bookmark this article">
+                    <i class="far fa-heart"></i>
+                </button>
+            </div>
+            <div class="breaking-card-body">
+                <h3 class="breaking-card-title"><a href="/news/{{ article.id }}">{{ article.title }}</a></h3>
+                <div class="breaking-card-footer">
+                    <span><i class="far fa-clock"></i> {{ article.time_ago or 'Unknown' }}</span>
+                    <span class="badge badge-cyan">{{ article.source or 'Unknown' }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================
+     V6: AI Picks Section
+     ============================================ -->
+{% if articles %}
+{% set ai_articles = articles | selectattr('sentiment_score', 'number') | sort(attribute='sentiment_score', reverse=true) | list %}
+{% if ai_articles %}
+<div class="ai-picks-section scroll-reveal">
+    <div class="section-header">
+        <h2><i class="fas fa-robot" style="color: var(--accent-cyan);"></i> AI Top Picks</h2>
+        <a href="/news?sort=bullish" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="ai-picks-grid">
+        {% for article in ai_articles[:3] %}
+        <div class="ai-pick-card">
+            <div class="ai-pick-score {{ article.sentiment_label or 'neutral' }}">
+                <i class="fas fa-{{ 'arrow-up' if (article.sentiment_label or 'neutral') == 'bullish' else ('arrow-down' if (article.sentiment_label or 'neutral') == 'bearish' else 'minus') }}"></i>
+                {{ (article.sentiment_label or 'Neutral') | title }} {{ '%.0f%%'|format((article.sentiment_score or 0) * 100) if article.sentiment_score else '' }}
+            </div>
+            <h3><a href="/news/{{ article.id }}">{{ article.title }}</a></h3>
+            <div class="ai-pick-meta">
+                <span>{{ article.source or 'Unknown' }}</span>
+                <span class="ai-pick-views"><i class="fas fa-eye"></i> {{ article.views or 0 }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Main Content: Two Column -->
+<div class="home-grid scroll-reveal">
+    <div class="main-column">
+
+        <!-- ============================================
+             UPGRADE 2: Enhanced Featured Article Card
+             ============================================ -->
+        {% if articles and articles[0] %}
+        <div class="featured-section scroll-reveal animate-in" style="animation-delay: 0.1s">
+            {% set featured = articles[0] %}
+            <a href="/news/{{ featured.id }}" style="text-decoration: none;">
+                <div class="featured-card">
+                    <div class="featured-img-wrapper">
+                        {% if featured.image_url %}
+                        <img src="{{ featured.image_url }}" alt="{{ featured.title }}" class="featured-img" loading="lazy" onerror="this.parentElement.removeChild(this)">
+                        {% endif %}
+                        <div class="featured-img-overlay"></div>
+                        <!-- FEATURED ribbon badge -->
+                        <span class="featured-ribbon"><i class="fas fa-star"></i> Featured</span>
+                        <!-- UPGRADE 2: Bookmark button (heart) -->
+                        <button class="featured-bookmark-btn" data-article-id="{{ featured.id }}"
+                            onclick="event.preventDefault(); event.stopPropagation(); toggleBookmark({{ featured.id }}, '{{ featured.title | e }}', '{{ featured.url | default('') }}', '{{ featured.source | default('') }}'); return false;"
+                            aria-label="Bookmark this article">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="featured-body">
+                        <div class="featured-meta">
+                            <span class="featured-label"><i class="fas fa-bolt"></i> Featured</span>
+                            <span class="badge badge-cyan">{{ featured.source or 'Unknown' }}</span>
+                            {% if featured.sentiment_label %}
+                            <span class="badge badge-{{ 'green' if featured.sentiment_label in ['bullish', 'very_bullish'] else ('red' if featured.sentiment_label in ['bearish', 'very_bearish'] else 'cyan') }}">
+                                {{ featured.sentiment_label | replace('_', ' ') | title }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <h2>{{ featured.title }}</h2>
+                        <p class="featured-summary">{{ featured.summary or (featured.content[:250] if featured.content else '') }}</p>
+                        <div class="featured-footer">
+                            <span><i class="far fa-clock"></i> {{ featured.time_ago or 'Unknown' }}</span>
+                            {% if featured.views %}<span><i class="far fa-eye"></i> {{ featured.views }} views</span>{% endif %}
+                            <!-- UPGRADE 2: Word count and reading time -->
+                            {% set word_count = (featured.content or '').split() | length %}
+                            {% set read_time = (word_count / 200) | int %}
+                            <span class="featured-reading-info">
+                                {% if word_count > 0 %}
+                                <span><i class="far fa-file-alt"></i> {{ word_count }} words</span>
+                                <span><i class="far fa-clock"></i> {{ read_time if read_time > 0 else 1 }} min read</span>
+                                {% endif %}
+                            </span>
+                            <span style="margin-left:auto; color: var(--accent-cyan); font-weight: 600;">Read More <i class="fas fa-arrow-right" style="font-size:0.75rem;"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Telegram Posts Section -->
+        {% if telegram_articles %}
+        <div class="telegram-section scroll-reveal">
+            <div class="section-header">
+                <h2><i class="fab fa-telegram" style="color: #229ED9;"></i> Published on Telegram</h2>
+                <a href="/news?telegram=1" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="telegram-grid">
+                {% for article in telegram_articles[:3] %}
+                <div class="news-card animate-in" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                    <div class="news-card-img-wrapper">
+                        {% if article.image_url %}
+                        <img src="{{ article.image_url }}" alt="{{ article.title }}" class="news-card-image" loading="lazy" onerror="this.style.display='none'">
+                        {% else %}
+                        <div class="news-card-image" style="background: var(--gradient-card); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-newspaper" style="font-size: 3rem; color: var(--accent-cyan); opacity: 0.3;"></i>
+                        </div>
+                        {% endif %}
+                        <!-- UPGRADE 3: Bookmark button -->
+                        <button class="bookmark-btn" data-article-id="{{ article.id }}"
+                            onclick="event.preventDefault(); event.stopPropagation(); toggleBookmark({{ article.id }}, '{{ article.title | e }}', '{{ article.url | default('') }}', '{{ article.source | default('') }}'); return false;"
+                            aria-label="Bookmark this article">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="news-card-body">
+                        <div class="news-card-meta">
+                            <span class="badge badge-cyan">{{ article.source or 'Unknown' }}</span>
+                            <span class="telegram-badge-inline"><i class="fab fa-telegram"></i> Telegram</span>
+                        </div>
+                        <h3 class="news-card-title"><a href="/news/{{ article.id }}">{{ article.title }}</a></h3>
+                        <p class="news-card-summary">{{ article.summary or '' }}</p>
+                        <div class="news-card-footer">
+                            <span><i class="far fa-clock"></i> {{ article.time_ago or 'Unknown' }}</span>
+                            <div class="news-card-share-mini" style="display:flex;gap:6px;">
+                                <a href="https://twitter.com/intent/tweet?text={{ article.title | urlencode }}&url={{ article.url | urlencode }}" target="_blank" title="Share on Twitter/X" style="color:var(--text-muted);transition:var(--transition);font-size:0.85rem;" onmouseover="this.style.color='#1DA1F2'" onmouseout="this.style.color='var(--text-muted)'"><i class="fab fa-twitter"></i></a>
+                                <a href="https://t.me/share/url?url={{ article.url | urlencode }}&text={{ article.title | urlencode }}" target="_blank" title="Share on Telegram" style="color:var(--text-muted);transition:var(--transition);font-size:0.85rem;" onmouseover="this.style.color='#229ED9'" onmouseout="this.style.color='var(--text-muted)'"><i class="fab fa-telegram"></i></a>
+                                <a href="https://wa.me/?text={{ article.title | urlencode }}%20{{ article.url | urlencode }}" target="_blank" title="Share on WhatsApp" style="color:var(--text-muted);transition:var(--transition);font-size:0.85rem;" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text-muted)'"><i class="fab fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Latest News -->
+        <div class="section-header">
+            <h2><i class="fas fa-bolt" style="color: var(--accent-cyan);"></i> Latest News</h2>
+            <a href="/news" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="news-grid">
+            {% for article in articles[1:] %}
+            <div class="news-card animate-in" style="animation-delay: {{ loop.index0 * 0.08 }}s">
+                <div class="news-card-img-wrapper">
+                    {% if article.image_url %}
+                    <img src="{{ article.image_url }}" alt="{{ article.title }}" class="news-card-image" loading="lazy" onerror="this.style.display='none'">
+                    {% else %}
+                    <div class="news-card-image" style="background: var(--gradient-card); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-newspaper" style="font-size: 3rem; color: var(--accent-cyan); opacity: 0.3;"></i>
+                    </div>
+                    {% endif %}
+                    <!-- UPGRADE 3: Bookmark button -->
+                    <button class="bookmark-btn" data-article-id="{{ article.id }}"
+                        onclick="event.preventDefault(); event.stopPropagation(); toggleBookmark({{ article.id }}, '{{ article.title | e }}', '{{ article.url | default('') }}', '{{ article.source | default('') }}'); return false;"
+                        aria-label="Bookmark this article">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <div class="news-card-body">
+                    <div class="news-card-meta">
+                        <span class="badge badge-cyan">{{ article.source or 'Unknown' }}</span>
+                        {% if article.category %}<span class="badge badge-purple">{{ article.category }}</span>{% endif %}
+                        {% if article.sentiment_label %}
+                        <span class="badge badge-{{ 'green' if article.sentiment_label in ['bullish', 'very_bullish'] else ('red' if article.sentiment_label in ['bearish', 'very_bearish'] else 'cyan') }}">
+                            {{ article.sentiment_label | replace('_', ' ') | title }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h3 class="news-card-title"><a href="/news/{{ article.id }}">{{ article.title }}</a></h3>
+                    <p class="news-card-summary">{{ article.summary or (article.content[:200] if article.content else '') }}</p>
+                    <div class="news-card-footer">
+                        <span><i class="far fa-clock"></i> {{ article.time_ago or 'Unknown' }}</span>
+                        <div class="news-card-share-mini" style="display:flex;gap:6px;">
+                            <a href="https://twitter.com/intent/tweet?text={{ article.title | urlencode }}&url={{ article.url | urlencode }}" target="_blank" title="Share on Twitter/X" style="color:var(--text-muted);transition:var(--transition);font-size:0.85rem;" onmouseover="this.style.color='#1DA1F2'" onmouseout="this.style.color='var(--text-muted)'"><i class="fab fa-twitter"></i></a>
+                            <a href="https://t.me/share/url?url={{ article.url | urlencode }}&text={{ article.title | urlencode }}" target="_blank" title="Share on Telegram" style="color:var(--text-muted);transition:var(--transition);font-size:0.85rem;" onmouseover="this.style.color='#229ED9'" onmouseout="this.style.color='var(--text-muted)'"><i class="fab fa-telegram"></i></a>
+                            <a href="https://wa.me/?text={{ article.title | urlencode }}%20{{ article.url | urlencode }}" target="_blank" title="Share on WhatsApp" style="color:var(--text-muted);transition:var(--transition);font-size:0.85rem;" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text-muted)'"><i class="fab fa-whatsapp"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not articles %}
+        <div style="text-align: center; padding: 4rem 0; color: var(--text-muted);">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--accent-cyan);"></i>
+            <p>Scraping news from 70+ sources... Articles will appear here shortly.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ============================================
+         UPGRADE 5: Enhanced Sidebar
+         ============================================ -->
+    <aside class="sidebar">
+
+        <!-- UPGRADE 5: Quick Stats Widget -->
+        {% if stats %}
+        <div class="quick-stats-widget animate-right" style="animation-delay: 0.05s">
+            <h3><i class="fas fa-chart-bar" style="color: var(--accent-cyan);"></i> Quick Stats</h3>
+            <div class="quick-stat-row">
+                <div class="quick-stat-row-label">
+                    <div class="quick-stat-row-icon animate-icon" style="background: rgba(34,211,238,0.1); color: var(--accent-cyan);"><i class="fas fa-newspaper"></i></div>
+                    Articles
+                </div>
+                <div class="quick-stat-row-value">{{ '{:,}'.format(stats.total_articles or 0) }}</div>
+            </div>
+            <div class="quick-stat-row">
+                <div class="quick-stat-row-label">
+                    <div class="quick-stat-row-icon animate-icon" style="background: rgba(59,130,246,0.1); color: var(--accent-blue);"><i class="fas fa-rss"></i></div>
+                    Sources
+                </div>
+                <div class="quick-stat-row-value">{{ stats.total_sources or 0 }}</div>
+            </div>
+            <div class="quick-stat-row">
+                <div class="quick-stat-row-label">
+                    <div class="quick-stat-row-icon animate-icon" style="background: rgba(251,191,36,0.1); color: var(--accent-yellow);"><i class="fab fa-bitcoin"></i></div>
+                    Coins
+                </div>
+                <div class="quick-stat-row-value">{{ stats.tracked_coins or 0 }}</div>
+            </div>
+            <div class="quick-stat-row">
+                <div class="quick-stat-row-label">
+                    <div class="quick-stat-row-icon animate-icon" style="background: rgba(167,139,250,0.1); color: var(--accent-purple);"><i class="fas fa-robot"></i></div>
+                    AI Processed
+                </div>
+                <div class="quick-stat-row-value">{{ '{:,}'.format(stats.ai_processed or 0) }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- UPGRADE 5: Telegram CTA (Promoted Higher) -->
+        <div class="animate-right" style="animation-delay: 0.15s; margin-bottom: 1.5rem;">
+            <div class="telegram-cta-enhanced">
+                <div class="cta-icon"><i class="fab fa-telegram"></i></div>
+                <h3>Follow on Telegram</h3>
+                <p>Get instant crypto news alerts directly to your phone</p>
+                <div class="cta-stats">
+                    <span><i class="fas fa-bolt"></i> Instant alerts</span>
+                    <span><i class="fas fa-shield-alt"></i> Spam-free</span>
+                    <span><i class="fas fa-users"></i> 5K+ members</span>
+                </div>
+                <a href="https://t.me/CryptositNews" target="_blank" class="btn btn-ghost" style="width: 100%; justify-content: center; background: rgba(34,158,217,0.12); border-color: rgba(34,158,217,0.25); color: #229ED9; position: relative;">
+                    <i class="fab fa-telegram"></i> Join Channel
+                </a>
+            </div>
+        </div>
+
+        <!-- Fear & Greed Gauge -->
+        {% if fear_greed %}
+        <div class="fng-section animate-right" style="animation-delay: 0.25s">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;"><i class="fas fa-tachometer-alt" style="color: var(--accent-cyan);"></i> Fear & Greed Index</h3>
+            <div class="fng-card">
+                <div class="fng-gauge">
+                    <svg viewBox="0 0 36 36">
+                        <circle class="gauge-bg" cx="18" cy="18" r="15.5"></circle>
+                        <circle class="gauge-fill" cx="18" cy="18" r="15.5"
+                            stroke-dasharray="97.4"
+                            stroke-dashoffset="{{ '%.1f'|format(97.4 - (97.4 * fear_greed.value / 100)) }}"
+                            stroke="{% if fear_greed.value <= 25 %}var(--accent-red){% elif fear_greed.value <= 45 %}var(--accent-yellow){% elif fear_greed.value <= 55 %}var(--accent-green){% elif fear_greed.value <= 75 %}var(--accent-green){% else %}var(--accent-red){% endif %}">
+                        </circle>
+                    </svg>
+                    <span class="gauge-value" style="color: {% if fear_greed.value <= 25 %}var(--accent-red){% elif fear_greed.value <= 45 %}var(--accent-yellow){% elif fear_greed.value <= 75 %}var(--accent-green){% else %}var(--accent-red){% endif %};">{{ fear_greed.value }}</span>
+                </div>
+                <div class="fng-info">
+                    <span class="fng-label" style="background: {% if fear_greed.value <= 25 %}rgba(248,113,113,0.12); color: var(--accent-red){% elif fear_greed.value <= 45 %}rgba(251,191,36,0.12); color: var(--accent-yellow){% elif fear_greed.value <= 75 %}rgba(52,211,153,0.12); color: var(--accent-green){% else %}rgba(248,113,113,0.12); color: var(--accent-red){% endif %};">{{ fear_greed.classification }}</span>
+                    <p style="margin-top: 0.6rem;">Market sentiment indicator based on volatility, volume, social media, and market momentum.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Trending Coins -->
+        {% if trending %}
+        <div class="trending-section animate-right" style="animation-delay: 0.3s">
+            <div class="section-header" style="margin-top: 0;">
+                <h2 style="font-size: 1.1rem;"><i class="fas fa-fire" style="color: var(--accent-yellow);"></i> Trending</h2>
+                <a href="/market" class="view-all">More <i class="fas fa-arrow-right"></i></a>
+            </div>
+            {% for t in trending[:6] %}
+            <div class="trending-card animate-in" style="animation-delay: {{ loop.index0 * 0.05 }}s; margin-bottom: 0.8rem;">
+                <span class="rank">{{ loop.index }}</span>
+                {% if t.image %}<img src="{{ t.image }}" alt="{{ t.name }}" class="t-img" loading="lazy" onerror="this.style.display='none'">{% endif %}
+                <div class="t-info">
+                    <div class="t-name">{{ t.name }}</div>
+                    <div class="t-sym">{{ t.symbol }}</div>
+                </div>
+                <div class="t-price">
+                    <div class="price">${{ '%.2f'|format(t.price) if t.price and t.price >= 1 else ('%.4f'|format(t.price) if t.price else 'N/A') }}</div>
+                    {% if t.change_24h and t.change_24h != 0 %}
+                    <div class="change {{ 'sentiment-bullish' if t.change_24h >= 0 else 'sentiment-bearish' }}">
+                        {{ '+' if t.change_24h >= 0 else '' }}{{ '%.2f'|format(t.change_24h) }}%
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- UPGRADE 5: Hot Topics Cloud -->
+        {% if stats and stats.total_articles and stats.total_articles > 10 %}
+        <div class="hot-topics-widget animate-right" style="animation-delay: 0.4s; margin-top: 1.5rem;">
+            <h3><i class="fas fa-fire-alt" style="color: var(--accent-orange);"></i> Hot Topics</h3>
+            <div class="tags-cloud">
+                {% for tag in ['Bitcoin', 'Ethereum', 'DeFi', 'NFT', 'Trading', 'Regulation', 'Mining', 'Web3', 'Altcoins', 'Solana', 'Binance', 'ETF', 'Halving', 'Layer 2', 'AI', 'Memecoins'] %}
+                <a href="/search?q={{ tag }}" class="hot-topic-tag {{ 'popular' if tag in ['Bitcoin', 'Ethereum', 'ETF', 'Solana', 'AI'] else '' }}">{{ tag }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Popular Topics (Legacy) -->
+        {% if stats and stats.total_articles and stats.total_articles > 10 %}
+        <div class="animate-right" style="animation-delay: 0.45s; margin-top: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem;"><i class="fas fa-tags" style="color: var(--accent-purple);"></i> Popular Topics</h3>
+            <div class="tags-cloud">
+                {% for tag in ['Bitcoin', 'Ethereum', 'DeFi', 'NFT', 'Trading', 'Regulation', 'Mining', 'Web3', 'Altcoins', 'Solana', 'Binance', 'ETF', 'Halving', 'Layer 2'] %}
+                <a href="/search?q={{ tag }}" class="tag-pill">{{ tag }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </aside>
+</div>
+
+<!-- ============================================
+     UPGRADE 7: Newsletter Section Redesign
+     ============================================ -->
+<div class="newsletter-section scroll-reveal animate-in" style="animation-delay: 0.2s">
+    <div class="newsletter-envelope">
+        <i class="far fa-envelope"></i>
+    </div>
+    <h2>Stay Ahead of the Market</h2>
+    <p class="newsletter-subtitle">Join 1,000+ crypto traders getting curated daily insights</p>
+    <div class="newsletter-counter">
+        <div class="newsletter-counter-item">
+            <div class="counter-number">{{ stats.total_articles if stats else '5,000' }}+</div>
+            <div class="counter-label">Articles</div>
+        </div>
+        <div class="newsletter-counter-item">
+            <div class="counter-number">{{ stats.sources_count if stats else '70' }}+</div>
+            <div class="counter-label">Sources</div>
+        </div>
+        <div class="newsletter-counter-item">
+            <div class="counter-number">{{ stats.tracked_coins if stats else '500' }}+</div>
+            <div class="counter-label">Coins</div>
+        </div>
+    </div>
+    <form class="newsletter-form" onsubmit="event.preventDefault(); handleNewsletterSubscribe(this); return false;">
+        <input type="email" placeholder="Enter your email address" required aria-label="Email for newsletter">
+        <button type="submit"><i class="fas fa-paper-plane"></i> Subscribe</button>
+    </form>
+    <div class="newsletter-trust">
+        <span><i class="fas fa-check-circle" style="color: var(--accent-green);"></i> 35+ Sources</span>
+        <span><i class="fas fa-check-circle" style="color: var(--accent-green);"></i> 20+ Coins</span>
+        <span><i class="fas fa-check-circle" style="color: var(--accent-green);"></i> AI-Powered</span>
+        <span><i class="fas fa-lock" style="color: var(--accent-cyan);"></i> No spam</span>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ============================================
+   Ticker Refresh
+   ============================================ */
+async function refreshTicker() {
+    try {
+        const res = await fetch('/api/prices');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.data || data.data.length === 0) return;
+        const track = document.getElementById('tickerTrack');
+        if (!track) return;
+        const coins = data.data.slice(0, 10);
+        let html = '';
+        for (let dup = 0; dup < 2; dup++) {
+            coins.forEach(c => {
+                const changeClass = c.change_24h >= 0 ? 'up' : 'down';
+                const caret = c.change_24h >= 0 ? 'up' : 'down';
+                const changeVal = Math.abs(c.change_24h || 0).toFixed(2);
+                const price = c.price >= 1 ? c.price.toFixed(2) : (c.price ? c.price.toFixed(4) : 'N/A');
+                const logo = c.image ? `<img src="${c.image}" alt="${c.symbol}" class="coin-logo" loading="lazy" onerror="this.style.display='none'">` : '';
+                html += `<div class="ticker-coin">${logo}<span class="coin-name">${c.name||''}</span><span class="coin-sym">${c.symbol||''}</span><span class="coin-price">$${price}</span><span class="coin-change ${changeClass}"><i class="fas fa-caret-${caret}"></i> ${changeVal}%</span></div>`;
+            });
+        }
+        track.innerHTML = html;
+    } catch(e) {}
+}
+setInterval(refreshTicker, 30000);
+
+/* ============================================
+   UPGRADE 1: Animated Stats Counter (IntersectionObserver)
+   ============================================ */
+(function initCounters() {
+    const counters = document.querySelectorAll('.hero-stat-number[data-target]');
+    if (!counters.length) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function animateCounter(el) {
+        const target = parseInt(el.getAttribute('data-target')) || 0;
+        if (target === 0) { el.textContent = '0'; return; }
+        const duration = 1500;
+        const startTime = performance.now();
+
+        function step(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease-out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(eased * target);
+            el.textContent = current.toLocaleString();
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                el.textContent = target.toLocaleString();
+            }
+        }
+        requestAnimationFrame(step);
+    }
+
+    if (prefersReducedMotion) {
+        // If user prefers reduced motion, just set the values immediately
+        counters.forEach(el => {
+            el.textContent = (parseInt(el.getAttribute('data-target')) || 0).toLocaleString();
+        });
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounter(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.3 });
+
+    counters.forEach(counter => observer.observe(counter));
+})();
+
+/* ============================================
+   UPGRADE 3: Heart-style Bookmark Toggle
+   ============================================ */
+// Override updateAllBookmarkButtons to use heart icons for index page bookmark-btns
+(function enhanceBookmarkButtons() {
+    const originalUpdate = window.updateAllBookmarkButtons;
+    if (originalUpdate) {
+        window.updateAllBookmarkButtons = function() {
+            // Call the original for standard bookmark buttons (fa-bookmark)
+            originalUpdate();
+
+            // Handle heart-style bookmark-btn buttons on this page
+            document.querySelectorAll('.bookmark-btn[data-article-id], .featured-bookmark-btn[data-article-id]').forEach(function(btn) {
+                const id = btn.getAttribute('data-article-id');
+                if (!id) return;
+                const icon = btn.querySelector('i');
+                if (!icon) return;
+
+                const bookmarks = JSON.parse(localStorage.getItem('cryptosit_bookmarks') || '{}');
+                if (bookmarks[id]) {
+                    btn.classList.add('bookmarked');
+                    icon.className = 'fas fa-heart';
+                    icon.style.color = 'var(--accent-red)';
+                } else {
+                    btn.classList.remove('bookmarked');
+                    icon.className = 'far fa-heart';
+                    icon.style.color = '';
+                }
+            });
+        };
+
+        // Run initial update
+        window.updateAllBookmarkButtons();
+    }
+})();
+
+/* ============================================
+   UPGRADE 7: Newsletter Subscribe Handler
+   ============================================ */
+function handleNewsletterSubscribe(form) {
+    const emailInput = form.querySelector('input[type="email"]');
+    if (!emailInput || !emailInput.value) return;
+
+    const email = emailInput.value;
+    // Show success toast
+    if (typeof showToast === 'function') {
+        showToast('Subscribed!', 'Welcome aboard! Check your inbox for confirmation.', 'success');
+    }
+
+    // Optionally POST to an endpoint
+    fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+    }).catch(function() {});
+
+    emailInput.value = '';
+}
+
+/* ============================================
+   UPGRADE 6: Real-time Breaking News Toast
+   ============================================ */
+(function initBreakingNewsPoller() {
+    const POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    const DISMISS_KEY = 'breaking_toast_dismissed_at';
+    const SEEN_KEY = 'breaking_seen_ids';
+
+    function getDismissedAt() {
+        const val = sessionStorage.getItem(DISMISS_KEY);
+        return val ? parseInt(val, 10) : 0;
+    }
+
+    function getSeenIds() {
+        try { return JSON.parse(sessionStorage.getItem(SEEN_KEY) || '[]'); }
+        catch(e) { return []; }
+    }
+
+    function hasRecentlyDismissed() {
+        return (Date.now() - getDismissedAt()) < (15 * 60 * 1000); // 15 min cooldown
+    }
+
+    function checkForBreakingNews() {
+        if (hasRecentlyDismissed()) return;
+
+        fetch('/api/breaking')
+            .then(function(res) {
+                if (!res.ok) return null;
+                return res.json();
+            })
+            .then(function(data) {
+                if (!data || !data.articles || data.articles.length === 0) return;
+
+                const seenIds = getSeenIds();
+                const newArticles = data.articles.filter(function(a) {
+                    return !seenIds.includes(String(a.id));
+                });
+
+                if (newArticles.length === 0) return;
+
+                // Show toast for the newest breaking article
+                const article = newArticles[0];
+                if (typeof showToast === 'function') {
+                    showToast(
+                        'Breaking News',
+                        (article.title || 'New breaking story available'),
+                        'breaking'
+                    );
+                }
+
+                // Track seen IDs
+                const updatedSeen = seenIds.concat(newArticles.map(function(a) { return String(a.id); }));
+                sessionStorage.setItem(SEEN_KEY, JSON.stringify(updatedSeen));
+
+                // Record dismiss time
+                sessionStorage.setItem(DISMISS_KEY, String(Date.now()));
+            })
+            .catch(function() {});
+    }
+
+    // Initial check after 10 seconds, then poll every 5 minutes
+    setTimeout(checkForBreakingNews, 10000);
+    setInterval(checkForBreakingNews, POLL_INTERVAL);
+})();
+
+/* ============================================
+   V4: Crypto Converter Logic
+   ============================================ */
+(function() {
+    let priceCache = {};
+    
+    async function fetchPrices() {
+        try {
+            const resp = await fetch('/api/prices?limit=50');
+            const data = await resp.json();
+            if (data.success && data.data) {
+                data.data.forEach(coin => {
+                    priceCache[coin.id] = coin.price;
+                    priceCache[coin.symbol] = coin.price;
+                });
+            }
+        } catch(e) { console.error('Price fetch error:', e); }
+    }
+    
+    window.convertCrypto = function() {
+        const amount = parseFloat(document.getElementById('converterFromAmount').value) || 0;
+        const fromId = document.getElementById('converterFromCoin').value;
+        const toId = document.getElementById('converterToCoin').value;
+        const fromPrice = priceCache[fromId] || 0;
+        const toPrice = priceCache[toId] || 0;
+        
+        let result = 0;
+        if (fromPrice && toPrice) {
+            result = (amount * fromPrice) / toPrice;
+        } else if (fromPrice && toId === 'tether') {
+            result = amount * fromPrice;
+        } else if (fromId === 'tether' && toPrice) {
+            result = amount / toPrice;
+        }
+        
+        const toSymbol = document.getElementById('converterToCoin').selectedOptions[0].text;
+        const fromSymbol = document.getElementById('converterFromCoin').selectedOptions[0].text;
+        
+        document.getElementById('converterToAmount').value = result > 0.0001 ? result.toFixed(result > 1 ? 2 : 6) : '0.00';
+        document.getElementById('converterResultValue').textContent = result > 0.0001 ? (result > 1 ? result.toLocaleString(undefined, {maximumFractionDigits:2}) : result.toFixed(6)) : 'N/A';
+        document.getElementById('converterResultLabel').textContent = `${amount} ${fromSymbol} = ${result > 0.0001 ? (result > 1 ? result.toLocaleString(undefined, {maximumFractionDigits:2}) : result.toFixed(6)) : 'N/A'} ${toSymbol}`;
+    };
+    
+    window.swapConverter = function() {
+        const fromSel = document.getElementById('converterFromCoin');
+        const toSel = document.getElementById('converterToCoin');
+        const tempVal = fromSel.value;
+        fromSel.value = toSel.value;
+        toSel.value = tempVal;
+        convertCrypto();
+    };
+    
+    // Fetch prices and initialize
+    fetchPrices().then(() => convertCrypto());
+    // Refresh every 5 minutes
+    setInterval(fetchPrices, 300000);
+})();
+
+/* V4: Live update time */
+(function() {
+    const el = document.getElementById('liveUpdateTime');
+    if (!el) return;
+    let seconds = 0;
+    function update() {
+        seconds++;
+        if (seconds < 60) el.textContent = seconds + 's ago';
+        else el.textContent = Math.floor(seconds/60) + 'm ago';
+    }
+    setInterval(update, 1000);
+    // Reset on visibility change
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) { seconds = 0; el.textContent = 'just now'; }
+    });
+})();
+</script>
+
+<script>
+// V6: Scroll Reveal Observer
+document.addEventListener('DOMContentLoaded', function() {
+    const revealElements = document.querySelectorAll('.scroll-reveal');
+    if (revealElements.length && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+        revealElements.forEach(function(el) { observer.observe(el); });
+    } else {
+        // Fallback: show all immediately
+        revealElements.forEach(function(el) { el.classList.add('revealed'); });
+    }
+});
+</script>
+{% endblock %}
